@@ -107,3 +107,31 @@ Jika secret tersedia, workflow menandatangani `dl.exe`, `dl-helper.exe`, `devlok
 Timestamp server: `http://timestamp.digicert.com`.
 
 Tanpa certificate, installer tetap dibuat dan diuji tetapi belum ditandatangani. Manifest update tetap mendukung signature Ed25519.
+
+## Signed Update Manifest
+
+Buat key sekali:
+
+```powershell
+go run ./cmd/devlok-release keygen -out update-signing.key
+```
+
+Perintah mencetak public key base64. Simpan private key di tempat aman, lalu tambahkan isi file ke GitHub Secret:
+
+```text
+UPDATE_SIGNING_KEY
+```
+
+Release workflow akan membuat `updates.json` bertanda tangan jika secret tersedia.
+
+Client yang ingin memakai manifest ini membuat `%USERPROFILE%\.devlok\config\update.json`:
+
+```json
+{
+  "schema": 1,
+  "manifest_url": "https://github.com/Igoon/DevLok/releases/download/v0.1.0-dev/updates.json",
+  "public_key": "PUBLIC_KEY_BASE64"
+}
+```
+
+Tanpa config tersebut, DevLok memakai GitHub Releases API + checksum `.sha256`.
