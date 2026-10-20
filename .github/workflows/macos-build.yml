@@ -39,6 +39,7 @@ jobs:
             find desktop/build -maxdepth 3 -type f | head -n 50
             exit 1
           fi
+          go build -trimpath -o desktop/build/bin/dl-helper ./cmd/dl-helper
           cp desktop/build/bin/dl-helper "$app/Contents/MacOS/dl-helper"
           chmod +x "$app/Contents/MacOS/dl-helper"
           mkdir -p dist
