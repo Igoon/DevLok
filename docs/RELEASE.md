@@ -97,6 +97,13 @@ Atau tray **Tools > Rollback app update**. Proses akan menutup GUI, menyalin bin
 
 ## Signing
 
-- Authenticode untuk installer belum dikonfigurasi.
-- Manifest update sudah mendukung signature Ed25519.
-- Jangan mendistribusikan installer tanpa memverifikasi hash dan sumbernya.
+Authenticode bersifat opsional dan diaktifkan lewat GitHub Secrets:
+
+- `WINDOWS_SIGN_PFX_BASE64`: isi file PFX dalam base64.
+- `WINDOWS_SIGN_PFX_PASSWORD`: password PFX.
+
+Jika secret tersedia, workflow menandatangani `dl.exe`, `dl-helper.exe`, `devlok-gui.exe`, dan installer sebelum smoke test dan publikasi. Checksum installer dihitung ulang setelah signing.
+
+Timestamp server: `http://timestamp.digicert.com`.
+
+Tanpa certificate, installer tetap dibuat dan diuji tetapi belum ditandatangani. Manifest update tetap mendukung signature Ed25519.

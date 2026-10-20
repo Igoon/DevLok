@@ -41,6 +41,23 @@ jobs:
       - name: Build GUI
         working-directory: desktop
         run: wails build -clean
+      - name: Sign binaries
+        shell: powershell
+        env:
+          SIGN_PFX_BASE64: ${{ secrets.WINDOWS_SIGN_PFX_BASE64 }}
+          SIGN_PFX_PASSWORD: ${{ secrets.WINDOWS_SIGN_PFX_PASSWORD }}
+        run: |
+          if (-not $env:SIGN_PFX_BASE64) { Write-Host "Signing dilewati: secret tidak tersedia."; exit 0 }
+          $pfx = Join-Path $env:RUNNER_TEMP "devlok-sign.pfx"
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:SIGN_PFX_BASE64))
+          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe |
+            Where-Object { $_.FullName -match '\\x64\\' } | Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $signtool) { throw "signtool.exe tidak ditemukan" }
+          foreach ($f in @("build\bin\dl.exe", "build\bin\dl-helper.exe", "desktop\build\bin\devlok-gui.exe")) {
+            & $signtool.FullName sign /f $pfx /p $env:SIGN_PFX_PASSWORD /fd sha256 /tr http://timestamp.digicert.com /td sha256 $f
+            if ($LASTEXITCODE -ne 0) { throw "sign gagal: $f" }
+          }
+          Remove-Item $pfx -Force
       - name: Package
         shell: powershell
         run: |
@@ -49,6 +66,25 @@ jobs:
             Write-Host "::error title=release package::$($_.Exception.Message)"
             throw
           }
+      - name: Sign installer
+        shell: powershell
+        env:
+          SIGN_PFX_BASE64: ${{ secrets.WINDOWS_SIGN_PFX_BASE64 }}
+          SIGN_PFX_PASSWORD: ${{ secrets.WINDOWS_SIGN_PFX_PASSWORD }}
+        run: |
+          if (-not $env:SIGN_PFX_BASE64) { Write-Host "Signing installer dilewati: secret tidak tersedia."; exit 0 }
+          $pfx = Join-Path $env:RUNNER_TEMP "devlok-sign.pfx"
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:SIGN_PFX_BASE64))
+          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe |
+            Where-Object { $_.FullName -match '\\x64\\' } | Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $signtool) { throw "signtool.exe tidak ditemukan" }
+          $setup = Get-ChildItem dist\DevLok-Setup-*.exe | Select-Object -First 1
+          if (-not $setup) { throw "installer tidak ditemukan" }
+          & $signtool.FullName sign /f $pfx /p $env:SIGN_PFX_PASSWORD /fd sha256 /tr http://timestamp.digicert.com /td sha256 $setup.FullName
+          if ($LASTEXITCODE -ne 0) { throw "sign installer gagal" }
+          Remove-Item $pfx -Force
+          $hash = (Get-FileHash -LiteralPath $setup.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          [IO.File]::WriteAllText($setup.FullName + ".sha256", "$hash  $($setup.Name)`n", (New-Object Text.UTF8Encoding($false)))
       - name: Installer smoke test
         shell: powershell
         run: |
