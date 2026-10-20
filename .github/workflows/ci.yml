@@ -18,6 +18,18 @@ jobs:
         with:
           go-version: "1.25"
           cache: true
+      - if: runner.os == 'Windows'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: desktop/frontend/package-lock.json
+      - if: runner.os == 'Windows'
+        run: npm ci
+        working-directory: desktop/frontend
+      - if: runner.os == 'Windows'
+        run: npm run build
+        working-directory: desktop/frontend
       - run: go vet ./...
       - shell: bash
         run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
