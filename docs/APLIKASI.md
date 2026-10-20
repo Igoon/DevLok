@@ -386,5 +386,6 @@ copy ..\build\bin\dl-helper.exe build\bin\dl-helper.exe
 | [CLI.md](CLI.md) | Spesifikasi CLI |
 | [SECURITY.md](SECURITY.md) | Model ancaman dan kontrol keamanan |
 | [UPDATES.md](UPDATES.md) | Kebijakan update aplikasi dan runtime |
+| [TIMELINE.md](TIMELINE.md) | Timeline fitur 0.1.0 sampai rencana 0.2.0 |
 | [LARAGON-GAPS.md](LARAGON-GAPS.md) | Perbandingan dengan Laragon |
 | [ROADMAP.md](ROADMAP.md) | Rencana milestone |
