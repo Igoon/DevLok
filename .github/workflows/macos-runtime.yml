@@ -38,7 +38,20 @@ jobs:
             phpmyadmin: false
           YAML
           printf '<?php echo "devlok-mac-ok";\n' > "$project/public/index.php"
-          ./dl up --path "$project" --skip-hosts --skip-trust
+          set +e
+          ./dl up --path "$project" --skip-hosts --skip-trust >up.log 2>&1
+          code=$?
+          set -e
+          cat up.log
+          if [ $code -ne 0 ]; then
+            msg=$(tail -n 30 up.log | tr '\n' ' ' | cut -c1-1500)
+            echo "::error title=mac stack::$msg"
+            for f in "$HOME/Library/Application Support/DevLok/logs/mysql/"*-error.log; do
+              [ -f "$f" ] && { echo "--- $f"; tail -n 40 "$f"; }
+            done
+            ./dl status || true
+            exit $code
+          fi
           body=$(curl -fsS --retry 5 --retry-delay 1 http://127.0.0.1:8080/)
           echo "body=$body"
           test "$body" = "devlok-mac-ok"
