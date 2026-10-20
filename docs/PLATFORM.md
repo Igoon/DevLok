@@ -67,8 +67,10 @@ Nama project dan file config harus diperlakukan case-sensitive secara logis, mes
 
 ### 4.5 Runtime macOS
 
-- PHP dan MySQL untuk macOS arm64 memerlukan sumber build yang tepat; Homebrew dapat menjadi fallback.
-- Nginx macOS dapat dibangun dari source atau diambil dari paket terkelola.
+- macOS v0.2.0 memakai Homebrew untuk Nginx dan PHP (PHP-FPM).
+- MySQL belum dikelola DevLok di macOS; project memakai MySQL eksternal.
+- Port default macOS: HTTP 8080, HTTPS 8443.
+- Packaging `.app`/`.dmg` unsigned tersedia sebagai artifact CI.
 - Manifest runtime memakai field `os` dan `arch`, sehingga sumber berbeda per platform adalah hal normal.
 
 ### 4.6 Signing
