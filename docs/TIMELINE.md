@@ -217,8 +217,7 @@ Rilis `0.1.0-dev`, `0.1.1-dev`, dan `0.1.1-dev.2` sampai `.4` adalah snapshot pe
 - Homebrew fallback untuk Nginx, PHP, dan MySQL.
 - PHP-FPM, Nginx, dan MySQL Homebrew dijalankan lewat supervisor.
 - Port default macOS: HTTP 8080, HTTPS 8443.
-- Workflow `macos-runtime` berhasil menjalankan Nginx + PHP-FPM Homebrew, mengakses `http://127.0.0.1:8080/`, lalu `dl down`.
-- MySQL di macOS belum dikelola DevLok; gunakan MySQL eksternal.
+- Workflow `macos-runtime` berhasil menjalankan Nginx + PHP-FPM + MySQL Homebrew, mengakses `http://127.0.0.1:8080/`, membuat database, lalu `dl down`.
 
 ### Platform
 
