@@ -33,7 +33,16 @@ jobs:
       - run: go vet ./...
       - shell: bash
         run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
-      - run: go test ./... -count=1
+      - name: Test
+        shell: bash
+        run: |
+          set +e
+          go test ./... -count=1 2>&1 | tee test.log
+          code=${PIPESTATUS[0]}
+          if [ $code -ne 0 ]; then
+            { echo '```'; tail -n 120 test.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit $code
       - if: runner.os == 'macOS'
         run: go test ./... -race -count=1
       - run: go build ./...
