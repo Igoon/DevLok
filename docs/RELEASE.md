@@ -49,6 +49,26 @@ Installer:
 - Tidak menghapus `%USERPROFILE%\.devlok` atau project pengguna saat uninstall.
 - Shortcut Start Menu dan opsi Desktop.
 
+## GitHub Release
+
+Workflow `.github/workflows/release.yml` berjalan saat tag `v*` di-push atau manual dari Actions.
+
+```powershell
+git tag v0.1.0-dev
+git push origin v0.1.0-dev
+```
+
+Workflow membangun portable ZIP dan installer, mengunggah artifact, lalu membuat GitHub Release. Tag yang mengandung `-` dibuat sebagai pre-release.
+
+Aset rilis:
+
+- `DevLok-<versi>-win64.zip`
+- `DevLok-<versi>-win64.zip.sha256`
+- `DevLok-Setup-<versi>.exe`
+- `DevLok-Setup-<versi>.exe.sha256`
+
+Installer saat ini belum ditandatangani Authenticode. Windows SmartScreen dapat menampilkan peringatan.
+
 ## Manifest Update
 
 Installer yang dihasilkan dapat dipakai sebagai `app.url` di manifest update. Hitung SHA256 installer:

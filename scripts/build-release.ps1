@@ -61,5 +61,9 @@ if ($Installer) {
     if (-not (Test-Path $iscc)) { throw "ISCC.exe tidak ditemukan. Instal Inno Setup 6." }
     & $iscc "/DAppVersion=$version" "/DNumericVersion=$numericVersion" "/DDistDir=$pkg" (Join-Path $root "installer\DevLok.iss")
     if ($LASTEXITCODE -ne 0) { throw "Inno Setup gagal" }
-    Write-Host "Installer dibuat di: $distRoot"
+    $installer = Join-Path $distRoot ("DevLok-Setup-" + $version + ".exe")
+    $installerHash = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash.ToLowerInvariant()
+    [IO.File]::WriteAllText($installer + ".sha256", "$installerHash  $([IO.Path]::GetFileName($installer))`n", (New-Object Text.UTF8Encoding($false)))
+    Write-Host "Installer: $installer"
+    Write-Host "SHA256:    $installerHash"
 }

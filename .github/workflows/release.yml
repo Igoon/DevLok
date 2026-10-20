@@ -1,0 +1,60 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag rilis, contoh v0.1.1"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: desktop/frontend/package-lock.json
+      - run: npm ci
+        working-directory: desktop/frontend
+      - run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.0
+      - run: choco install innosetup --no-progress -y
+      - shell: powershell
+        run: .\scripts\build-release.ps1 -Installer
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DevLok-windows
+          path: |
+            dist/*.zip
+            dist/*.exe
+            dist/*.sha256
+      - name: Publish release
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+        run: |
+          $version = (Get-Content (Get-ChildItem dist\DevLok -Directory | Select-Object -First 1).FullName\VERSION).Trim()
+          if ("v$version" -ne $env:TAG) { throw "Tag $env:TAG tidak cocok dengan versi aplikasi v$version" }
+          $assets = Get-ChildItem dist -File | Where-Object { $_.Name -match '\.(zip|exe|sha256)$' } | ForEach-Object { $_.FullName }
+          gh release view $env:TAG 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $env:TAG $assets --clobber
+          } elseif ($env:TAG -match '-') {
+            gh release create $env:TAG $assets --title "DevLok $env:TAG" --generate-notes --prerelease
+          } else {
+            gh release create $env:TAG $assets --title "DevLok $env:TAG" --generate-notes
+          }
