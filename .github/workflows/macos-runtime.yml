@@ -61,6 +61,6 @@ jobs:
           test "$body" = "devlok-mac-ok"
           ./dl status
           ./dl db list --json
-          pma=$(curl -fsS -H 'Host: phpmyadmin.test' http://127.0.0.1:8080/)
+          pma=$(curl -fsS --retry 10 --retry-delay 1 --retry-all-errors -H 'Host: phpmyadmin.test' http://127.0.0.1:8080/)
           echo "$pma" | grep -qi phpmyadmin
           ./dl down
