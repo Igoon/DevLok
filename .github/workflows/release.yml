@@ -57,24 +57,14 @@ jobs:
             dist/*.exe
             dist/*.sha256
       - name: Publish release
-        shell: powershell
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
-        run: |
-          $version = (Get-Content (Get-ChildItem dist\DevLok -Directory | Select-Object -First 1).FullName\VERSION).Trim()
-          if ("v$version" -ne $env:TAG) { throw "Tag $env:TAG tidak cocok dengan versi aplikasi v$version" }
-          $assets = Get-ChildItem dist -File | Where-Object { $_.Name -match '\.(zip|exe|sha256)$' } | ForEach-Object { $_.FullName }
-          gh release view $env:TAG *> $null
-          if ($LASTEXITCODE -eq 0) {
-            $out = gh release upload $env:TAG $assets --clobber 2>&1
-          } elseif ($env:TAG -match '-') {
-            $out = gh release create $env:TAG $assets --title "DevLok $env:TAG" --generate-notes --prerelease 2>&1
-          } else {
-            $out = gh release create $env:TAG $assets --title "DevLok $env:TAG" --generate-notes 2>&1
-          }
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "::error title=publish release::$($out -join ' ')"
-            exit 1
-          }
-          $out
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          name: DevLok ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') || (github.event_name == 'workflow_dispatch' && contains(inputs.tag, '-')) }}
+          fail_on_unmatched_files: true
+          files: |
+            dist/*.zip
+            dist/*.exe
+            dist/*.sha256
