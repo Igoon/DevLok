@@ -95,7 +95,8 @@ jobs:
           trap { Write-Host "::error title=manifest::$($_.Exception.Message)"; exit 1 }
           Write-Host "::notice title=manifest::start"
           if (-not $env:UPDATE_SIGNING_KEY) { Write-Host "Manifest signing dilewati: secret tidak tersedia."; exit 0 }
-          $version = (Get-Content (Get-ChildItem dist\DevLok -Directory | Select-Object -First 1).FullName\VERSION).Trim()
+          $pkg = Get-ChildItem dist\DevLok -Directory | Select-Object -First 1
+          $version = (Get-Content (Join-Path $pkg.FullName "VERSION")).Trim()
           $setup = Get-ChildItem dist\DevLok-Setup-*.exe | Select-Object -First 1
           $hash = (Get-FileHash -LiteralPath $setup.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
           $payload = @{
