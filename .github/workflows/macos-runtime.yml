@@ -1,0 +1,46 @@
+name: macos-runtime
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  runtime:
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache: true
+      - name: Install Homebrew runtimes
+        run: brew install nginx php
+      - name: Build CLI
+        run: go build -trimpath -o dl ./cmd/dl
+      - name: Run macOS stack
+        shell: bash
+        run: |
+          set -e
+          project="$RUNNER_TEMP/devlok-mac-test"
+          mkdir -p "$project/public"
+          cat > "$project/.devlok.yaml" <<'YAML'
+          schema: 1
+          name: macdemo
+          web:
+            server: nginx
+            root: public
+            tld: test
+            php: "8.4"
+            https: false
+          components:
+            mysql: false
+            phpmyadmin: false
+          YAML
+          printf '<?php echo "devlok-mac-ok";\n' > "$project/public/index.php"
+          ./dl up --path "$project" --skip-hosts --skip-trust
+          body=$(curl -fsS --retry 5 --retry-delay 1 http://127.0.0.1:8080/)
+          echo "body=$body"
+          test "$body" = "devlok-mac-ok"
+          ./dl status
+          ./dl down

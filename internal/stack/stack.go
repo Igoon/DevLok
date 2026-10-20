@@ -119,17 +119,31 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 			mysqlVersion = v.Version
 		}
 	}
-	nginx, err := installRuntime(ctx, mgr, "nginx", nginxVersion, nginxSHA)
+	nginx, err := installPlatformRuntime(ctx, mgr, "nginx", nginxVersion, nginxSHA, p.stateDir)
 	if err != nil {
 		return Result{}, err
 	}
-	php, err := installRuntime(ctx, mgr, "php", phpVersion, phpSHA)
+	php, err := installPlatformRuntime(ctx, mgr, "php", phpVersion, phpSHA, p.stateDir)
 	if err != nil {
 		return Result{}, err
+	}
+	var preWarnings []string
+	if platform.Current().Name() == "darwin" {
+		if !sameMinor(nginx.Version, nginxVersion) {
+			preWarnings = append(preWarnings, "Nginx Homebrew "+nginx.Version+" dipakai; manifest meminta "+nginxVersion+".")
+		}
+		if !sameMinor(php.Version, phpVersion) {
+			preWarnings = append(preWarnings, "PHP Homebrew "+php.Version+" dipakai; manifest meminta "+phpVersion+".")
+		}
 	}
 	mysqlEnabled := p.manifest.ComponentEnabled("mysql")
+	if platform.Current().Name() == "darwin" {
+		if mysqlEnabled {
+			preWarnings = append(preWarnings, "MySQL belum dikelola DevLok di macOS. Gunakan MySQL eksternal dan arahkan .env project ke server tersebut.")
+		}
+		mysqlEnabled = false
+	}
 	pmaEnabled := mysqlEnabled && p.manifest.ComponentEnabled("phpmyadmin")
-	var preWarnings []string
 	var pma rt.Installed
 	pmaOK := false
 	if pmaEnabled {
@@ -174,11 +188,11 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 		}
 	}
 
-	httpPort, err := choosePort(p.manifest.Ports.HTTP, "HTTP", 80, 8080)
+	httpPort, err := chooseHTTPPort(p.manifest.Ports.HTTP)
 	if err != nil {
 		return Result{}, err
 	}
-	httpsPort, err := choosePort(p.manifest.Ports.HTTPS, "HTTPS", 443, 8443)
+	httpsPort, err := chooseHTTPSPort(p.manifest.Ports.HTTPS)
 	if err != nil {
 		return Result{}, err
 	}
@@ -324,15 +338,9 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 		}
 	}
 
-	phpSpec := supervisor.Spec{
-		Name:       "php",
-		Executable: filepath.Join(php.Path, "php-cgi.exe"),
-		Args:       []string{"-b", fmt.Sprintf("127.0.0.1:%d", phpPort), "-c", iniPath},
-		Dir:        p.projectDir,
-		Env:        []string{"PHP_FCGI_CHILDREN=4", "PHP_FCGI_MAX_REQUESTS=0"},
-		Health:     supervisor.Health{TCPPort: phpPort, Timeout: 10 * time.Second},
-		Policy:     supervisor.PolicyNo,
-		Persistent: true,
+	phpSpec, err := newPHPSpec(php, iniPath, filepath.Join(p.logs, "php-error.log"), p.generated, p.projectDir, phpPort)
+	if err != nil {
+		return Result{}, err
 	}
 	if _, err := sm.Start(phpSpec); err != nil {
 		return Result{}, err
@@ -554,6 +562,25 @@ func stopExisting(sm *supervisor.Manager) {
 	}
 }
 
+func chooseHTTPPort(explicit int) (int, error) {
+	if platform.Current().Name() == "darwin" && explicit == 0 {
+		return choosePort(0, "HTTP", 8080, 8000)
+	}
+	return choosePort(explicit, "HTTP", 80, 8080)
+}
+
+func chooseHTTPSPort(explicit int) (int, error) {
+	if platform.Current().Name() == "darwin" && explicit == 0 {
+		return choosePort(0, "HTTPS", 8443, 9443)
+	}
+	return choosePort(explicit, "HTTPS", 443, 8443)
+}
+
+func sameMinor(actual, requested string) bool {
+	a := strings.Split(actual, ".")
+	b := strings.Split(requested, ".")
+	return len(a) >= 2 && len(b) >= 2 && a[0] == b[0] && a[1] == b[1]
+}
 func choosePort(explicit int, label string, fallback ...int) (int, error) {
 	if explicit > 0 {
 		st := ports.Check(explicit)
@@ -597,10 +624,8 @@ func writePHPIni(path, phpDir, logPath, caPath string, extensions []string, cust
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return devlokerr.Wrap(devlokerr.CodePermissionDenied, err, "Folder php.ini tidak dapat dibuat.", "")
 	}
-	extDir := filepath.Join(phpDir, "ext")
 	var b strings.Builder
 	b.WriteString("[PHP]\n")
-	fmt.Fprintf(&b, "extension_dir = %q\n", filepath.ToSlash(extDir))
 	fmt.Fprintf(&b, "error_log = %q\n", filepath.ToSlash(logPath))
 	b.WriteString("date.timezone = Asia/Jakarta\n")
 	b.WriteString("display_errors = On\n")
@@ -615,11 +640,7 @@ func writePHPIni(path, phpDir, logPath, caPath string, extensions []string, cust
 	b.WriteString("expose_php = Off\n")
 	fmt.Fprintf(&b, "curl.cainfo = %q\n", filepath.ToSlash(caPath))
 	fmt.Fprintf(&b, "openssl.cafile = %q\n\n", filepath.ToSlash(caPath))
-	for _, ext := range extensions {
-		if _, err := os.Stat(filepath.Join(extDir, "php_"+ext+".dll")); err == nil {
-			fmt.Fprintf(&b, "extension=%s\n", ext)
-		}
-	}
+	writePHPExtensionSettings(&b, phpDir, extensions)
 	if text := strings.TrimSpace(string(custom)); text != "" {
 		b.WriteString("\n; >>> DevLok user override >>>\n")
 		b.WriteString(text)
