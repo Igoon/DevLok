@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 
 	"devlok/internal/devlokerr"
+	"devlok/internal/platform"
 )
 
 func Seal(data []byte) ([]byte, error) {
@@ -58,11 +59,11 @@ func aead() (cipher.AEAD, error) {
 }
 
 func key() ([]byte, error) {
-	home, err := os.UserHomeDir()
+	state, err := platform.Current().StateDir()
 	if err != nil {
-		return nil, devlokerr.Wrap(devlokerr.CodeInternal, err, "Home directory tidak dapat ditentukan.", "")
+		return nil, devlokerr.Wrap(devlokerr.CodeInternal, err, "State dir tidak dapat ditentukan.", "")
 	}
-	dir := filepath.Join(home, ".devlok", "secrets")
+	dir := filepath.Join(state, "secrets")
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return nil, devlokerr.Wrap(devlokerr.CodePermissionDenied, err, "Folder secret tidak dapat dibuat.", "")
 	}

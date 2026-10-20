@@ -20,19 +20,19 @@ func newPlatform() Platform { return darwinPlatform{} }
 func (darwinPlatform) Name() string { return "darwin" }
 
 func (darwinPlatform) StateDir() (string, error) {
-	home, err := os.UserHomeDir()
+	dir, err := os.UserConfigDir()
 	if err != nil {
-		return "", fmt.Errorf("home dir: %w", err)
+		return "", fmt.Errorf("config dir: %w", err)
 	}
-	return filepath.Join(home, ".devlok"), nil
+	return filepath.Join(dir, "DevLok"), nil
 }
 
-func (p darwinPlatform) CacheDir() (string, error) {
-	state, err := p.StateDir()
+func (darwinPlatform) CacheDir() (string, error) {
+	dir, err := os.UserCacheDir()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("cache dir: %w", err)
 	}
-	return filepath.Join(state, "cache"), nil
+	return filepath.Join(dir, "DevLok"), nil
 }
 
 func (darwinPlatform) HostsPath() string { return "/etc/hosts" }

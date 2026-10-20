@@ -213,7 +213,7 @@ Rilis `0.1.0-dev`, `0.1.1-dev`, dan `0.1.1-dev.2` sampai `.4` adalah snapshot pe
 - Frontend dibangun di CI macOS.
 - CI macOS Intel (`macos-15-intel`) berhasil: vet, test, race test, dan build.
 - Kode GUI/tray macOS berhasil dikompilasi.
-- Workflow `macos-build` menghasilkan `.app` bundle unsigned sebagai artifact.
+- Workflow `macos-build` menghasilkan `.app`, ZIP, dan `.dmg` unsigned sebagai artifact.
 
 ### Platform
 

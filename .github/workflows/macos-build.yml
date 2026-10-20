@@ -41,8 +41,11 @@ jobs:
           fi
           mkdir -p dist
           ditto -c -k --sequesterRsrc --keepParent "$app" "dist/DevLok-macos-intel.zip"
+          hdiutil create -volname DevLok -srcfolder "$app" -ov -format UDZO "dist/DevLok-macos-intel.dmg"
           ls -lh dist
       - uses: actions/upload-artifact@v4
         with:
           name: DevLok-macos-intel
-          path: dist/DevLok-macos-intel.zip
+          path: |
+            dist/DevLok-macos-intel.zip
+            dist/DevLok-macos-intel.dmg
