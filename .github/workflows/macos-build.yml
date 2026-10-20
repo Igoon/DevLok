@@ -39,9 +39,22 @@ jobs:
             find desktop/build -maxdepth 3 -type f | head -n 50
             exit 1
           fi
+          cp desktop/build/bin/dl-helper "$app/Contents/MacOS/dl-helper"
+          chmod +x "$app/Contents/MacOS/dl-helper"
           mkdir -p dist
           ditto -c -k --sequesterRsrc --keepParent "$app" "dist/DevLok-macos-intel.zip"
-          hdiutil create -volname DevLok -srcfolder "$app" -ov -format UDZO "dist/DevLok-macos-intel.dmg"
+          staging=$(mktemp -d)
+          cp -R "$app" "$staging/DevLok.app"
+          ln -s /Applications "$staging/Applications"
+          cat > "$staging/README.txt" <<'EOF'
+          DevLok untuk macOS
+
+          Prasyarat:
+            brew install nginx php mysql
+
+          Aplikasi belum ditandatangani/notarized.
+          'EOF'
+          hdiutil create -volname DevLok -srcfolder "$staging" -ov -format UDZO "dist/DevLok-macos-intel.dmg"
           ls -lh dist
       - uses: actions/upload-artifact@v4
         with:
