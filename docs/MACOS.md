@@ -50,7 +50,7 @@ Data MySQL, kredensial, log, certificate, dan runtime shim berada di state dir D
 - Hosts melalui `osascript` dengan administrator prompt.
 - Trust CA melalui `security`.
 - Build GUI Wails dan `.app`.
-- DMG unsigned.
+- DMG unsigned berisi aplikasi, symlink Applications, README prasyarat, dan `dl-helper` di dalam bundle.
 - CI Intel dan Apple Silicon.
 
 ## Batasan
