@@ -8,7 +8,7 @@
 | Arti | Development lokal |
 | Jenis | Local development environment manager |
 | Platform | Windows 10 22H2+ / Windows 11, x64 |
-| Versi | `0.1.0-dev` |
+| Versi | `0.1.1` |
 | Lisensi | Belum ditentukan |
 | GUI | `devlok-gui.exe` |
 | CLI | `dl.exe` |

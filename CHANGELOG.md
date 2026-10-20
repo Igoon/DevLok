@@ -4,6 +4,8 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-20
+
 ### Added
 
 - Tab Update di GUI: cek update, unduh installer, apply, dan rollback.
@@ -100,6 +102,6 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 - Import project dan vhost dari Laragon.
 - Installer Inno Setup dan mode portable.
 
-## [0.1.0] - TBD
+## [0.1.0] - 2026-10-20
 
-Belum dirilis.
+Rilis Windows pertama. Detail perubahan ada di 0.1.1.

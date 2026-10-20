@@ -41,20 +41,11 @@ func newUpdateCommand(jsonOut *bool) *cobra.Command {
 			}
 			var appUpdate *update.AppUpdate
 			remoteErr := ""
-			if cfg != nil {
-				ctx, cancel := context.WithTimeout(cmd.Context(), 15*time.Second)
-				defer cancel()
-				appUpdate, err = update.RemoteCheck(ctx, cfg)
-				if err != nil {
-					remoteErr = err.Error()
-				}
-			} else {
-				ctx, cancel := context.WithTimeout(cmd.Context(), 15*time.Second)
-				defer cancel()
-				appUpdate, err = update.GitHubCheck(ctx)
-				if err != nil {
-					remoteErr = err.Error()
-				}
+			ctx, cancel := context.WithTimeout(cmd.Context(), 15*time.Second)
+			defer cancel()
+			appUpdate, err = update.AppUpdateCheck(ctx, cfg)
+			if err != nil {
+				remoteErr = err.Error()
 			}
 			if *jsonOut {
 				return writeJSON(cmd.OutOrStdout(), "update.check", true, map[string]any{
@@ -114,11 +105,7 @@ func newUpdateDownloadCommand(jsonOut *bool) *cobra.Command {
 			}
 			var appUpdate *update.AppUpdate
 			checkCtx, cancelCheck := context.WithTimeout(cmd.Context(), 15*time.Second)
-			if cfg != nil {
-				appUpdate, err = update.RemoteCheck(checkCtx, cfg)
-			} else {
-				appUpdate, err = update.GitHubCheck(checkCtx)
-			}
+			appUpdate, err = update.AppUpdateCheck(checkCtx, cfg)
 			cancelCheck()
 			if err != nil {
 				return err
@@ -167,11 +154,7 @@ func newUpdateApplyCommand(jsonOut *bool) *cobra.Command {
 			}
 			var appUpdate *update.AppUpdate
 			checkCtx, cancelCheck := context.WithTimeout(cmd.Context(), 15*time.Second)
-			if cfg != nil {
-				appUpdate, err = update.RemoteCheck(checkCtx, cfg)
-			} else {
-				appUpdate, err = update.GitHubCheck(checkCtx)
-			}
+			appUpdate, err = update.AppUpdateCheck(checkCtx, cfg)
 			cancelCheck()
 			if err != nil {
 				return err

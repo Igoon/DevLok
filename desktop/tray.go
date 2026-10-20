@@ -673,18 +673,12 @@ func (a *App) refreshTrayUpdates(manual bool) {
 	var appUpdate *update.AppUpdate
 	remoteErr := ""
 	if state, err := platform.Current().StateDir(); err == nil {
-		if cfg, cfgErr := update.LoadConfig(state); cfgErr != nil {
+		cfg, cfgErr := update.LoadConfig(state)
+		if cfgErr != nil {
 			remoteErr = cfgErr.Error()
-		} else if cfg != nil {
-			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-			appUpdate, err = update.RemoteCheck(ctx, cfg)
-			cancel()
-			if err != nil {
-				remoteErr = err.Error()
-			}
 		} else {
 			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-			appUpdate, err = update.GitHubCheck(ctx)
+			appUpdate, err = update.AppUpdateCheck(ctx, cfg)
 			cancel()
 			if err != nil {
 				remoteErr = err.Error()
@@ -748,10 +742,7 @@ func (a *App) checkAppUpdate(state string) (*update.AppUpdate, error) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
-	if cfg != nil {
-		return update.RemoteCheck(ctx, cfg)
-	}
-	return update.GitHubCheck(ctx)
+	return update.AppUpdateCheck(ctx, cfg)
 }
 func (a *App) trayDownloadAppUpdate() {
 	state, err := platform.Current().StateDir()

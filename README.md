@@ -8,15 +8,15 @@
 
 Local development environment untuk Windows: Nginx + PHP + MySQL, dengan GUI dan CLI. Dibuat sebagai alternatif Laragon yang reproducible, aman secara default, dan siap diport ke macOS.
 
-- **Versi awal**: `0.1.0` (Windows 10 22H2+ / Windows 11, x64)
-- **Status**: `0.1.0-dev`. M0-M6 inti selesai; installer dan browser fallback menyusul.
+- **Versi awal**: `0.1.1` (Windows 10 22H2+ / Windows 11, x64)
+- **Status**: `0.1.1` stable untuk Windows. macOS dan browser fallback menyusul.
 - **Stack**: Go + Wails v2 + Svelte + TypeScript
 - **Binary**: `dl.exe` (CLI), `devlok-gui.exe` (GUI Wails), `dl-helper.exe` (hosts privileged)
 - **Manifest project**: `.devlok.yaml` + `.devlok.lock`
 
 Sudah tersedia: manifest loader/validator, logger JSONL, platform Windows, `doctor`, `init`, `version`, runtime manager (SHA256 + ekstraksi aman), deteksi port dan owner, supervisor proses (Job Object, health check, restart, rekonsiliasi), generator config Nginx, hosts terkelola, CA lokal + TLS per domain, stack `up/down/status`, MySQL per project (password DPAPI, database/user acak), backup/restore/seed, lockfile dan verifikasi checksum, export environment, import Laragon, `run/shell` dengan env project, GUI Wails, phpMyAdmin, editor teks, single-instance lock, dan CI Windows/macOS.
 
-Belum tersedia: migrasi schema manifest, forwarding perintah lewat named pipe, browser fallback dan installer.
+Belum tersedia: migrasi schema manifest, forwarding perintah lewat named pipe, browser fallback, dan dukungan macOS.
 
 ## Masalah yang diselesaikan
 
@@ -86,7 +86,7 @@ wails version
 
 Installer DevLok menangani:
 
-- WebView2 Runtime (bootstrap bila belum ada).
+- Deteksi WebView2 Runtime dan tautan unduh resmi jika belum ada.
 - Visual C++ Redistributable 2015-2022 x64.
 - Runtime Nginx/PHP/MySQL diunduh saat pertama kali dipakai, bukan dibundel.
 
@@ -288,7 +288,7 @@ Paket yang menyusul: `db`, `importlaragon`, `api`, `desktop/`, `templates/`, `in
 | M4 Database | Selesai (inti) |
 | M5 Reproducibility dan import | Selesai (inti) |
 | M6 GUI | Selesai (tray tersedia; browser fallback pending) |
-| M7 Installer dan hardening | Belum mulai |
+| M7 Installer dan hardening | Installer, release, updater, dan rollback selesai; Authenticode menunggu certificate |
 
 ## Lisensi
 
