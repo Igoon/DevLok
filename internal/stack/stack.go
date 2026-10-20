@@ -137,10 +137,7 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 		}
 	}
 	mysqlEnabled := p.manifest.ComponentEnabled("mysql")
-	if platform.Current().Name() == "darwin" && p.manifest.ComponentEnabled("phpmyadmin") {
-		preWarnings = append(preWarnings, "phpMyAdmin belum tersedia di macOS; komponen dilewati.")
-	}
-	pmaEnabled := mysqlEnabled && p.manifest.ComponentEnabled("phpmyadmin") && platform.Current().Name() != "darwin"
+	pmaEnabled := mysqlEnabled && p.manifest.ComponentEnabled("phpmyadmin")
 	var pma rt.Installed
 	pmaOK := false
 	if pmaEnabled {
