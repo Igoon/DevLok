@@ -155,3 +155,32 @@ func TestInstallerCommand(t *testing.T) {
 		t.Fatal("expected unsupported format")
 	}
 }
+
+func TestGitHubCheck(t *testing.T) {
+	sum := strings.Repeat("a", 64)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/releases", func(w http.ResponseWriter, r *http.Request) {
+		rel := []githubRelease{{
+			TagName: "v99.0.0",
+			Name:    "DevLok 99",
+			Body:    "notes",
+			Assets: []githubAsset{
+				{Name: "DevLok-Setup-99.0.0.exe", BrowserDownloadURL: "http://" + r.Host + "/setup.exe"},
+				{Name: "DevLok-Setup-99.0.0.exe.sha256", BrowserDownloadURL: "http://" + r.Host + "/setup.exe.sha256"},
+			},
+		}}
+		_ = json.NewEncoder(w).Encode(rel)
+	})
+	mux.HandleFunc("/setup.exe.sha256", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(sum + "  DevLok-Setup-99.0.0.exe\n"))
+	})
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+	got, err := githubCheck(context.Background(), srv.URL+"/releases")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got == nil || got.Latest != "99.0.0" || got.SHA256 != sum || got.Notes != "notes" {
+		t.Fatalf("wrong update: %+v", got)
+	}
+}

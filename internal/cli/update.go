@@ -48,6 +48,13 @@ func newUpdateCommand(jsonOut *bool) *cobra.Command {
 				if err != nil {
 					remoteErr = err.Error()
 				}
+			} else {
+				ctx, cancel := context.WithTimeout(cmd.Context(), 15*time.Second)
+				defer cancel()
+				appUpdate, err = update.GitHubCheck(ctx)
+				if err != nil {
+					remoteErr = err.Error()
+				}
 			}
 			if *jsonOut {
 				return writeJSON(cmd.OutOrStdout(), "update.check", true, map[string]any{
@@ -105,11 +112,13 @@ func newUpdateDownloadCommand(jsonOut *bool) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if cfg == nil {
-				return devlokerr.New(devlokerr.CodeInvalidArgument, "Konfigurasi update belum dibuat.", "Buat config/update.json berisi manifest_url dan public_key.")
-			}
+			var appUpdate *update.AppUpdate
 			checkCtx, cancelCheck := context.WithTimeout(cmd.Context(), 15*time.Second)
-			appUpdate, err := update.RemoteCheck(checkCtx, cfg)
+			if cfg != nil {
+				appUpdate, err = update.RemoteCheck(checkCtx, cfg)
+			} else {
+				appUpdate, err = update.GitHubCheck(checkCtx)
+			}
 			cancelCheck()
 			if err != nil {
 				return err
@@ -156,11 +165,13 @@ func newUpdateApplyCommand(jsonOut *bool) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if cfg == nil {
-				return devlokerr.New(devlokerr.CodeInvalidArgument, "Konfigurasi update belum dibuat.", "Buat config/update.json berisi manifest_url dan public_key.")
-			}
+			var appUpdate *update.AppUpdate
 			checkCtx, cancelCheck := context.WithTimeout(cmd.Context(), 15*time.Second)
-			appUpdate, err := update.RemoteCheck(checkCtx, cfg)
+			if cfg != nil {
+				appUpdate, err = update.RemoteCheck(checkCtx, cfg)
+			} else {
+				appUpdate, err = update.GitHubCheck(checkCtx)
+			}
 			cancelCheck()
 			if err != nil {
 				return err

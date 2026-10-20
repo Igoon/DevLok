@@ -12,6 +12,8 @@ func TestCompare(t *testing.T) {
 		{"8.4", "8.4.0", 0},
 		{"1.30.6", "1.30.6", 0},
 		{"9.4.0", "8.4.10", 1},
+		{"0.1.0-dev", "0.1.0", -1},
+		{"0.2.0-dev", "0.1.0", 1},
 	}
 	for _, c := range cases {
 		if got := Compare(c.a, c.b); got != c.want {

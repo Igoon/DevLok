@@ -11,7 +11,7 @@
 
 ## Kondisi Saat Ini
 
-`dl update` memeriksa runtime terpasang terhadap registry yang dibundel dan update aplikasi jika `config/update.json` tersedia:
+`dl update` memeriksa runtime terpasang terhadap registry yang dibundel dan update aplikasi. Jika `config/update.json` tidak ada, DevLok memakai GitHub Releases resmi `Igoon/DevLok`.
 
 ```powershell
 dl update
@@ -35,7 +35,9 @@ Update runtime tersedia:
 Pasang versi baru dengan: dl runtime add <nama>@<versi>
 ```
 
-GUI/tray juga menampilkan menu **Updates (N)** jika ada update aplikasi atau runtime. Mengeklik menu tersebut menampilkan daftar update. Pemeriksaan tidak mengunduh atau memasang apa pun.
+GUI/tray juga menampilkan menu **Updates (N)** jika ada update aplikasi atau runtime. Mengeklik menu tersebut menampilkan daftar update. Pemeriksaan tidak mengunduh atau memasang apa pun. Signed manifest di `config/update.json` selalu diprioritaskan; GitHub fallback dipakai hanya jika config tidak ada.
+
+Fallback GitHub memakai API resmi dan checksum asset `.sha256`. Ini tidak memakai signature Ed25519, sehingga trust berakar pada keamanan repo GitHub. Untuk verifikasi rantai penuh, gunakan signed manifest.
 
 Memasang versi baru:
 

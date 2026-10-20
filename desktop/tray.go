@@ -682,6 +682,13 @@ func (a *App) refreshTrayUpdates(manual bool) {
 			if err != nil {
 				remoteErr = err.Error()
 			}
+		} else {
+			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+			appUpdate, err = update.GitHubCheck(ctx)
+			cancel()
+			if err != nil {
+				remoteErr = err.Error()
+			}
 		}
 	}
 	if remoteErr != "" {
@@ -734,24 +741,25 @@ func (a *App) refreshTrayUpdates(manual bool) {
 	}
 	a.trayInfo("Update tersedia", msg)
 }
+func (a *App) checkAppUpdate(state string) (*update.AppUpdate, error) {
+	cfg, err := update.LoadConfig(state)
+	if err != nil {
+		return nil, err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	if cfg != nil {
+		return update.RemoteCheck(ctx, cfg)
+	}
+	return update.GitHubCheck(ctx)
+}
 func (a *App) trayDownloadAppUpdate() {
 	state, err := platform.Current().StateDir()
 	if err != nil {
 		a.trayError("Update", err)
 		return
 	}
-	cfg, err := update.LoadConfig(state)
-	if err != nil {
-		a.trayError("Update", err)
-		return
-	}
-	if cfg == nil {
-		a.trayInfo("Update", "Konfigurasi update belum dibuat.\n\nBuat "+update.ConfigPath(state))
-		return
-	}
-	checkCtx, cancelCheck := context.WithTimeout(context.Background(), 15*time.Second)
-	appUpdate, err := update.RemoteCheck(checkCtx, cfg)
-	cancelCheck()
+	appUpdate, err := a.checkAppUpdate(state)
 	if err != nil {
 		a.trayError("Update", err)
 		return
@@ -776,18 +784,7 @@ func (a *App) trayApplyAppUpdate() {
 		a.trayError("Update", err)
 		return
 	}
-	cfg, err := update.LoadConfig(state)
-	if err != nil {
-		a.trayError("Update", err)
-		return
-	}
-	if cfg == nil {
-		a.trayInfo("Update", "Konfigurasi update belum dibuat.\n\nBuat "+update.ConfigPath(state))
-		return
-	}
-	checkCtx, cancelCheck := context.WithTimeout(context.Background(), 15*time.Second)
-	appUpdate, err := update.RemoteCheck(checkCtx, cfg)
-	cancelCheck()
+	appUpdate, err := a.checkAppUpdate(state)
 	if err != nil {
 		a.trayError("Update", err)
 		return

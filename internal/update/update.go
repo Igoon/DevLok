@@ -62,8 +62,35 @@ func Check(mgr *rt.Manager) ([]RuntimeUpdate, error) {
 }
 
 func Compare(a, b string) int {
-	as := strings.Split(strings.TrimSpace(a), ".")
-	bs := strings.Split(strings.TrimSpace(b), ".")
+	baseA, preA := versionParts(a)
+	baseB, preB := versionParts(b)
+	n := compareBase(baseA, baseB)
+	if n != 0 {
+		return n
+	}
+	if preA == preB {
+		return 0
+	}
+	if preA == "" {
+		return 1
+	}
+	if preB == "" {
+		return -1
+	}
+	return strings.Compare(preA, preB)
+}
+
+func versionParts(v string) (string, string) {
+	v = strings.TrimSpace(v)
+	if i := strings.IndexByte(v, '-'); i >= 0 {
+		return v[:i], v[i+1:]
+	}
+	return v, ""
+}
+
+func compareBase(a, b string) int {
+	as := strings.Split(a, ".")
+	bs := strings.Split(b, ".")
 	n := len(as)
 	if len(bs) > n {
 		n = len(bs)
