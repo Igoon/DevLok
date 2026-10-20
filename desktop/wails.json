@@ -1,0 +1,19 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "DevLok",
+  "outputfilename": "devlok-gui",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "DevLok"
+  },
+  "info": {
+    "companyName": "DevLok",
+    "productName": "DevLok",
+    "productVersion": "0.1.0",
+    "copyright": "DevLok",
+    "comments": "Local development environment"
+  }
+}

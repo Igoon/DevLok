@@ -1,0 +1,82 @@
+# Release dan Packaging
+
+## Build Portable
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-release.ps1
+```
+
+Output:
+
+```text
+dist\DevLok\<versi>\
+dist\DevLok-<versi>-win64.zip
+dist\DevLok-<versi>-win64.zip.sha256
+```
+
+Isi paket:
+
+- `devlok-gui.exe`
+- `dl.exe`
+- `dl-helper.exe`
+- `README.md`
+- `docs\APLIKASI.md`
+- `docs\UPDATES.md`
+- `VERSION`
+
+Script juga membangun ulang CLI, helper, dan GUI kecuali memakai `-SkipBuild`.
+
+## Build Installer
+
+Prasyarat: Inno Setup 6.
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-release.ps1 -Installer
+```
+
+Output:
+
+```text
+dist\DevLok-Setup-<versi>.exe
+```
+
+Installer:
+
+- Per-user, tanpa admin.
+- Direktori default `%LOCALAPPDATA%\Programs\DevLok`.
+- Menutup aplikasi yang sedang berjalan sebelum upgrade.
+- Menyalin binary lama ke `{app}\backup\previous` sebelum upgrade.
+- Tidak menghapus `%USERPROFILE%\.devlok` atau project pengguna saat uninstall.
+- Shortcut Start Menu dan opsi Desktop.
+
+## Manifest Update
+
+Installer yang dihasilkan dapat dipakai sebagai `app.url` di manifest update. Hitung SHA256 installer:
+
+```powershell
+Get-FileHash .\dist\DevLok-Setup-0.1.1.exe -Algorithm SHA256
+```
+
+Masukkan versi, URL HTTPS, dan hash ke payload bertanda tangan Ed25519. Format ada di [UPDATES.md](UPDATES.md).
+
+## Rollback
+
+Installer menyimpan binary versi sebelumnya di:
+
+```text
+%LOCALAPPDATA%\Programs\DevLok\backup\previous
+```
+
+Rollback:
+
+```powershell
+dl update rollback --yes
+```
+
+Atau tray **Tools > Rollback app update**. Proses akan menutup GUI, menyalin binary dari folder backup, lalu menjalankan GUI kembali. Stack dihentikan terlebih dahulu. Rollback hanya tersedia jika upgrade dilakukan melalui installer DevLok.
+
+## Signing
+
+- Authenticode untuk installer belum dikonfigurasi.
+- Manifest update sudah mendukung signature Ed25519.
+- Jangan mendistribusikan installer tanpa memverifikasi hash dan sumbernya.

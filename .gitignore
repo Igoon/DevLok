@@ -1,0 +1,39 @@
+# Build output
+/bin/
+/build/
+/dist/
+*.exe
+*.test
+*.out
+
+# Local state
+.devlok/
+*.log
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Exported environments
+devlok-*.zip
+
+# Desktop build
+/desktop/build/
+/desktop/frontend/node_modules/
+/desktop/frontend/wailsjs/
+/desktop/frontend/dist/
+/desktop/frontend/package.json.md5
+
+# Public CA bundle used by PHP runtime
+!internal/stack/cacert.pem

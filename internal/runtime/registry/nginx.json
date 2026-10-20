@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "name": "nginx",
+  "display": "Nginx",
+  "versions": [
+    {
+      "version": "1.30.6",
+      "artifacts": {
+        "windows/amd64": {
+          "url": "https://nginx.org/download/nginx-1.30.6.zip",
+          "sha256": "c6ee35edb0a861063323f709192ae50d1eefaf2ea7d00678bd2b22d8542dc61e",
+          "size": 2773293,
+          "archive": "zip",
+          "executables": ["nginx.exe"]
+        }
+      }
+    }
+  ]
+}

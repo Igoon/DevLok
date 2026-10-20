@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "name": "mysql",
+  "display": "MySQL",
+  "versions": [
+    {
+      "version": "9.4.0",
+      "artifacts": {
+        "windows/amd64": {
+          "url": "https://cdn.mysql.com/Downloads/MySQL-9.4/mysql-9.4.0-winx64.zip",
+          "sha256": "86c508ca9356dcebb0180d041bececc0105c69d52c746ebfa4899345b310d27c",
+          "size": 305258984,
+          "archive": "zip",
+          "executables": ["bin/mysqld.exe", "bin/mysql.exe", "bin/mysqldump.exe"]
+        }
+      }
+    },
+    {
+      "version": "8.4.10",
+      "artifacts": {
+        "windows/amd64": {
+          "url": "https://cdn.mysql.com/Downloads/MySQL-8.4/mysql-8.4.10-winx64.zip",
+          "sha256": "3b950db31c33fb59252568c012bd9ee5fac50811e778ca7c8f1a0dc91686cd6f",
+          "size": 280672277,
+          "archive": "zip",
+          "executables": ["bin/mysqld.exe", "bin/mysql.exe", "bin/mysqldump.exe"]
+        }
+      }
+    }
+  ]
+}
