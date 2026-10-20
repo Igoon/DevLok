@@ -91,6 +91,9 @@ jobs:
           UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
           TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
         run: |
+          $ErrorActionPreference = "Stop"
+          trap { Write-Host "::error title=manifest::$($_.Exception.Message)"; exit 1 }
+          Write-Host "::notice title=manifest::start"
           if (-not $env:UPDATE_SIGNING_KEY) { Write-Host "Manifest signing dilewati: secret tidak tersedia."; exit 0 }
           $version = (Get-Content (Get-ChildItem dist\DevLok -Directory | Select-Object -First 1).FullName\VERSION).Trim()
           $setup = Get-ChildItem dist\DevLok-Setup-*.exe | Select-Object -First 1
@@ -110,11 +113,13 @@ jobs:
           try { $keyData = [Convert]::FromBase64String($env:UPDATE_SIGNING_KEY.Trim()) }
           catch { Write-Host "::error title=manifest key::$($_.Exception.Message)"; exit 1 }
           if ($keyData.Length -notin 32, 64) { Write-Host "::error title=manifest key::panjang key $($keyData.Length) byte, harus 32 atau 64"; exit 1 }
+          Write-Host "::notice title=manifest::key ok"
           Set-Content -LiteralPath $payloadPath -Value $payload -NoNewline -Encoding utf8
           Set-Content -LiteralPath $keyPath -Value ([Convert]::ToBase64String($keyData)) -NoNewline -Encoding ascii
           $signOut = & go run ./cmd/devlok-release sign -key $keyPath -payload $payloadPath -out dist\updates.json 2>&1
           $signOut
           if ($LASTEXITCODE -ne 0) { Write-Host "::error title=manifest sign::$($signOut -join ' ')"; exit 1 }
+          Write-Host "::notice title=manifest::signed"
           Remove-Item $keyPath, $payloadPath -Force
       - name: Installer smoke test
         shell: powershell
