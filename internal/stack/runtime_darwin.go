@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"devlok/internal/brew"
 	"devlok/internal/devlokerr"
 	rt "devlok/internal/runtime"
 )
@@ -26,11 +27,11 @@ func installPlatformRuntime(ctx context.Context, mgr *rt.Manager, name, constrai
 }
 
 func brewNginx(ctx context.Context, stateDir string) (rt.Installed, error) {
-	prefix, err := brewPrefix(ctx, "nginx")
+	prefix, err := brew.Prefix(ctx, "nginx")
 	if err != nil {
 		return rt.Installed{}, err
 	}
-	base, err := brewPrefix(ctx, "")
+	base, err := brew.Prefix(ctx, "")
 	if err != nil {
 		return rt.Installed{}, err
 	}
@@ -42,7 +43,7 @@ func brewNginx(ctx context.Context, stateDir string) (rt.Installed, error) {
 	if _, err := os.Stat(filepath.Join(confDir, "mime.types")); err != nil {
 		confDir = filepath.Join(prefix, "conf")
 	}
-	version := brewVersion(ctx, "nginx")
+	version := brew.Version(ctx, "nginx")
 	if version == "" {
 		version = "brew"
 	}
@@ -60,7 +61,7 @@ func brewNginx(ctx context.Context, stateDir string) (rt.Installed, error) {
 }
 
 func brewPHP(ctx context.Context) (rt.Installed, error) {
-	prefix, err := brewPrefix(ctx, "php")
+	prefix, err := brew.Prefix(ctx, "php")
 	if err != nil {
 		return rt.Installed{}, err
 	}
@@ -74,34 +75,6 @@ func brewPHP(ctx context.Context) (rt.Installed, error) {
 		version = "brew"
 	}
 	return rt.Installed{Name: "php", Version: version, Path: prefix}, nil
-}
-
-func brewPrefix(ctx context.Context, formula string) (string, error) {
-	args := []string{"--prefix"}
-	if formula != "" {
-		args = append(args, formula)
-	}
-	out, err := exec.CommandContext(ctx, "brew", args...).Output()
-	if err != nil {
-		hint := "Instal Homebrew lalu jalankan brew install nginx php."
-		if formula != "" {
-			hint = "Jalankan brew install " + formula + "."
-		}
-		return "", devlokerr.Wrap(devlokerr.CodeDependencyMissing, err, "Homebrew tidak dapat menemukan "+formula+".", hint)
-	}
-	return strings.TrimSpace(string(out)), nil
-}
-
-func brewVersion(ctx context.Context, formula string) string {
-	out, err := exec.CommandContext(ctx, "brew", "list", "--versions", formula).Output()
-	if err != nil {
-		return ""
-	}
-	fields := strings.Fields(strings.TrimSpace(string(out)))
-	if len(fields) < 2 {
-		return ""
-	}
-	return strings.Split(fields[len(fields)-1], "_")[0]
 }
 
 func replaceSymlink(path, target string) error {

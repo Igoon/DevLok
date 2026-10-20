@@ -15,7 +15,7 @@ jobs:
           go-version: "1.25"
           cache: true
       - name: Install Homebrew runtimes
-        run: brew install nginx php
+        run: brew install nginx php mysql
       - name: Build CLI
         run: go build -trimpath -o dl ./cmd/dl
       - name: Run macOS stack
@@ -34,7 +34,7 @@ jobs:
             php: "8.4"
             https: false
           components:
-            mysql: false
+            mysql: true
             phpmyadmin: false
           YAML
           printf '<?php echo "devlok-mac-ok";\n' > "$project/public/index.php"
@@ -43,4 +43,5 @@ jobs:
           echo "body=$body"
           test "$body" = "devlok-mac-ok"
           ./dl status
+          ./dl db list --json
           ./dl down

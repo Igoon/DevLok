@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"devlok/internal/brew"
 	"devlok/internal/devlokerr"
 	"devlok/internal/hidden"
 	"devlok/internal/platform"
@@ -234,6 +235,18 @@ func (m *Manager) Ensure(ctx context.Context) error {
 }
 
 func (m *Manager) install(ctx context.Context) error {
+	if platform.Current().Name() == "darwin" {
+		prefix, err := brew.Prefix(ctx, "mysql")
+		if err != nil {
+			return err
+		}
+		version := brew.Version(ctx, "mysql")
+		if version == "" {
+			version = "brew"
+		}
+		m.Install = rt.Installed{Name: "mysql", Version: version, Path: prefix}
+		return nil
+	}
 	mgr, err := rt.NewManager(rt.Options{
 		Root:     filepath.Join(m.StateDir, "runtimes"),
 		Cache:    filepath.Join(m.StateDir, "cache", "downloads"),

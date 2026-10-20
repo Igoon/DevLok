@@ -137,13 +137,10 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 		}
 	}
 	mysqlEnabled := p.manifest.ComponentEnabled("mysql")
-	if platform.Current().Name() == "darwin" {
-		if mysqlEnabled {
-			preWarnings = append(preWarnings, "MySQL belum dikelola DevLok di macOS. Gunakan MySQL eksternal dan arahkan .env project ke server tersebut.")
-		}
-		mysqlEnabled = false
+	if platform.Current().Name() == "darwin" && p.manifest.ComponentEnabled("phpmyadmin") {
+		preWarnings = append(preWarnings, "phpMyAdmin belum tersedia di macOS; komponen dilewati.")
 	}
-	pmaEnabled := mysqlEnabled && p.manifest.ComponentEnabled("phpmyadmin")
+	pmaEnabled := mysqlEnabled && p.manifest.ComponentEnabled("phpmyadmin") && platform.Current().Name() != "darwin"
 	var pma rt.Installed
 	pmaOK := false
 	if pmaEnabled {
