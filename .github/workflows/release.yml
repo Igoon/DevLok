@@ -31,9 +31,24 @@ jobs:
       - run: npm ci
         working-directory: desktop/frontend
       - run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.0
-      - run: choco install innosetup --no-progress -y
       - shell: powershell
-        run: .\scripts\build-release.ps1 -Installer
+        run: Add-Content -Path $env:GITHUB_PATH -Value "$(go env GOPATH)\bin"
+      - run: choco install innosetup --no-progress -y
+      - name: Build CLI
+        run: |
+          go build -trimpath -o build\bin\dl.exe ./cmd/dl
+          go build -trimpath -o build\bin\dl-helper.exe ./cmd/dl-helper
+      - name: Build GUI
+        working-directory: desktop
+        run: wails build -clean
+      - name: Package
+        shell: powershell
+        run: |
+          try { .\scripts\build-release.ps1 -SkipBuild -Installer }
+          catch {
+            Write-Host "::error title=release package::$($_.Exception.Message)"
+            throw
+          }
       - uses: actions/upload-artifact@v4
         with:
           name: DevLok-windows
