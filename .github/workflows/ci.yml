@@ -41,6 +41,8 @@ jobs:
           code=${PIPESTATUS[0]}
           if [ $code -ne 0 ]; then
             { echo '```'; tail -n 120 test.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+            msg=$(tail -n 40 test.log | tr '\n' ' ' | cut -c1-1500)
+            echo "::error title=go test failure::$msg"
           fi
           exit $code
       - if: runner.os == 'macOS'
