@@ -20,6 +20,7 @@ DefaultGroupName=DevLok
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
+MinVersion=10.0.19045
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=..\dist
 OutputBaseFilename=DevLok-Setup-{#AppVersion}
@@ -47,6 +48,40 @@ Name: "{autodesktop}\DevLok"; Filename: "{app}\devlok-gui.exe"; Tasks: desktopic
 Filename: "{app}\devlok-gui.exe"; Description: "Jalankan DevLok"; Flags: nowait postinstall skipifsilent
 
 [Code]
+const
+  WebView2GUID = '{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}';
+
+function IsWebView2Installed: Boolean;
+var
+  Version: String;
+begin
+  Result :=
+    RegQueryStringValue(HKLM, 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\' + WebView2GUID, 'pv', Version) or
+    RegQueryStringValue(HKLM, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\' + WebView2GUID, 'pv', Version) or
+    RegQueryStringValue(HKCU, 'Software\Microsoft\EdgeUpdate\Clients\' + WebView2GUID, 'pv', Version);
+end;
+
+function InitializeSetup: Boolean;
+var
+  ErrorCode: Integer;
+begin
+  Result := True;
+  if not IsWebView2Installed then
+  begin
+    MsgBox('DevLok memerlukan Microsoft Edge WebView2 Runtime.' + #13#10 + #13#10 +
+      'Installer akan membuka halaman unduh resmi Microsoft. Jalankan DevLok Setup lagi setelah WebView2 terpasang.',
+      mbError, MB_OK);
+    ShellExec('open', 'https://go.microsoft.com/fwlink/p/?LinkId=2124703', '', '', SW_SHOWNORMAL, ewNoWait, ErrorCode);
+    Result := False;
+    Exit;
+  end;
+  if not FileExists(ExpandConstant('{sys}\msvcp140.dll')) then
+  begin
+    MsgBox('Visual C++ Runtime 2015-2022 x64 belum terdeteksi. Pasang Microsoft Visual C++ Redistributable x64 sebelum menjalankan PHP/MySQL.',
+      mbInformation, MB_OK);
+  end;
+end;
+
 procedure BackupBinaries;
 var
   Dir: String;

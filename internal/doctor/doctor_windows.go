@@ -63,7 +63,7 @@ func checkWebView2() Check {
 			return Check{Name: "webview2", Status: StatusOK, Message: "WebView2 " + pv}
 		}
 	}
-	return Check{Name: "webview2", Status: StatusWarn, Message: "WebView2 Runtime tidak terdeteksi.", Hint: "Installer DevLok akan memasangnya, atau gunakan winget install Microsoft.EdgeWebView2Runtime."}
+	return Check{Name: "webview2", Status: StatusWarn, Message: "WebView2 Runtime tidak terdeteksi.", Hint: "Installer DevLok akan membuka halaman unduh WebView2, atau gunakan winget install Microsoft.EdgeWebView2Runtime."}
 }
 
 func checkVCRuntime() Check {
