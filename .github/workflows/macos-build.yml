@@ -1,0 +1,48 @@
+name: macos-build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: desktop/frontend/package-lock.json
+      - run: npm ci
+        working-directory: desktop/frontend
+      - run: npm run build
+        working-directory: desktop/frontend
+      - run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.0
+      - run: echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - name: Build helper
+        run: go build -trimpath -o desktop/build/bin/dl-helper ./cmd/dl-helper
+      - name: Build GUI
+        working-directory: desktop
+        run: wails build -clean
+      - name: Package app
+        run: |
+          set -e
+          app=$(find desktop/build/bin -maxdepth 1 -name '*.app' | head -n 1)
+          if [ -z "$app" ]; then
+            echo "app bundle tidak ditemukan"
+            find desktop/build -maxdepth 3 -type f | head -n 50
+            exit 1
+          fi
+          mkdir -p dist
+          ditto -c -k --sequesterRsrc --keepParent "$app" "dist/DevLok-macos-intel.zip"
+          ls -lh dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DevLok-macos-intel
+          path: dist/DevLok-macos-intel.zip
