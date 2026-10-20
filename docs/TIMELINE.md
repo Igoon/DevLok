@@ -9,7 +9,7 @@ Dokumen ini merangkum perjalanan fitur DevLok dari versi awal sampai rencana v0.
 | `0.1.0-dev` | 20 Oktober 2026 | Snapshot pengembangan | Fondasi Windows: runtime, service, site, database, GUI, tray |
 | `0.1.1` | 20 Oktober 2026 | Rilis stable pertama | Update system, installer, release pipeline, GUI update, hardening |
 | `0.1.2` | TBD | Direncanakan | ARM64, MySQL 8.0 opsional, Mailpit, perbaikan stabilitas |
-| `0.2.0` | TBD | Direncanakan | Dukungan macOS: platform, runtime, GUI, `.app`/`.dmg`, signing |
+| `0.2.0` | TBD | Sedang dikerjakan | Dukungan macOS: platform, runtime, GUI, `.app`/`.dmg`, signing |
 
 Rilis `0.1.0-dev`, `0.1.1-dev`, dan `0.1.1-dev.2` sampai `.4` adalah snapshot pengembangan sebelum `0.1.1` stable.
 
@@ -200,10 +200,19 @@ Rilis `0.1.0-dev`, `0.1.1-dev`, dan `0.1.1-dev.2` sampai `.4` adalah snapshot pe
 
 ---
 
-## 0.2.0 - Rencana macOS
+## 0.2.0 - macOS
 
-**Status:** direncanakan  
+**Status:** sedang dikerjakan  
 **Platform target:** macOS Apple Silicon dan Intel
+
+### Sudah Dikerjakan
+
+- `platform_darwin.go`: hosts path, trust CA, process start time, browser, folder, editor, terminal, flush DNS.
+- `privileged_darwin.go`: sinkronisasi hosts via `osascript` dengan administrator prompt.
+- Build tag desktop mendukung Windows dan macOS.
+- Frontend dibangun di CI macOS.
+- CI macOS Intel (`macos-15-intel`) berhasil: vet, test, race test, dan build.
+- Kode GUI/tray macOS berhasil dikompilasi.
 
 ### Platform
 
