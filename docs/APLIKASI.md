@@ -67,6 +67,7 @@ Dibandingkan Laragon, DevLok menangani:
 - Tab **Sites** untuk daftar project dan pembuatan site baru.
 - Tab **Logs** untuk melihat log Nginx, PHP, MySQL, dan aplikasi.
 - Tab **Konfigurasi** untuk domain, alias, document root, HTTPS, database, port, versi service, dan komponen.
+- Tab **Update** untuk cek update aplikasi/runtime, download installer, apply, dan rollback.
 - Tab **Import** untuk scan dan migrasi project Laragon.
 - Pemeriksaan port langsung: free atau in use beserta nama proses.
 - Simpan konfigurasi otomatis me-restart stack jika sedang berjalan.

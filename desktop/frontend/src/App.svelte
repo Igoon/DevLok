@@ -79,6 +79,9 @@
   let importResults: any[] = []
   let importAdopt = true
   let importBusy = false
+  let updateInfo: any = null
+  let updateBusy = false
+  let updateNotice = ''
 
   const serviceRuntimeNames = new Set(['nginx', 'php', 'mysql', 'node', 'phpmyadmin'])
   $: extraRuntimes = runtimes.filter((r) => !serviceRuntimeNames.has(r.name))
@@ -410,6 +413,66 @@
     })
   }
 
+  async function loadUpdates() {
+    updateBusy = true
+    error = ''
+    updateNotice = ''
+    try {
+      updateInfo = await api().UpdateInfo()
+    } catch (e) {
+      error = message(e)
+    } finally {
+      updateBusy = false
+    }
+  }
+
+  async function downloadAppUpdate() {
+    updateBusy = true
+    error = ''
+    updateNotice = ''
+    try {
+      const path = await api().DownloadAppUpdate()
+      updateNotice = 'Installer terverifikasi: ' + path
+    } catch (e) {
+      error = message(e)
+    } finally {
+      updateBusy = false
+    }
+  }
+
+  async function applyAppUpdate() {
+    if (!confirm('Jalankan installer update? DevLok akan ditutup dan stack dihentikan.')) return
+    updateBusy = true
+    error = ''
+    updateNotice = ''
+    try {
+      await api().ApplyAppUpdate()
+      updateNotice = 'Installer dijadwalkan. DevLok akan ditutup.'
+    } catch (e) {
+      error = message(e)
+      updateBusy = false
+    }
+  }
+
+  async function rollbackAppUpdate() {
+    if (!confirm('Rollback ke binary DevLok sebelumnya? DevLok akan ditutup.')) return
+    updateBusy = true
+    error = ''
+    updateNotice = ''
+    try {
+      await api().RollbackAppUpdate()
+      updateNotice = 'Rollback dijadwalkan. DevLok akan ditutup.'
+    } catch (e) {
+      error = message(e)
+      updateBusy = false
+    }
+  }
+
+  function copyRuntimeCommand(u: any) {
+    navigator.clipboard?.writeText('dl runtime add ' + u.name + '@' + u.latest)
+    updateNotice = 'Perintah disalin.'
+  }
+
   async function loadLogs() {
     try {
       logs = await api().Logs(logService, 250)
@@ -487,6 +550,7 @@
       <button class:active={tab === 'sites'} on:click={() => (tab = 'sites')}>Sites</button>
       <button class:active={tab === 'logs'} on:click={() => (tab = 'logs')}>Logs</button>
       <button class:active={tab === 'config'} on:click={openConfig}>Konfigurasi</button>
+      <button class:active={tab === 'update'} on:click={() => { tab = 'update'; loadUpdates() }}>Update</button>
       <button class:active={tab === 'import'} on:click={() => { tab = 'import'; if (importSites.length === 0) scanLaragon() }}>Import</button>
     </nav>
     <div class="top-right">
@@ -837,6 +901,72 @@
         </div>
         <p class="muted">Port 0 = otomatis. Menyimpan saat stack berjalan akan restart stack.</p>
       {/if}
+    </section>
+  </main>
+  {:else if tab === 'update'}
+  <main class="layout config-layout">
+    <section class="panel config-panel">
+      <h2>Update DevLok</h2>
+      <div class="form-row">
+        <span class="muted">Versi terpasang: <strong>{version}</strong></span>
+        <button on:click={loadUpdates} disabled={updateBusy}>Periksa update</button>
+      </div>
+
+      {#if updateNotice}
+        <div class="notice-box">{updateNotice}</div>
+      {/if}
+
+      {#if updateInfo}
+        {#if updateInfo.remote_error}
+          <p class="muted">Pemeriksaan aplikasi: {updateInfo.remote_error}</p>
+        {/if}
+
+        {#if updateInfo.app_update}
+          <div class="site">
+            <div class="site-head">
+              <strong>DevLok {updateInfo.app_update.latest}</strong>
+              {#if updateInfo.app_update.severity}
+                <span class="pill running">{updateInfo.app_update.severity}</span>
+              {/if}
+            </div>
+            <div class="muted">Terpasang {updateInfo.app_update.current}</div>
+            {#if updateInfo.app_update.notes}
+              <p class="muted" style="white-space:pre-wrap">{updateInfo.app_update.notes}</p>
+            {/if}
+            <div class="form-row">
+              <button on:click={downloadAppUpdate} disabled={updateBusy}>Unduh installer</button>
+              <button class="primary" on:click={applyAppUpdate} disabled={updateBusy}>Unduh & jalankan</button>
+            </div>
+          </div>
+        {:else}
+          <p class="muted">Aplikasi sudah memakai versi terbaru.</p>
+        {/if}
+
+        <h2>Update runtime</h2>
+        {#if !updateInfo.runtimes || updateInfo.runtimes.length === 0}
+          <p class="muted">Semua runtime terpasang sudah versi terbaru.</p>
+        {:else}
+          <div class="stack">
+            {#each updateInfo.runtimes as u}
+              <div class="site">
+                <div class="site-head">
+                  <strong>{u.name}</strong>
+                  <span class="pill running">{u.installed} &rarr; {u.latest}</span>
+                </div>
+                <div class="form-row">
+                  <button on:click={() => copyRuntimeCommand(u)}>Salin perintah</button>
+                </div>
+              </div>
+            {/each}
+          </div>
+        {/if}
+      {:else}
+        <p class="muted">Klik Periksa update untuk melihat versi terbaru.</p>
+      {/if}
+
+      <h2>Rollback</h2>
+      <p class="muted">Pulihkan binary dari backup installer sebelumnya. Hanya tersedia setelah upgrade melalui installer.</p>
+      <button on:click={rollbackAppUpdate} disabled={updateBusy}>Rollback app update</button>
     </section>
   </main>
   {:else}

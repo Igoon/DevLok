@@ -123,6 +123,7 @@ components:
 - Versi MySQL dipilih lewat `services.mysql` atau dropdown di area service GUI; katalog saat ini 8.4.10 dan 9.4.0.
 - GUI: toggle Database/phpMyAdmin dan pilihan versi MySQL langsung di area service; perubahan otomatis restart stack.
 - Tab **Konfigurasi**: atur domain, alias, document root, nama database, HTTPS, port HTTP/HTTPS/MySQL/PHP, versi Nginx/PHP/MySQL/Node, dan komponen. Port dicek live (free/in use). Simpan akan restart stack bila aktif.
+- Tab **Update**: cek update aplikasi/runtime, unduh installer, apply, dan rollback.
 - Tab **Import**: scan Laragon, pilih project, tulis manifest, dan daftarkan project ke GUI tanpa memindahkan folder.
 - `dl site create --no-db` membuat site tanpa database.
 - `dl edit` memakai Notepad++ bila terpasang (`dl runtime add notepadpp`), lalu VS Code, lalu Notepad.

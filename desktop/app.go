@@ -21,6 +21,7 @@ import (
 	rt "devlok/internal/runtime"
 	"devlok/internal/stack"
 	"devlok/internal/supervisor"
+	"devlok/internal/update"
 	"devlok/internal/version"
 )
 
@@ -788,6 +789,97 @@ func toServiceViews(services []supervisor.Status) []ServiceView {
 	return out
 }
 
+type UpdateInfoView struct {
+	Current     string                 `json:"current"`
+	App         *update.AppUpdate      `json:"app_update,omitempty"`
+	Runtimes    []update.RuntimeUpdate `json:"runtimes"`
+	RemoteError string                 `json:"remote_error,omitempty"`
+}
+
+func (a *App) UpdateInfo() (UpdateInfoView, error) {
+	state, err := platform.Current().StateDir()
+	if err != nil {
+		return UpdateInfoView{}, err
+	}
+	mgr, err := a.runtimeManager()
+	if err != nil {
+		return UpdateInfoView{}, err
+	}
+	runtimes, err := update.Check(mgr)
+	if err != nil {
+		return UpdateInfoView{}, err
+	}
+	if runtimes == nil {
+		runtimes = []update.RuntimeUpdate{}
+	}
+	out := UpdateInfoView{Current: a.Version(), Runtimes: runtimes}
+	appUpdate, err := a.checkAppUpdate(state)
+	if err != nil {
+		out.RemoteError = err.Error()
+	} else {
+		out.App = appUpdate
+	}
+	return out, nil
+}
+
+func (a *App) DownloadAppUpdate() (string, error) {
+	state, err := platform.Current().StateDir()
+	if err != nil {
+		return "", err
+	}
+	appUpdate, err := a.checkAppUpdate(state)
+	if err != nil {
+		return "", err
+	}
+	if appUpdate == nil {
+		return "", devlokerr.New(devlokerr.CodeInvalidArgument, "Tidak ada update aplikasi.", "")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
+	defer cancel()
+	return update.Download(ctx, appUpdate, filepath.Join(state, "cache", "updates"))
+}
+
+func (a *App) ApplyAppUpdate() error {
+	state, err := platform.Current().StateDir()
+	if err != nil {
+		return err
+	}
+	appUpdate, err := a.checkAppUpdate(state)
+	if err != nil {
+		return err
+	}
+	if appUpdate == nil {
+		return devlokerr.New(devlokerr.CodeInvalidArgument, "Tidak ada update aplikasi.", "")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
+	defer cancel()
+	path, err := update.Download(ctx, appUpdate, filepath.Join(state, "cache", "updates"))
+	if err != nil {
+		return err
+	}
+	if err := update.LaunchInstallerDetached(path); err != nil {
+		return err
+	}
+	go a.quitApp()
+	return nil
+}
+
+func (a *App) RollbackAppUpdate() error {
+	exe, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	appDir := filepath.Dir(exe)
+	backup := update.RollbackBackupDir(appDir)
+	if _, err := os.Stat(filepath.Join(backup, "devlok-gui.exe")); err != nil {
+		return devlokerr.New(devlokerr.CodeDependencyMissing, "Backup aplikasi sebelumnya tidak ditemukan.", "Rollback hanya tersedia setelah upgrade melalui installer DevLok.")
+	}
+	if err := update.ScheduleRollback(appDir); err != nil {
+		return err
+	}
+	go a.quitApp()
+	return nil
+}
 func (a *App) Version() string {
 	return version.Current().Version
 }

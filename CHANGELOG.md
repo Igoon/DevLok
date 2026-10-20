@@ -6,6 +6,11 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ### Added
 
+- Tab Update di GUI: cek update, unduh installer, apply, dan rollback.
+- Update aplikasi via GitHub Releases dengan fallback checksum `.sha256`.
+- Signed update manifest Ed25519 dan tool `devlok-release`.
+- Installer check WebView2/Windows 22H2 dan smoke test otomatis.
+- Release GitHub otomatis untuk ZIP, installer, checksum, dan manifest.
 - CLI `dl` dengan `doctor`, `init`, `version`, `ports`, dan `runtime`.
 - Manifest `.devlok.yaml` dengan validasi ketat dan default.
 - Runtime manager: registry, download resume, SHA256, ekstraksi aman, mode offline.
