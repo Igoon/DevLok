@@ -164,7 +164,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == ''workflow_dispatch'' && inputs.tag || github.ref }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
       - uses: actions/setup-go@v5
         with:
           go-version: "1.25"
@@ -177,7 +177,7 @@ jobs:
       - name: Verify update from old version
         shell: powershell
         env:
-          TAG: ${{ github.event_name == ''workflow_dispatch'' && inputs.tag || github.ref_name }}
+          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
         run: |
           $latest = ((& .\tmp\dl.exe update --json | Out-String | ConvertFrom-Json).data.app_update.latest)
           if (-not $latest) { throw "update aplikasi tidak terdeteksi" }
