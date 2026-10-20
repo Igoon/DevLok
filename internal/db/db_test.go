@@ -3,6 +3,7 @@ package db
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -48,6 +49,9 @@ func TestRandomPassword(t *testing.T) {
 }
 
 func TestCredsSealed(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("DPAPI hanya tersedia di Windows")
+	}
 	state := t.TempDir()
 	m, err := New(Options{StateDir: state, Version: "8.4"})
 	if err != nil {
