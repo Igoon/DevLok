@@ -158,3 +158,41 @@ jobs:
             dist/*.exe
             dist/*.sha256
             dist/updates.json
+  verify-update:
+    needs: windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == ''workflow_dispatch'' && inputs.tag || github.ref }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache: true
+      - name: Build old client
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Path tmp -Force | Out-Null
+          go build -trimpath -ldflags "-X devlok/internal/version.Version=0.0.1-dev" -o tmp\dl.exe ./cmd/dl
+      - name: Verify update from old version
+        shell: powershell
+        env:
+          TAG: ${{ github.event_name == ''workflow_dispatch'' && inputs.tag || github.ref_name }}
+        run: |
+          $latest = ((& .\tmp\dl.exe update --json | Out-String | ConvertFrom-Json).data.app_update.latest)
+          if (-not $latest) { throw "update aplikasi tidak terdeteksi" }
+          if ("v$latest" -ne $env:TAG) { throw "update $latest tidak cocok dengan tag $env:TAG" }
+          & .\tmp\dl.exe update download
+          if ($LASTEXITCODE -ne 0) { throw "download update gagal" }
+          $setup = Get-ChildItem "$env:USERPROFILE\.devlok\cache\updates" -Filter "*$latest*.exe" | Select-Object -First 1
+          if (-not $setup) { throw "installer update tidak ditemukan" }
+          $dir = Join-Path $env:RUNNER_TEMP "DevLokUpdateE2E"
+          $p = Start-Process -FilePath $setup.FullName -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/DIR=$dir" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "installer update exit $($p.ExitCode)" }
+          $installed = (& "$dir\dl.exe" version).ToString()
+          if ($installed -notmatch [regex]::Escape($latest)) { throw "versi terpasang tidak cocok: $installed" }
+          $unins = Get-ChildItem $dir -Filter "unins*.exe" | Select-Object -First 1
+          if ($unins) {
+            $u = Start-Process -FilePath $unins.FullName -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART" -Wait -PassThru
+            if ($u.ExitCode -ne 0) { throw "uninstaller exit $($u.ExitCode)" }
+          }

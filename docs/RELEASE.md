@@ -60,6 +60,8 @@ git push origin v0.1.0-dev
 
 Workflow membangun portable ZIP dan installer, mengunggah artifact, lalu membuat GitHub Release. Tag yang mengandung `-` dibuat sebagai pre-release.
 
+Setelah rilis, job `verify-update` membangun client versi lama `0.0.1-dev`, mendeteksi update dari GitHub, mengunduh installer, memasangnya silent, memverifikasi versi, lalu uninstall.
+
 Aset rilis:
 
 - `DevLok-<versi>-win64.zip`
