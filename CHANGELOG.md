@@ -104,4 +104,4 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [0.1.0] - 2026-10-20
 
-Rilis Windows pertama. Detail perubahan ada di 0.1.1.
+Fondasi Windows. Tidak dirilis sebagai stable terpisah; fitur digabung ke rilis 0.1.1.

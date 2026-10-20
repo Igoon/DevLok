@@ -6,8 +6,8 @@ Dokumen ini merangkum perjalanan fitur DevLok dari versi awal sampai rencana v0.
 
 | Versi | Tanggal | Status | Fokus |
 |---|---|---|---|
-| `0.1.0` | 20 Oktober 2026 | Rilis | Fondasi Windows: runtime, service, site, database, GUI, tray |
-| `0.1.1` | 20 Oktober 2026 | Rilis stable | Update system, installer, release pipeline, GUI update, hardening |
+| `0.1.0-dev` | 20 Oktober 2026 | Snapshot pengembangan | Fondasi Windows: runtime, service, site, database, GUI, tray |
+| `0.1.1` | 20 Oktober 2026 | Rilis stable pertama | Update system, installer, release pipeline, GUI update, hardening |
 | `0.1.2` | TBD | Direncanakan | ARM64, MySQL 8.0 opsional, Mailpit, perbaikan stabilitas |
 | `0.2.0` | TBD | Direncanakan | Dukungan macOS: platform, runtime, GUI, `.app`/`.dmg`, signing |
 
@@ -15,10 +15,11 @@ Rilis `0.1.0-dev`, `0.1.1-dev`, dan `0.1.1-dev.2` sampai `.4` adalah snapshot pe
 
 ---
 
-## 0.1.0 - Fondasi Windows
+## 0.1.0-dev - Fondasi Windows
 
-**Status:** rilis  
-**Platform:** Windows 10 22H2+ / Windows 11 x64
+**Status:** snapshot pengembangan  
+**Platform:** Windows 10 22H2+ / Windows 11 x64  
+**Catatan:** tidak dirilis sebagai stable terpisah; fitur fondasi digabung ke `0.1.1`.
 
 ### Runtime dan Service
 
