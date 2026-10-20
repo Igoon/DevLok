@@ -275,6 +275,7 @@ Paket yang menyusul: `db`, `importlaragon`, `api`, `desktop/`, `templates/`, `in
 | [docs/RELEASE.md](docs/RELEASE.md) | Build portable, installer, GitHub Release, dan rollback |
 | [docs/TIMELINE.md](docs/TIMELINE.md) | Timeline fitur 0.1.0 sampai rencana 0.2.0 |
 | [docs/MACOS.md](docs/MACOS.md) | Status, prasyarat, dan batasan macOS |
+| [docs/MACOS-SIGNING.md](docs/MACOS-SIGNING.md) | Signing dan notarization macOS |
 | [docs/LARAGON-GAPS.md](docs/LARAGON-GAPS.md) | Audit kekurangan Laragon vs DevLok |
 | [docs/STITCH_PROMPTS.md](docs/STITCH_PROMPTS.md) | Prompt Google Stitch untuk alternatif UI app dan tray |
 | [docs/adr/](docs/adr/) | Architecture Decision Records |
