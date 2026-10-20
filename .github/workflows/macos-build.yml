@@ -53,7 +53,7 @@ jobs:
             brew install nginx php mysql
 
           Aplikasi belum ditandatangani/notarized.
-          'EOF'
+          EOF
           hdiutil create -volname DevLok -srcfolder "$staging" -ov -format UDZO "dist/DevLok-macos-intel.dmg"
           ls -lh dist
       - uses: actions/upload-artifact@v4
