@@ -69,7 +69,7 @@ Nama project dan file config harus diperlakukan case-sensitive secara logis, mes
 
 - macOS v0.2.0 memakai Homebrew untuk Nginx, PHP (PHP-FPM), dan MySQL.
 - MySQL memakai data dir dan kredensial milik DevLok, bukan data Homebrew.
-- phpMyAdmin belum tersedia di macOS.
+- phpMyAdmin tersedia di macOS menggunakan PHP Homebrew dan MySQL DevLok.
 - Port default macOS: HTTP 8080, HTTPS 8443.
 - Packaging `.app`/`.dmg` unsigned tersedia sebagai artifact CI.
 - Manifest runtime memakai field `os` dan `arch`, sehingga sumber berbeda per platform adalah hal normal.
