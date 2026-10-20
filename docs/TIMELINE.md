@@ -214,8 +214,8 @@ Rilis `0.1.0-dev`, `0.1.1-dev`, dan `0.1.1-dev.2` sampai `.4` adalah snapshot pe
 - CI macOS Intel (`macos-15-intel`) berhasil: vet, test, race test, dan build.
 - Kode GUI/tray macOS berhasil dikompilasi.
 - Workflow `macos-build` menghasilkan `.app`, ZIP, dan `.dmg` unsigned sebagai artifact.
-- Homebrew fallback untuk Nginx dan PHP.
-- PHP-FPM dan Nginx Homebrew dijalankan lewat supervisor.
+- Homebrew fallback untuk Nginx, PHP, dan MySQL.
+- PHP-FPM, Nginx, dan MySQL Homebrew dijalankan lewat supervisor.
 - Port default macOS: HTTP 8080, HTTPS 8443.
 - Workflow `macos-runtime` berhasil menjalankan Nginx + PHP-FPM Homebrew, mengakses `http://127.0.0.1:8080/`, lalu `dl down`.
 - MySQL di macOS belum dikelola DevLok; gunakan MySQL eksternal.
