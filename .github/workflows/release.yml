@@ -65,11 +65,16 @@ jobs:
           $version = (Get-Content (Get-ChildItem dist\DevLok -Directory | Select-Object -First 1).FullName\VERSION).Trim()
           if ("v$version" -ne $env:TAG) { throw "Tag $env:TAG tidak cocok dengan versi aplikasi v$version" }
           $assets = Get-ChildItem dist -File | Where-Object { $_.Name -match '\.(zip|exe|sha256)$' } | ForEach-Object { $_.FullName }
-          gh release view $env:TAG 2>$null
+          gh release view $env:TAG *> $null
           if ($LASTEXITCODE -eq 0) {
-            gh release upload $env:TAG $assets --clobber
+            $out = gh release upload $env:TAG $assets --clobber 2>&1
           } elseif ($env:TAG -match '-') {
-            gh release create $env:TAG $assets --title "DevLok $env:TAG" --generate-notes --prerelease
+            $out = gh release create $env:TAG $assets --title "DevLok $env:TAG" --generate-notes --prerelease 2>&1
           } else {
-            gh release create $env:TAG $assets --title "DevLok $env:TAG" --generate-notes
+            $out = gh release create $env:TAG $assets --title "DevLok $env:TAG" --generate-notes 2>&1
           }
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::error title=publish release::$($out -join ' ')"
+            exit 1
+          }
+          $out
