@@ -49,6 +49,21 @@ jobs:
             Write-Host "::error title=release package::$($_.Exception.Message)"
             throw
           }
+      - name: Installer smoke test
+        shell: powershell
+        run: |
+          $setup = Get-ChildItem dist\DevLok-Setup-*.exe | Select-Object -First 1
+          if (-not $setup) { throw "installer tidak ditemukan" }
+          $dir = Join-Path $env:RUNNER_TEMP "DevLokInstall"
+          $p = Start-Process -FilePath $setup.FullName -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/DIR=$dir" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "installer exit $($p.ExitCode)" }
+          & "$dir\dl.exe" version
+          if ($LASTEXITCODE -ne 0) { throw "dl version gagal" }
+          $unins = Get-ChildItem $dir -Filter "unins*.exe" | Select-Object -First 1
+          if ($unins) {
+            $u = Start-Process -FilePath $unins.FullName -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART" -Wait -PassThru
+            if ($u.ExitCode -ne 0) { throw "uninstaller exit $($u.ExitCode)" }
+          }
       - uses: actions/upload-artifact@v4
         with:
           name: DevLok-windows

@@ -1,5 +1,11 @@
 # DevLok
 
+## Download
+
+- [GitHub Releases](https://github.com/Igoon/DevLok/releases)
+- Portable ZIP dan installer Windows tersedia di halaman rilis.
+- Installer belum ditandatangani Authenticode.
+
 Local development environment untuk Windows: Nginx + PHP + MySQL, dengan GUI dan CLI. Dibuat sebagai alternatif Laragon yang reproducible, aman secara default, dan siap diport ke macOS.
 
 - **Versi awal**: `0.1.0` (Windows 10 22H2+ / Windows 11, x64)
