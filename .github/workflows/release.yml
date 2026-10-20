@@ -107,10 +107,13 @@ jobs:
           } | ConvertTo-Json -Depth 5
           $payloadPath = Join-Path $env:RUNNER_TEMP "update-payload.json"
           $keyPath = Join-Path $env:RUNNER_TEMP "update-signing.key"
+          $keyData = [Convert]::FromBase64String($env:UPDATE_SIGNING_KEY.Trim())
+          if ($keyData.Length -notin 32, 64) { Write-Host "::error title=manifest key::panjang key $($keyData.Length) byte, harus 32 atau 64"; exit 1 }
           Set-Content -LiteralPath $payloadPath -Value $payload -NoNewline -Encoding utf8
-          Set-Content -LiteralPath $keyPath -Value $env:UPDATE_SIGNING_KEY -NoNewline -Encoding ascii
-          go run ./cmd/devlok-release sign -key $keyPath -payload $payloadPath -out dist\updates.json
-          if ($LASTEXITCODE -ne 0) { throw "sign manifest gagal" }
+          Set-Content -LiteralPath $keyPath -Value ([Convert]::ToBase64String($keyData)) -NoNewline -Encoding ascii
+          $signOut = & go run ./cmd/devlok-release sign -key $keyPath -payload $payloadPath -out dist\updates.json 2>&1
+          $signOut
+          if ($LASTEXITCODE -ne 0) { Write-Host "::error title=manifest sign::$($signOut -join ' ')"; exit 1 }
           Remove-Item $keyPath, $payloadPath -Force
       - name: Installer smoke test
         shell: powershell
