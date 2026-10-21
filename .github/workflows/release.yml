@@ -40,7 +40,9 @@ jobs:
           go build -trimpath -o build\bin\dl-helper.exe ./cmd/dl-helper
       - name: Build GUI
         working-directory: desktop
-        run: wails build -clean
+        run: |
+          Copy-Item -LiteralPath assets\app.ico -Destination build\windows\icon.ico -Force
+          wails build -clean
       - name: Sign binaries
         shell: powershell
         env:
