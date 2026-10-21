@@ -53,6 +53,37 @@ Data MySQL, kredensial, log, certificate, dan runtime shim berada di state dir D
 - DMG unsigned berisi aplikasi, symlink Applications, README prasyarat, dan `dl-helper` di dalam bundle.
 - CI Intel dan Apple Silicon.
 
+## Tanpa Apple Developer Berbayar
+
+Apple hanya mengizinkan distribusi macOS yang dipercaya secara otomatis melalui Developer ID dan notarization. Tanpa itu, tidak ada cara resmi agar aplikasi publik langsung lolos Gatekeeper.
+
+Pilihan tanpa biaya:
+
+1. **Build lokal**
+   ```bash
+   ./scripts/build-macos.sh
+   ```
+   Menghasilkan `dist/DevLok-macos-local.zip` dan `.dmg` dengan ad-hoc signature. Aplikasi yang dibangun sendiri di Mac biasanya tidak memiliki atribut quarantine, sehingga dapat dibuka.
+
+2. **Tester tepercaya**
+   Unduh DMG unsigned, lalu:
+   ```bash
+   xattr -dr com.apple.quarantine /Applications/DevLok.app
+   ```
+   Ini melewati Gatekeeper. Hanya untuk tester yang Anda percaya, bukan distribusi publik.
+
+3. **Build dari source**
+   Pengguna menjalankan build macOS sendiri. Ini menghindari masalah quarantine dan tidak membutuhkan certificate.
+
+4. **Homebrew tap**
+   Distribusi untuk pengguna teknis; belum diimplementasikan dan tidak menggantikan notarization.
+
+Yang tidak disarankan:
+- Mematikan Gatekeeper global dengan `spctl --master-disable`.
+- Membagikan private key atau certificate self-signed sebagai solusi publik.
+
+Untuk distribusi publik yang aman, tetap diperlukan Apple Developer Program berbayar.
+
 ## Batasan
 
 - Installer macOS belum tersedia.
