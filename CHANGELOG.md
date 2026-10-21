@@ -4,6 +4,13 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-10-20
+
+### Fixed
+
+- Tombol Database memakai URL phpMyAdmin langsung dari state stack, sama seperti tray.
+- Dashboard refresh dan tombol Database konsisten setelah Start All.
+
 ## [0.1.4] - 2026-10-20
 
 ### Fixed

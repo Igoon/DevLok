@@ -218,6 +218,10 @@ func (a *App) Status() StatusView {
 	}
 }
 
+func (a *App) PHPMyAdminURL() string {
+	return activePHPMyAdminURL()
+}
+
 func (a *App) Up(path string) (stack.Result, error) {
 	if path == "" {
 		return stack.Result{}, devlokerr.New(devlokerr.CodeInvalidArgument, "Pilih folder project terlebih dahulu.", "")

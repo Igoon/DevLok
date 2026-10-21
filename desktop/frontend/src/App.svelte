@@ -83,6 +83,7 @@
   let updateBusy = false
   let updateNotice = ''
   let refreshToken = 0
+  let pmaURL = ''
 
   const serviceRuntimeNames = new Set(['nginx', 'php', 'mysql', 'node', 'phpmyadmin'])
   $: extraRuntimes = runtimes.filter((r) => !serviceRuntimeNames.has(r.name))
@@ -253,6 +254,7 @@
       if (token !== refreshToken) return
       status = s
       sites = si
+      try { pmaURL = await app.PHPMyAdminURL() } catch { pmaURL = '' }
       if (!versionLoaded) {
         version = await app.Version()
         versionLoaded = true
@@ -532,16 +534,6 @@
     run('Membuka terminal...', () => api().OpenTerminal(path))
   }
 
-  function phpMyAdminURL() {
-    if (!status.url) return ''
-    try {
-      const u = new URL(status.url)
-      return `${u.protocol}//phpmyadmin.test${u.port ? ':' + u.port : ''}`
-    } catch {
-      return ''
-    }
-  }
-
   function serviceState(name: string) {
     const list = status.services || []
     const svc = list.find((s: any) => s.name === name || (name === 'mysql' && s.name.startsWith('mysql-')))
@@ -562,7 +554,6 @@
   }
 
   $: activeSite = sites.find((s) => s.path === selectedPath) || null
-  $: pmaURL = phpMyAdminURL()
 
   onMount(() => {
     refresh(false)
