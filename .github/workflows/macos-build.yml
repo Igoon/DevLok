@@ -67,6 +67,8 @@ jobs:
             codesign --force --options runtime --timestamp --sign "$identity" "$app/Contents/MacOS/dl-helper"
             codesign --force --options runtime --timestamp --sign "$identity" "$app"
             codesign --verify --deep --strict --verbose=2 "$app"
+          else
+            codesign --force --deep --sign - "$app"
           fi
           mkdir -p dist
           ditto -c -k --sequesterRsrc --keepParent "$app" "dist/DevLok-macos-intel.zip"
