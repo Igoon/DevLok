@@ -4,6 +4,19 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-20
+
+### Added
+
+- Icon aplikasi DevLok menggantikan icon default Wails.
+- Update runtime langsung dari tab Update GUI.
+- Tombol update PHP/Nginx/MySQL/Node beserta perubahan project dan restart stack.
+
+### Fixed
+
+- Icon Windows tidak lagi memakai huruf W bawaan Wails.
+- Update runtime tidak lagi harus lewat CLI.
+
 ## [0.1.1] - 2026-10-20
 
 ### Added

@@ -468,6 +468,21 @@
     }
   }
 
+  async function updateRuntime(u: any) {
+    if (!confirm('Pasang ' + u.name + ' ' + u.latest + ' dan ubah project aktif?')) return
+    updateBusy = true
+    error = ''
+    updateNotice = ''
+    try {
+      updateNotice = await api().InstallRuntimeUpdate(u.name, u.latest)
+      await loadUpdates()
+    } catch (e) {
+      error = message(e)
+    } finally {
+      updateBusy = false
+    }
+  }
+
   function copyRuntimeCommand(u: any) {
     navigator.clipboard?.writeText('dl runtime add ' + u.name + '@' + u.latest)
     updateNotice = 'Perintah disalin.'
@@ -954,6 +969,7 @@
                   <span class="pill running">{u.installed} &rarr; {u.latest}</span>
                 </div>
                 <div class="form-row">
+                  <button class="primary" on:click={() => updateRuntime(u)} disabled={updateBusy}>Update ke {u.latest}</button>
                   <button on:click={() => copyRuntimeCommand(u)}>Salin perintah</button>
                 </div>
               </div>

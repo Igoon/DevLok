@@ -822,6 +822,40 @@ func (a *App) UpdateInfo() (UpdateInfoView, error) {
 	return out, nil
 }
 
+func (a *App) InstallRuntimeUpdate(name, version string) (string, error) {
+	mgr, err := a.runtimeManager()
+	if err != nil {
+		return "", err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	defer cancel()
+	inst, _, err := mgr.Install(ctx, name, version)
+	if err != nil {
+		return "", err
+	}
+	project := a.trayProjectPath()
+	if project == "" {
+		return "Runtime " + inst.Name + " " + inst.Version + " terpasang. Belum ada site aktif untuk diperbarui.", nil
+	}
+	if err := a.SetServiceVersion(project, name, inst.Version); err != nil {
+		return "", err
+	}
+	message := "Runtime " + inst.Name + " " + inst.Version + " terpasang dan project diperbarui."
+	if name != "node" {
+		if st, err := stack.LoadState(""); err == nil && sameTrayPath(st.ProjectDir, project) {
+			if err := stack.Down(""); err != nil {
+				return message, err
+			}
+			upCtx, upCancel := context.WithTimeout(context.Background(), 30*time.Minute)
+			defer upCancel()
+			if _, err := stack.Up(upCtx, stack.Options{ProjectDir: project}); err != nil {
+				return message, err
+			}
+			message += " Stack direstart."
+		}
+	}
+	return message, nil
+}
 func (a *App) DownloadAppUpdate() (string, error) {
 	state, err := platform.Current().StateDir()
 	if err != nil {
