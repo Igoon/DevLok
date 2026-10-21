@@ -841,6 +841,9 @@ func (a *App) InstallRuntimeUpdate(name, version string) (string, error) {
 		return "", err
 	}
 	message := "Runtime " + inst.Name + " " + inst.Version + " terpasang dan project diperbarui."
+	if name == "mysql" {
+		message += " Data MySQL tidak dimigrasikan otomatis; restore dump lama bila diperlukan."
+	}
 	if name != "node" {
 		if st, err := stack.LoadState(""); err == nil && sameTrayPath(st.ProjectDir, project) {
 			if err := stack.Down(""); err != nil {

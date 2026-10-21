@@ -469,7 +469,8 @@
   }
 
   async function updateRuntime(u: any) {
-    if (!confirm('Pasang ' + u.name + ' ' + u.latest + ' dan ubah project aktif?')) return
+    const extra = u.name === 'mysql' ? '\n\nData MySQL tidak dimigrasikan otomatis. Backup database lama sebelum berpindah versi mayor.' : ''
+    if (!confirm('Pasang ' + u.name + ' ' + u.latest + ' dan ubah project aktif?' + extra)) return
     updateBusy = true
     error = ''
     updateNotice = ''
