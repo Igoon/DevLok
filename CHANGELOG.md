@@ -4,6 +4,15 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-10-20
+
+### Fixed
+
+- Dashboard refresh setelah Start All memakai sequence guard dan polling sampai status running.
+- Tab Dashboard me-refresh status saat dibuka.
+- Tombol Database memberi pesan jika URL phpMyAdmin belum tersedia.
+- Polling status dipercepat menjadi 3 detik.
+
 ## [0.1.3] - 2026-10-20
 
 ### Fixed

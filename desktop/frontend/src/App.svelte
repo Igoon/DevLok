@@ -82,6 +82,7 @@
   let updateInfo: any = null
   let updateBusy = false
   let updateNotice = ''
+  let refreshToken = 0
 
   const serviceRuntimeNames = new Set(['nginx', 'php', 'mysql', 'node', 'phpmyadmin'])
   $: extraRuntimes = runtimes.filter((r) => !serviceRuntimeNames.has(r.name))
@@ -245,9 +246,11 @@
   }
 
   async function refresh(silent = true) {
+    const token = ++refreshToken
     try {
       const app = api()
       const [s, si] = await Promise.all([app.Status(), app.Sites()])
+      if (token !== refreshToken) return
       status = s
       sites = si
       if (!versionLoaded) {
@@ -383,6 +386,11 @@
       await loadComponents(path)
       const result = await api().Up(path)
       notice = (result?.warnings || []).join(' | ')
+      for (let i = 0; i < 8; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 400))
+        await refresh(true)
+        if (status.running) break
+      }
       await loadLogs()
     })
   }
@@ -497,6 +505,14 @@
     }
   }
 
+  function openDatabase() {
+    if (!pmaURL) {
+      error = 'URL phpMyAdmin belum tersedia. Jalankan Start All terlebih dahulu.'
+      return
+    }
+    openURL(pmaURL)
+  }
+
   function openURL(url: string) {
     if (!url) return
     run('Membuka browser...', () => api().OpenURL(url))
@@ -550,7 +566,7 @@
 
   onMount(() => {
     refresh(false)
-    timer = window.setInterval(() => refresh(true), 5000)
+    timer = window.setInterval(() => refresh(true), 3000)
   })
 
   onDestroy(() => {
@@ -562,7 +578,7 @@
   <header class="topbar">
     <div class="brand">DevLok <span>local dev</span></div>
     <nav class="tabs">
-      <button class:active={tab === 'dashboard'} on:click={() => (tab = 'dashboard')}>Dashboard</button>
+      <button class:active={tab === 'dashboard'} on:click={() => { tab = 'dashboard'; refresh(true) }}>Dashboard</button>
       <button class:active={tab === 'sites'} on:click={() => (tab = 'sites')}>Sites</button>
       <button class:active={tab === 'logs'} on:click={() => (tab = 'logs')}>Logs</button>
       <button class:active={tab === 'config'} on:click={openConfig}>Konfigurasi</button>
@@ -662,7 +678,7 @@
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/></svg>
           Web
         </button>
-        <button class="tool" on:click={() => openURL(pmaURL)} disabled={!status.running || !dbEnabled || !pmaEnabled || !!busy}>
+        <button class="tool" on:click={openDatabase} disabled={!status.running || !dbEnabled || !pmaEnabled || !!busy}>
           <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v6c0 1.7 3.1 3 7 3s7-1.3 7-3V5M5 11v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>
           Database
         </button>
