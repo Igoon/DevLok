@@ -41,6 +41,7 @@ jobs:
       - name: Build GUI
         working-directory: desktop
         run: |
+          New-Item -ItemType Directory -Path build\windows -Force | Out-Null
           Copy-Item -LiteralPath assets\app.ico -Destination build\windows\icon.ico -Force
           wails build -clean
       - name: Sign binaries

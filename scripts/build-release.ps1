@@ -15,6 +15,7 @@ if (-not $SkipBuild) {
     & go build -trimpath -o (Join-Path $root "build\bin\dl-helper.exe") ./cmd/dl-helper
     if ($LASTEXITCODE -ne 0) { throw "go build helper gagal" }
 
+    New-Item -ItemType Directory -Path (Join-Path $root "desktop\build\windows") -Force | Out-Null
     Copy-Item -LiteralPath (Join-Path $root "desktop\assets\app.ico") -Destination (Join-Path $root "desktop\build\windows\icon.ico") -Force
     Write-Host "Build GUI..."
     $wails = Join-Path $env:USERPROFILE "go\bin\wails.exe"
