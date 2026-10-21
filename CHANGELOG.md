@@ -4,6 +4,12 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-10-21
+
+### Changed
+
+- Icon aplikasi dan installer memakai inisial DL.
+
 ## [0.1.5] - 2026-10-20
 
 ### Fixed
