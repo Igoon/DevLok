@@ -4,6 +4,15 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-20
+
+### Fixed
+
+- Updater Windows memakai file `.cmd` sementara, menghindari error `Windows cannot find //`.
+- Rollback Windows memakai mekanisme script yang sama.
+- Icon aplikasi dan installer memakai icon DevLok.
+- Update runtime dari GUI beserta peringatan migrasi MySQL.
+
 ## [0.1.2] - 2026-10-20
 
 ### Added
