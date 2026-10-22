@@ -33,12 +33,26 @@ type Version struct {
 }
 
 type Artifact struct {
-	URL         string   `json:"url"`
-	SHA256      string   `json:"sha256"`
-	Size        int64    `json:"size,omitempty"`
-	Archive     string   `json:"archive"`
-	Filename    string   `json:"filename,omitempty"`
-	Executables []string `json:"executables"`
+	URL          string   `json:"url"`
+	URLFallbacks []string `json:"url_fallbacks,omitempty"`
+	SHA256       string   `json:"sha256"`
+	Size         int64    `json:"size,omitempty"`
+	Archive      string   `json:"archive"`
+	Filename     string   `json:"filename,omitempty"`
+	Executables  []string `json:"executables"`
+}
+
+func (a Artifact) downloadURLs() []string {
+	urls := make([]string, 0, 1+len(a.URLFallbacks))
+	if a.URL != "" {
+		urls = append(urls, a.URL)
+	}
+	for _, u := range a.URLFallbacks {
+		if u != "" {
+			urls = append(urls, u)
+		}
+	}
+	return urls
 }
 
 type Resolved struct {
@@ -134,9 +148,13 @@ func validateRegistry(reg Registry) error {
 }
 
 func validateArtifact(name, version string, a Artifact) error {
-	u, err := url.Parse(a.URL)
-	if err != nil || u.Scheme != "https" || u.Host == "" {
+	if !validArtifactURL(a.URL) {
 		return devlokerr.New(devlokerr.CodeInternal, "URL artifact tidak valid: "+name+" "+version, "Gunakan URL HTTPS.")
+	}
+	for _, fallback := range a.URLFallbacks {
+		if !validArtifactURL(fallback) {
+			return devlokerr.New(devlokerr.CodeInternal, "URL fallback tidak valid: "+name+" "+version, "Gunakan URL HTTPS.")
+		}
 	}
 	if !sha256Re.MatchString(a.SHA256) {
 		return devlokerr.New(devlokerr.CodeInternal, "SHA256 tidak valid: "+name+" "+version, "")
@@ -158,6 +176,11 @@ func validateArtifact(name, version string, a Artifact) error {
 		return devlokerr.New(devlokerr.CodeInternal, "Nama file tidak aman: "+a.Filename, "")
 	}
 	return nil
+}
+
+func validArtifactURL(raw string) bool {
+	u, err := url.Parse(raw)
+	return err == nil && u.Scheme == "https" && u.Host != ""
 }
 
 func safeRelative(p string) bool {

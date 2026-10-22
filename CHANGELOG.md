@@ -4,6 +4,12 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-10-22
+
+### Fixed
+
+- Unduhan runtime mencoba `url_fallbacks` bila URL utama gagal, mis. arsip PHP lama di windows.php.net.
+
 ## [0.1.6] - 2026-10-21
 
 ### Changed

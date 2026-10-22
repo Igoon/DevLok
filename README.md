@@ -8,8 +8,8 @@
 
 Local development environment untuk Windows: Nginx + PHP + MySQL, dengan GUI dan CLI. Dibuat sebagai alternatif Laragon yang reproducible, aman secara default, dan siap diport ke macOS.
 
-- **Versi awal**: `0.1.6` (Windows 10 22H2+ / Windows 11, x64)
-- **Status**: `0.1.6` stable untuk Windows. macOS memakai Homebrew fallback untuk Nginx/PHP/MySQL; packaging unsigned sudah tersedia sebagai artifact.
+- **Versi awal**: `0.1.7` (Windows 10 22H2+ / Windows 11, x64)
+- **Status**: `0.1.7` stable untuk Windows. macOS memakai Homebrew fallback untuk Nginx/PHP/MySQL; packaging unsigned sudah tersedia sebagai artifact.
 - **Stack**: Go + Wails v2 + Svelte + TypeScript
 - **Binary**: `dl.exe` (CLI), `devlok-gui.exe` (GUI Wails), `dl-helper.exe` (hosts privileged)
 - **Manifest project**: `.devlok.yaml` + `.devlok.lock`

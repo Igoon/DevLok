@@ -184,6 +184,40 @@ func TestInstallVerifyRemove(t *testing.T) {
 	}
 }
 
+func TestInstallFallsBackToMirror(t *testing.T) {
+	zipData := buildZip(t, map[string]string{"tool-1.0.0/tool.exe": "binary"})
+	fallbackHits := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/missing.zip" {
+			http.NotFound(w, r)
+			return
+		}
+		fallbackHits++
+		http.ServeContent(w, r, "tool.zip", time.Now(), bytes.NewReader(zipData))
+	}))
+	defer server.Close()
+
+	reg := testRegistry(server.URL+"/missing.zip", sha(zipData), int64(len(zipData)))
+	artifact := reg[0].Versions[0].Artifacts["windows/amd64"]
+	artifact.URLFallbacks = []string{server.URL + "/tool.zip"}
+	reg[0].Versions[0].Artifacts["windows/amd64"] = artifact
+
+	m := newTestManager(t, reg, server.Client())
+	inst, downloaded, err := m.Install(context.Background(), "tool", "1.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !downloaded {
+		t.Fatal("install should download from fallback")
+	}
+	if fallbackHits != 1 {
+		t.Fatalf("fallback hits = %d, want 1", fallbackHits)
+	}
+	if _, err := os.Stat(filepath.Join(inst.Path, "tool.exe")); err != nil {
+		t.Fatalf("executable missing: %v", err)
+	}
+}
+
 func TestInstallChecksumMismatch(t *testing.T) {
 	zipData := buildZip(t, map[string]string{"tool-1.0.0/tool.exe": "binary"})
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -371,6 +405,13 @@ func TestParseRegistryRejectsBadSHA(t *testing.T) {
 	data := []byte(`{"schema":1,"name":"x","display":"X","versions":[{"version":"1.0.0","artifacts":{"windows/amd64":{"url":"https://example.com/x.zip","sha256":"nope","archive":"zip","executables":["x.exe"]}}}]}`)
 	if _, err := ParseRegistry(data); err == nil {
 		t.Fatal("expected invalid sha error")
+	}
+}
+
+func TestParseRegistryRejectsBadFallbackURL(t *testing.T) {
+	data := []byte(`{"schema":1,"name":"x","display":"X","versions":[{"version":"1.0.0","artifacts":{"windows/amd64":{"url":"https://example.com/x.zip","url_fallbacks":["http://example.com/x.zip"],"sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","archive":"zip","executables":["x.exe"]}}}]}`)
+	if _, err := ParseRegistry(data); err == nil {
+		t.Fatal("expected invalid fallback url error")
 	}
 }
 

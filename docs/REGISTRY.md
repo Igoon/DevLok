@@ -65,6 +65,7 @@ File saat ini:
 | Field | Wajib | Keterangan |
 |---|---|---|
 | `url` | Ya | HTTPS |
+| `url_fallbacks` | Tidak | Daftar URL HTTPS cadangan; dicoba berurutan jika `url` gagal |
 | `sha256` | Ya | 64 karakter hex huruf kecil |
 | `size` | Tidak | Ukuran byte, untuk progress dan verifikasi awal |
 | `archive` | Ya | `zip`, `tar.gz`, atau `file` |
@@ -80,6 +81,7 @@ File saat ini:
 5. Folder root tunggal dihapus otomatis agar layout konsisten.
 6. Semua `executables` harus ada sebelum runtime dianggap terpasang.
 7. Marker `.devlok-runtime.json` ditulis setelah verifikasi; tanpa marker, runtime dianggap belum terpasang.
+8. Jika `url` gagal, `url_fallbacks` dicoba berurutan. Checksum tetap satu dan harus cocok dengan isi salah satu URL.
 
 ## 5. Menambah versi
 
@@ -105,6 +107,6 @@ Versi yang tidak punya artifact untuk platform aktif tidak akan dipilih oleh res
 ## 7. Batasan
 
 - Registry belum mendukung signature PGP; integritas mengandalkan SHA256 dari registry yang di-review.
-- Tidak ada mirror otomatis. Jika upstream menghapus versi lama, tambahkan mirror tepercaya secara eksplisit.
+- Tidak ada mirror otomatis. Jika upstream menghapus versi lama, tambahkan URL cadangan tepercaya di `url_fallbacks` secara eksplisit.
 - Runtime yang diunduh tidak dibundel di installer.
 - Verifikasi ulang isi direktori terpasang tidak dilakukan; `runtime verify` memeriksa marker, executable, dan checksum arsip cache.

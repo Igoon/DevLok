@@ -126,7 +126,7 @@ func (m *Manager) Install(ctx context.Context, name, constraint string) (Install
 		}
 		_ = os.Remove(archivePath)
 		m.notify(Progress{Phase: "download", Name: name, Version: res.Version.Version, Total: res.Artifact.Size})
-		if err := m.download(ctx, res.Artifact.URL, archivePath, res.Artifact.SHA256, res.Artifact.Size, name, res.Version.Version); err != nil {
+		if err := m.download(ctx, res.Artifact.downloadURLs(), archivePath, res.Artifact.SHA256, res.Artifact.Size, name, res.Version.Version); err != nil {
 			return Installed{}, false, err
 		}
 		downloaded = true
@@ -300,7 +300,28 @@ func parseBase(raw string) (string, error) {
 	return raw[i+1:], nil
 }
 
-func (m *Manager) download(ctx context.Context, rawURL, dest, wantSHA string, wantSize int64, name, version string) error {
+func (m *Manager) download(ctx context.Context, urls []string, dest, wantSHA string, wantSize int64, name, version string) error {
+	if len(urls) == 0 {
+		return devlokerr.New(devlokerr.CodeDependencyMissing, "URL runtime kosong untuk "+name+"@"+version, "Periksa registry runtime.")
+	}
+	var lastErr error
+	for i, rawURL := range urls {
+		if i > 0 {
+			_ = os.Remove(dest + ".part")
+		}
+		err := m.downloadOne(ctx, rawURL, dest, wantSHA, wantSize, name, version)
+		if err == nil {
+			return nil
+		}
+		if ctx.Err() != nil {
+			return err
+		}
+		lastErr = err
+	}
+	return lastErr
+}
+
+func (m *Manager) downloadOne(ctx context.Context, rawURL, dest, wantSHA string, wantSize int64, name, version string) error {
 	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
 		return devlokerr.Wrap(devlokerr.CodePermissionDenied, err, "Folder cache tidak dapat dibuat.", "")
 	}
