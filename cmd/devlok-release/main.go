@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	rt "devlok/internal/runtime"
 )
@@ -31,14 +32,85 @@ func main() {
 		pubkey(os.Args[2:])
 	case "registries":
 		registries(os.Args[2:])
+	case "payload":
+		payloadCommand(os.Args[2:])
 	default:
 		usage()
 	}
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: devlok-release keygen -out key.txt | sign -key key.txt -payload payload.json -out updates.json | pubkey -key key.txt | registries -out runtimes.json")
+	fmt.Fprintln(os.Stderr, "usage: devlok-release keygen -out key.txt | sign -key key.txt -payload payload.json -out updates.json | pubkey -key key.txt | registries -out runtimes.json | payload -version X -url URL -sha256 HASH -runtimes runtimes.json -out payload.json")
 	os.Exit(2)
+}
+
+type releaseApp struct {
+	Version     string `json:"version"`
+	URL         string `json:"url"`
+	SHA256      string `json:"sha256"`
+	Notes       string `json:"notes,omitempty"`
+	Severity    string `json:"severity,omitempty"`
+	PublishedAt string `json:"published_at,omitempty"`
+}
+
+type releasePayload struct {
+	App      releaseApp    `json:"app"`
+	Runtimes []rt.Registry `json:"runtimes,omitempty"`
+}
+
+func payloadCommand(args []string) {
+	fs := flag.NewFlagSet("payload", flag.ExitOnError)
+	version := fs.String("version", "", "app version")
+	rawURL := fs.String("url", "", "installer URL")
+	sha := fs.String("sha256", "", "installer SHA256")
+	notes := fs.String("notes", "", "release notes")
+	severity := fs.String("severity", "feature", "severity")
+	published := fs.String("published-at", "", "published timestamp")
+	runtimesPath := fs.String("runtimes", "", "runtimes json")
+	out := fs.String("out", "", "output payload json")
+	_ = fs.Parse(args)
+	if *version == "" || *rawURL == "" || *sha == "" || *out == "" {
+		fail("payload: -version, -url, -sha256, -out wajib")
+	}
+	var regs []rt.Registry
+	if *runtimesPath != "" {
+		data, err := os.ReadFile(*runtimesPath)
+		if err != nil {
+			fail(err.Error())
+		}
+		if err := json.Unmarshal(data, &regs); err != nil {
+			fail(err.Error())
+		}
+	}
+	if len(regs) == 0 {
+		loaded, err := rt.LoadEmbedded()
+		if err != nil {
+			fail(err.Error())
+		}
+		regs = loaded
+	}
+	if *published == "" {
+		*published = time.Now().UTC().Format(time.RFC3339)
+	}
+	p := releasePayload{
+		App: releaseApp{
+			Version:     *version,
+			URL:         *rawURL,
+			SHA256:      *sha,
+			Notes:       *notes,
+			Severity:    *severity,
+			PublishedAt: *published,
+		},
+		Runtimes: regs,
+	}
+	data, err := json.MarshalIndent(p, "", "  ")
+	if err != nil {
+		fail(err.Error())
+	}
+	data = append(data, '\n')
+	if err := os.WriteFile(*out, data, 0o644); err != nil {
+		fail(err.Error())
+	}
 }
 
 func registries(args []string) {

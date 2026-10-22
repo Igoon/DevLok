@@ -36,6 +36,36 @@ func TestRegistriesOutput(t *testing.T) {
 	}
 }
 
+func TestPayloadOutput(t *testing.T) {
+	dir := t.TempDir()
+	runtimesPath := filepath.Join(dir, "runtimes.json")
+	payloadPath := filepath.Join(dir, "payload.json")
+	registries([]string{"-out", runtimesPath})
+	payloadCommand([]string{
+		"-version", "9.9.9",
+		"-url", "https://example.com/DevLok-Setup.exe",
+		"-sha256", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		"-runtimes", runtimesPath,
+		"-out", payloadPath,
+	})
+	data, err := os.ReadFile(payloadPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var p struct {
+		App struct {
+			Version string `json:"version"`
+		} `json:"app"`
+		Runtimes []map[string]any `json:"runtimes"`
+	}
+	if err := json.Unmarshal(data, &p); err != nil {
+		t.Fatal(err)
+	}
+	if p.App.Version != "9.9.9" || len(p.Runtimes) == 0 {
+		t.Fatalf("payload = %+v", p)
+	}
+}
+
 func TestKeygenSign(t *testing.T) {
 	dir := t.TempDir()
 	keyPath := filepath.Join(dir, "update.key")

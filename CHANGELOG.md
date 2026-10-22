@@ -4,6 +4,13 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.1.10] - 2026-10-22
+
+### Fixed
+
+- Payload `updates.json` memakai generator Go agar daftar `runtimes` terserialisasi sebagai array yang valid.
+- Verifikasi update aplikasi pada rilis 0.1.9 gagal karena format payload dari PowerShell.
+
 ## [0.1.9] - 2026-10-22
 
 ### Added

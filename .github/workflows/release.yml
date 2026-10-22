@@ -103,27 +103,15 @@ jobs:
           $version = (Get-Content (Join-Path $pkg.FullName "VERSION")).Trim()
           $setup = Get-ChildItem dist\DevLok-Setup-*.exe | Select-Object -First 1
           $hash = (Get-FileHash -LiteralPath $setup.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
-          $runtimes = @()
-          if (Test-Path "dist\runtimes.json") {
-            $runtimes = Get-Content -LiteralPath "dist\runtimes.json" -Raw | ConvertFrom-Json
-          }
-          $payload = @{
-            app = @{
-              version = $version
-              url = "https://github.com/Igoon/DevLok/releases/download/$env:TAG/$($setup.Name)"
-              sha256 = $hash
-              severity = "feature"
-              notes = "DevLok $version"
-              published_at = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-            }
-            runtimes = $runtimes
-          } | ConvertTo-Json -Depth 20
+          $url = "https://github.com/Igoon/DevLok/releases/download/$env:TAG/$($setup.Name)"
+          $published = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
           $payloadPath = Join-Path $env:RUNNER_TEMP "update-payload.json"
           $keyPath = Join-Path $env:RUNNER_TEMP "update-signing.key"
+          & go run ./cmd/devlok-release payload -version $version -url $url -sha256 $hash -severity feature -notes "DevLok $version" -published-at $published -runtimes dist\runtimes.json -out $payloadPath
+          if ($LASTEXITCODE -ne 0) { throw "payload manifest gagal" }
           try { $keyData = [Convert]::FromBase64String($env:UPDATE_SIGNING_KEY.Trim()) }
           catch { Write-Host "::error title=manifest key::$($_.Exception.Message)"; exit 1 }
           if ($keyData.Length -notin 32, 64) { Write-Host "::error title=manifest key::panjang key $($keyData.Length) byte, harus 32 atau 64"; exit 1 }
-          [IO.File]::WriteAllText($payloadPath, $payload, (New-Object Text.UTF8Encoding($false)))
           Set-Content -LiteralPath $keyPath -Value ([Convert]::ToBase64String($keyData)) -NoNewline -Encoding ascii
           $signOut = & go run ./cmd/devlok-release sign -key $keyPath -payload $payloadPath -out dist\updates.json 2>&1
           $signOut
