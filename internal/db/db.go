@@ -30,10 +30,11 @@ import (
 const credsSchema = 1
 
 type Options struct {
-	StateDir string
-	Version  string
-	Port     int
-	Progress func(rt.Progress)
+	StateDir   string
+	Version    string
+	Port       int
+	Progress   func(rt.Progress)
+	Registries []rt.Registry
 }
 
 type Manager struct {
@@ -49,6 +50,7 @@ type Manager struct {
 	Port             int
 	PreferredPort    int
 	Progress         func(rt.Progress)
+	Registries       []rt.Registry
 }
 
 type InstanceState struct {
@@ -100,6 +102,7 @@ func New(opts Options) (*Manager, error) {
 		LogPath:          filepath.Join(opts.StateDir, "logs", "mysql", key+"-error.log"),
 		PreferredPort:    opts.Port,
 		Progress:         opts.Progress,
+		Registries:       opts.Registries,
 	}
 	st, err := m.loadState()
 	if err == nil && st.Port != 0 {
@@ -248,9 +251,10 @@ func (m *Manager) install(ctx context.Context) error {
 		return nil
 	}
 	mgr, err := rt.NewManager(rt.Options{
-		Root:     filepath.Join(m.StateDir, "runtimes"),
-		Cache:    filepath.Join(m.StateDir, "cache", "downloads"),
-		Progress: m.Progress,
+		Root:       filepath.Join(m.StateDir, "runtimes"),
+		Cache:      filepath.Join(m.StateDir, "cache", "downloads"),
+		Progress:   m.Progress,
+		Registries: m.Registries,
 	})
 	if err != nil {
 		return err

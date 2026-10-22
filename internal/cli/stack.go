@@ -36,6 +36,7 @@ func newUpCommand(jsonOut *bool) *cobra.Command {
 				SkipHosts:  skipHosts,
 				SkipTrust:  skipTrust,
 				Progress:   runtimeProgress(cmd, *jsonOut),
+				Registries: loadRemoteRegistries(""),
 			})
 			if err != nil {
 				return err
@@ -218,7 +219,7 @@ func newSiteCreateCommand(jsonOut *bool) *cobra.Command {
 			}
 			ctx, cancel := context.WithTimeout(cmd.Context(), 30*time.Minute)
 			defer cancel()
-			res, err := st.Up(ctx, st.Options{ProjectDir: dir, Progress: runtimeProgress(cmd, *jsonOut)})
+			res, err := st.Up(ctx, st.Options{ProjectDir: dir, Progress: runtimeProgress(cmd, *jsonOut), Registries: loadRemoteRegistries("")})
 			if err != nil {
 				return err
 			}

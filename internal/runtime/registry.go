@@ -113,6 +113,10 @@ func ParseRegistry(data []byte) (Registry, error) {
 	return reg, nil
 }
 
+func ValidateRegistry(reg Registry) error {
+	return validateRegistry(reg)
+}
+
 func validateRegistry(reg Registry) error {
 	if reg.Schema != registrySchema {
 		return devlokerr.New(devlokerr.CodeInternal, "Schema registry tidak didukung.", "Gunakan schema 1.")

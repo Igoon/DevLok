@@ -8,6 +8,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+
+	rt "devlok/internal/runtime"
 )
 
 type envelope struct {
@@ -27,14 +29,38 @@ func main() {
 		sign(os.Args[2:])
 	case "pubkey":
 		pubkey(os.Args[2:])
+	case "registries":
+		registries(os.Args[2:])
 	default:
 		usage()
 	}
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: devlok-release keygen -out key.txt | sign -key key.txt -payload payload.json -out updates.json | pubkey -key key.txt")
+	fmt.Fprintln(os.Stderr, "usage: devlok-release keygen -out key.txt | sign -key key.txt -payload payload.json -out updates.json | pubkey -key key.txt | registries -out runtimes.json")
 	os.Exit(2)
+}
+
+func registries(args []string) {
+	fs := flag.NewFlagSet("registries", flag.ExitOnError)
+	out := fs.String("out", "", "output json")
+	_ = fs.Parse(args)
+	regs, err := rt.LoadEmbedded()
+	if err != nil {
+		fail(err.Error())
+	}
+	data, err := json.MarshalIndent(regs, "", "  ")
+	if err != nil {
+		fail(err.Error())
+	}
+	data = append(data, '\n')
+	if *out == "" {
+		_, _ = os.Stdout.Write(data)
+		return
+	}
+	if err := os.WriteFile(*out, data, 0o644); err != nil {
+		fail(err.Error())
+	}
 }
 
 func keygen(args []string) {

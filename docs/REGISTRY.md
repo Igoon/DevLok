@@ -104,7 +104,18 @@ Key artifact memakai format `os/arch`:
 
 Versi yang tidak punya artifact untuk platform aktif tidak akan dipilih oleh resolver.
 
-## 7. Batasan
+## 7. Registry remote
+
+Registry embedded tetap menjadi fallback. Manifest update `updates.json` yang ditandatangani dapat memuat array `runtimes` berisi registry lengkap.
+
+- Client memverifikasi signature Ed25519 sebelum memakai registry remote.
+- Cache disimpan di `%USERPROFILE%\.devlok\cache\registry.json` dengan TTL 6 jam.
+- Manual "Periksa update" memaksa fetch baru; auto-update/startup memakai cache.
+- Jika fetch gagal, cache lama yang masih valid dipakai; jika tidak ada, registry embedded dipakai.
+- Registry remote digabung per nama runtime; entri remote menimpa embedded.
+- Semua URL tetap HTTPS dan SHA256 divalidasi dengan aturan registry yang sama.
+
+## 8. Batasan
 
 - Registry belum mendukung signature PGP; integritas mengandalkan SHA256 dari registry yang di-review.
 - Tidak ada mirror otomatis. Jika upstream menghapus versi lama, tambahkan URL cadangan tepercaya di `url_fallbacks` secara eksplisit.

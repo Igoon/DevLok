@@ -39,6 +39,7 @@ type Options struct {
 	SkipHosts  bool
 	SkipTrust  bool
 	Progress   func(rt.Progress)
+	Registries []rt.Registry
 }
 
 type Result struct {
@@ -99,9 +100,10 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 		cleanupRuntimeProcesses(p.stateDir)
 	}
 	mgr, err := rt.NewManager(rt.Options{
-		Root:     p.runtimes,
-		Cache:    p.cache,
-		Progress: opts.Progress,
+		Root:       p.runtimes,
+		Cache:      p.cache,
+		Progress:   opts.Progress,
+		Registries: opts.Registries,
 	})
 	if err != nil {
 		return Result{}, err
@@ -160,7 +162,7 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 	var dbm *db.Manager
 	mysqlPort := 0
 	if mysqlEnabled {
-		dbm, err = db.New(db.Options{StateDir: p.stateDir, Version: mysqlVersion, Port: p.manifest.Ports.MySQL, Progress: opts.Progress})
+		dbm, err = db.New(db.Options{StateDir: p.stateDir, Version: mysqlVersion, Port: p.manifest.Ports.MySQL, Progress: opts.Progress, Registries: opts.Registries})
 		if err != nil {
 			return Result{}, err
 		}

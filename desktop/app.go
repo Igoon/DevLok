@@ -29,17 +29,21 @@ import (
 )
 
 type App struct {
-	ctx           context.Context
-	updateMu      sync.Mutex
-	updateCancel  context.CancelFunc
-	autoMu        sync.Mutex
-	autoLastCheck time.Time
+	ctx             context.Context
+	updateMu        sync.Mutex
+	updateCancel    context.CancelFunc
+	autoMu          sync.Mutex
+	autoLastCheck   time.Time
+	registryMu      sync.Mutex
+	registryFetchMu sync.Mutex
+	registries      []rt.Registry
 }
 
 func NewApp() *App { return &App{} }
 
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	go a.refreshRemoteRegistries(10*time.Second, false)
 	go a.autoUpdateLoop(ctx)
 }
 
@@ -238,6 +242,10 @@ func (a *App) PHPMyAdminURL() string {
 	return activePHPMyAdminURL()
 }
 
+func (a *App) stackOptions(path string) stack.Options {
+	return stack.Options{ProjectDir: path, Registries: a.currentRegistries()}
+}
+
 func (a *App) Up(path string) (stack.Result, error) {
 	if path == "" {
 		return stack.Result{}, devlokerr.New(devlokerr.CodeInvalidArgument, "Pilih folder project terlebih dahulu.", "")
@@ -245,7 +253,7 @@ func (a *App) Up(path string) (stack.Result, error) {
 	saveLastProject(path)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
-	return stack.Up(ctx, stack.Options{ProjectDir: path})
+	return stack.Up(ctx, a.stackOptions(path))
 }
 
 func (a *App) Down() error {
@@ -373,7 +381,7 @@ func (a *App) CreateSite(name, php string, withDatabase bool) (stack.Result, err
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
 	saveLastProject(dir)
-	return stack.Up(ctx, stack.Options{ProjectDir: dir})
+	return stack.Up(ctx, a.stackOptions(dir))
 }
 
 func (a *App) Components(path string) (ComponentsView, error) {
@@ -657,10 +665,83 @@ func (a *App) runtimeManagerWithProgress(progress func(rt.Progress)) (*rt.Manage
 		return nil, err
 	}
 	return rt.NewManager(rt.Options{
-		Root:     filepath.Join(state, "runtimes"),
-		Cache:    filepath.Join(state, "cache", "downloads"),
-		Progress: progress,
+		Root:       filepath.Join(state, "runtimes"),
+		Cache:      filepath.Join(state, "cache", "downloads"),
+		Progress:   progress,
+		Registries: a.currentRegistries(),
 	})
+}
+
+func (a *App) currentRegistries() []rt.Registry {
+	a.registryMu.Lock()
+	defer a.registryMu.Unlock()
+	if len(a.registries) == 0 {
+		return nil
+	}
+	return append([]rt.Registry(nil), a.registries...)
+}
+
+func (a *App) refreshRemoteRegistries(timeout time.Duration, force bool) {
+	if !a.registryFetchMu.TryLock() {
+		return
+	}
+	defer a.registryFetchMu.Unlock()
+	state, err := platform.Current().StateDir()
+	if err != nil {
+		return
+	}
+	cfg, err := update.LoadConfig(state)
+	if err != nil {
+		trayLog("registry config: " + err.Error())
+		return
+	}
+	if cfg == nil {
+		cfg = update.DefaultConfig()
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ttl := update.DefaultRegistryTTL
+	if force {
+		ttl = 0
+	}
+	remote, err := update.RemoteRegistries(ctx, cfg, update.RegistryCachePath(state), ttl)
+	if err != nil {
+		trayLog("registry remote: " + err.Error())
+		return
+	}
+	if len(remote) == 0 {
+		return
+	}
+	embedded, err := rt.LoadEmbedded()
+	if err != nil {
+		embedded = nil
+	}
+	merged := mergeRegistries(embedded, remote)
+	a.registryMu.Lock()
+	a.registries = merged
+	a.registryMu.Unlock()
+}
+
+func mergeRegistries(base, override []rt.Registry) []rt.Registry {
+	byName := map[string]rt.Registry{}
+	order := make([]string, 0, len(base)+len(override))
+	for _, reg := range base {
+		if _, ok := byName[reg.Name]; !ok {
+			order = append(order, reg.Name)
+		}
+		byName[reg.Name] = reg
+	}
+	for _, reg := range override {
+		if _, ok := byName[reg.Name]; !ok {
+			order = append(order, reg.Name)
+		}
+		byName[reg.Name] = reg
+	}
+	out := make([]rt.Registry, 0, len(order))
+	for _, name := range order {
+		out = append(out, byName[name])
+	}
+	return out
 }
 
 func (a *App) SetComponents(path string, database, phpmyadmin bool) error {
@@ -1161,6 +1242,7 @@ func (a *App) autoUpdateTick() {
 	if err != nil {
 		return
 	}
+	a.refreshRemoteRegistries(10*time.Second, false)
 	prefs, err := update.LoadPreferences(state)
 	if err != nil {
 		trayLog("auto update config: " + err.Error())
@@ -1226,6 +1308,7 @@ func (a *App) UpdateInfo() (UpdateInfoView, error) {
 	if err != nil {
 		return UpdateInfoView{}, err
 	}
+	a.refreshRemoteRegistries(3*time.Second, true)
 	mgr, err := a.runtimeManager()
 	if err != nil {
 		return UpdateInfoView{}, err
@@ -1293,7 +1376,7 @@ func (a *App) InstallRuntimeUpdate(name, version string) (string, error) {
 			}
 			upCtx, upCancel := context.WithTimeout(context.Background(), 30*time.Minute)
 			defer upCancel()
-			if _, err := stack.Up(upCtx, stack.Options{ProjectDir: project}); err != nil {
+			if _, err := stack.Up(upCtx, a.stackOptions(project)); err != nil {
 				a.emitUpdateError("runtime", name, inst.Version, err)
 				return message, err
 			}
@@ -1390,7 +1473,7 @@ func (a *App) updateRuntimes(includeNewSeries bool) (string, error) {
 			} else {
 				upCtx, upCancel := context.WithTimeout(context.Background(), 30*time.Minute)
 				defer upCancel()
-				if _, err := stack.Up(upCtx, stack.Options{ProjectDir: project}); err != nil {
+				if _, err := stack.Up(upCtx, a.stackOptions(project)); err != nil {
 					failures = append(failures, "start stack: "+err.Error())
 				}
 			}

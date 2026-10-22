@@ -4,6 +4,14 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.1.9] - 2026-10-22
+
+### Added
+
+- Registry runtime dinamis dari `updates.json` bertanda tangan; cache 6 jam, fallback registry embedded.
+- Release workflow ikut mempublikasikan daftar runtime di manifest update.
+- Periksa update manual mengambil registry terbaru; auto-update/startup memakai cache.
+
 ## [0.1.8] - 2026-10-22
 
 ### Added

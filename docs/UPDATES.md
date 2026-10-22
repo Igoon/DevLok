@@ -58,6 +58,16 @@ Tab **Update** punya preferensi otomatis yang disimpan di `%USERPROFILE%\.devlok
 
 Auto-update berjalan hanya selama GUI DevLok hidup. Supervisor latar tetap menjaga service tetapi tidak melakukan update. Update aplikasi otomatis tidak berjalan diam-diam: opsi harus diaktifkan eksplisit dan installer tetap memakai mekanisme update normal.
 
+## Registry Runtime Remote
+
+Manifest `updates.json` bertanda tangan juga memuat array `runtimes`. Client memverifikasi signature sebelum memakai registry tersebut.
+
+- Cache: `%USERPROFILE%\.devlok\cache\registry.json`, TTL 6 jam.
+- "Periksa update" manual memaksa fetch terbaru.
+- Auto-update dan startup memakai cache; fetch gagal memakai cache lama atau registry embedded.
+- Registry remote digabung per nama runtime; versi baru bisa terdeteksi tanpa merilis ulang aplikasi, selama manifest pusat diperbarui.
+- URL tetap HTTPS dan checksum tetap diverifikasi.
+
 Fallback GitHub memakai API resmi dan checksum asset `.sha256`. Ini tidak memakai signature Ed25519, sehingga trust berakar pada keamanan repo GitHub. Untuk verifikasi rantai penuh, gunakan signed manifest.
 
 Memasang versi baru:

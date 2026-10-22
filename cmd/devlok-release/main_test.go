@@ -9,6 +9,33 @@ import (
 	"testing"
 )
 
+func TestRegistriesOutput(t *testing.T) {
+	out := filepath.Join(t.TempDir(), "runtimes.json")
+	registries([]string{"-out", out})
+	data, err := os.ReadFile(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var regs []struct {
+		Name string `json:"name"`
+	}
+	if err := json.Unmarshal(data, &regs); err != nil {
+		t.Fatal(err)
+	}
+	if len(regs) == 0 {
+		t.Fatal("empty registry output")
+	}
+	found := false
+	for _, reg := range regs {
+		if reg.Name == "php" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("php registry missing")
+	}
+}
+
 func TestKeygenSign(t *testing.T) {
 	dir := t.TempDir()
 	keyPath := filepath.Join(dir, "update.key")

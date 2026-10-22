@@ -88,6 +88,8 @@ jobs:
           Remove-Item $pfx -Force
           $hash = (Get-FileHash -LiteralPath $setup.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
           [IO.File]::WriteAllText($setup.FullName + ".sha256", "$hash  $($setup.Name)`n", (New-Object Text.UTF8Encoding($false)))
+      - name: Build runtime registry payload
+        run: go run ./cmd/devlok-release registries -out dist\runtimes.json
       - name: Sign update manifest
         shell: powershell
         env:
@@ -101,6 +103,10 @@ jobs:
           $version = (Get-Content (Join-Path $pkg.FullName "VERSION")).Trim()
           $setup = Get-ChildItem dist\DevLok-Setup-*.exe | Select-Object -First 1
           $hash = (Get-FileHash -LiteralPath $setup.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          $runtimes = @()
+          if (Test-Path "dist\runtimes.json") {
+            $runtimes = Get-Content -LiteralPath "dist\runtimes.json" -Raw | ConvertFrom-Json
+          }
           $payload = @{
             app = @{
               version = $version
@@ -110,7 +116,8 @@ jobs:
               notes = "DevLok $version"
               published_at = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
             }
-          } | ConvertTo-Json -Depth 5
+            runtimes = $runtimes
+          } | ConvertTo-Json -Depth 20
           $payloadPath = Join-Path $env:RUNNER_TEMP "update-payload.json"
           $keyPath = Join-Path $env:RUNNER_TEMP "update-signing.key"
           try { $keyData = [Convert]::FromBase64String($env:UPDATE_SIGNING_KEY.Trim()) }

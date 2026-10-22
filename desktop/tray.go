@@ -858,7 +858,7 @@ func (a *App) traySetServiceVersion(service, version string) {
 		_ = stack.Down("")
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 		defer cancel()
-		_, _ = stack.Up(ctx, stack.Options{ProjectDir: project})
+		_, _ = stack.Up(ctx, a.stackOptions(project))
 	}
 	a.syncServiceMenus()
 }
@@ -1390,7 +1390,7 @@ func (a *App) trayRestartStack() bool {
 	_ = stack.Down("")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
-	if _, err := stack.Up(ctx, stack.Options{ProjectDir: project}); err != nil {
+	if _, err := stack.Up(ctx, a.stackOptions(project)); err != nil {
 		a.trayError("Restart Stack", err)
 		return false
 	}
@@ -1488,7 +1488,7 @@ func (a *App) trayStartAll() {
 	saveLastProject(project)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
-	if _, err := stack.Up(ctx, stack.Options{ProjectDir: project}); err != nil {
+	if _, err := stack.Up(ctx, a.stackOptions(project)); err != nil {
 		trayLog("start all: " + err.Error())
 	}
 }
@@ -1642,7 +1642,7 @@ func (a *App) trayOpenSite(path string) {
 	saveLastProject(path)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
-	if _, err := stack.Up(ctx, stack.Options{ProjectDir: path}); err != nil {
+	if _, err := stack.Up(ctx, a.stackOptions(path)); err != nil {
 		trayLog("open site: " + err.Error())
 	}
 	a.syncSiteMenu()

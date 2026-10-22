@@ -228,10 +228,11 @@ func newRuntimeManager(offline bool, progress func(rt.Progress)) (*rt.Manager, e
 		return nil, devlokerr.Wrap(devlokerr.CodeInternal, err, "State dir tidak dapat ditentukan.", "")
 	}
 	return rt.NewManager(rt.Options{
-		Root:     filepath.Join(state, "runtimes"),
-		Cache:    filepath.Join(state, "cache", "downloads"),
-		Offline:  offline,
-		Progress: progress,
+		Root:       filepath.Join(state, "runtimes"),
+		Cache:      filepath.Join(state, "cache", "downloads"),
+		Offline:    offline,
+		Progress:   progress,
+		Registries: loadRemoteRegistries(state),
 	})
 }
 
