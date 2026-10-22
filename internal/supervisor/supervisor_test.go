@@ -13,6 +13,26 @@ import (
 	"devlok/internal/platform"
 )
 
+func TestReconcileMarksDeadOrphanStopped(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "state", "services.json")
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	data := `{"schema":1,"services":[{"name":"php","pid":999999,"state":"running","started_at":"2026-01-01T00:00:00Z"}]}`
+	if err := os.WriteFile(path, []byte(data), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	m, err := NewManager(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m.Reconcile()
+	st, ok := m.Get("php")
+	if !ok || st.State != StateStopped || st.PID != 0 {
+		t.Fatalf("status = %+v, %v", st, ok)
+	}
+}
+
 func TestHelperProcess(t *testing.T) {
 	mode := os.Getenv("DEVLOK_HELPER_MODE")
 	if mode == "" {

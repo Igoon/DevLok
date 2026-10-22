@@ -126,6 +126,30 @@ func TestDownloadVerifiesChecksum(t *testing.T) {
 	}
 }
 
+func TestDownloadReportsProgress(t *testing.T) {
+	content := []byte(strings.Repeat("installer", 512))
+	sum := sha256.Sum256(content)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write(content)
+	}))
+	defer srv.Close()
+	rel := &AppUpdate{Latest: "9.9.9", URL: srv.URL + "/DevLok-Setup.exe", SHA256: hex.EncodeToString(sum[:])}
+	var lastDone, lastTotal int64
+	_, err := DownloadWithProgress(context.Background(), rel, t.TempDir(), func(done, total int64) {
+		lastDone = done
+		lastTotal = total
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if lastDone != int64(len(content)) {
+		t.Fatalf("last progress = %d, want %d", lastDone, len(content))
+	}
+	if lastTotal != 0 && lastTotal != int64(len(content)) {
+		t.Fatalf("total progress = %d, want %d or unknown", lastTotal, len(content))
+	}
+}
+
 func TestDownloadRejectsBadChecksum(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("fake installer"))

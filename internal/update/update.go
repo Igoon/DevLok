@@ -8,8 +8,15 @@ import (
 	rt "devlok/internal/runtime"
 )
 
+const (
+	KindPatch = "patch"
+	KindNew   = "new"
+)
+
 type RuntimeUpdate struct {
 	Name      string   `json:"name"`
+	Kind      string   `json:"kind"`
+	Series    string   `json:"series,omitempty"`
 	Installed string   `json:"installed"`
 	Latest    string   `json:"latest"`
 	Newer     []string `json:"newer"`
@@ -20,45 +27,108 @@ func Check(mgr *rt.Manager) ([]RuntimeUpdate, error) {
 	if err != nil {
 		return nil, err
 	}
-	highest := map[string]string{}
+	return checkInstalled(installed, mgr.Registries, mgr.OS+"/"+mgr.Arch), nil
+}
+
+func checkInstalled(installed []rt.Installed, regs []rt.Registry, platform string) []RuntimeUpdate {
+	byName := map[string][]string{}
 	for _, in := range installed {
-		if highest[in.Name] == "" || Compare(in.Version, highest[in.Name]) > 0 {
-			highest[in.Name] = in.Version
-		}
+		byName[in.Name] = append(byName[in.Name], in.Version)
 	}
-	key := mgr.OS + "/" + mgr.Arch
 	var out []RuntimeUpdate
-	for _, reg := range mgr.Registries {
-		current := highest[reg.Name]
-		if current == "" {
+	for _, reg := range regs {
+		current := byName[reg.Name]
+		if len(current) == 0 {
 			continue
 		}
-		var newer []string
-		latest := ""
+		var available []string
 		for _, v := range reg.Versions {
-			if _, ok := v.Artifacts[key]; !ok {
+			if _, ok := v.Artifacts[platform]; ok {
+				available = append(available, v.Version)
+			}
+		}
+		if len(available) == 0 {
+			continue
+		}
+		sort.Slice(current, func(i, j int) bool { return Compare(current[i], current[j]) > 0 })
+		highestBySeries := map[string]string{}
+		for _, version := range current {
+			series := versionSeries(version)
+			if have, ok := highestBySeries[series]; !ok || Compare(version, have) > 0 {
+				highestBySeries[series] = version
+			}
+		}
+		seriesList := make([]string, 0, len(highestBySeries))
+		for series := range highestBySeries {
+			seriesList = append(seriesList, series)
+		}
+		sort.Slice(seriesList, func(i, j int) bool { return Compare(seriesList[i], seriesList[j]) > 0 })
+		for _, series := range seriesList {
+			version := highestBySeries[series]
+			var newer []string
+			latest := ""
+			for _, v := range available {
+				if versionSeries(v) != series || Compare(v, version) <= 0 {
+					continue
+				}
+				newer = append(newer, v)
+				if latest == "" || Compare(v, latest) > 0 {
+					latest = v
+				}
+			}
+			if latest == "" {
 				continue
 			}
-			if Compare(v.Version, current) > 0 {
-				newer = append(newer, v.Version)
-			}
-			if latest == "" || Compare(v.Version, latest) > 0 {
-				latest = v.Version
+			sort.Slice(newer, func(i, j int) bool { return Compare(newer[i], newer[j]) < 0 })
+			out = append(out, RuntimeUpdate{
+				Name:      reg.Name,
+				Kind:      KindPatch,
+				Series:    series,
+				Installed: version,
+				Latest:    latest,
+				Newer:     newer,
+			})
+		}
+		highestInstalled := current[0]
+		latest := ""
+		for _, v := range available {
+			if latest == "" || Compare(v, latest) > 0 {
+				latest = v
 			}
 		}
-		if len(newer) == 0 {
-			continue
+		if latest != "" && Compare(versionSeries(latest), versionSeries(highestInstalled)) > 0 {
+			out = append(out, RuntimeUpdate{
+				Name:      reg.Name,
+				Kind:      KindNew,
+				Series:    versionSeries(latest),
+				Installed: highestInstalled,
+				Latest:    latest,
+			})
 		}
-		sort.Slice(newer, func(i, j int) bool { return Compare(newer[i], newer[j]) < 0 })
-		out = append(out, RuntimeUpdate{
-			Name:      reg.Name,
-			Installed: current,
-			Latest:    latest,
-			Newer:     newer,
-		})
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
-	return out, nil
+	sort.SliceStable(out, func(i, j int) bool {
+		if out[i].Name != out[j].Name {
+			return out[i].Name < out[j].Name
+		}
+		if out[i].Kind != out[j].Kind {
+			return out[i].Kind == KindPatch
+		}
+		return Compare(out[i].Installed, out[j].Installed) > 0
+	})
+	return out
+}
+
+func SameSeries(a, b string) bool {
+	return versionSeries(a) == versionSeries(b)
+}
+
+func versionSeries(v string) string {
+	base, _ := versionParts(v)
+	parts := strings.Split(base, ".")
+	if len(parts) <= 2 {
+		return base
+	}
+	return parts[0] + "." + parts[1]
 }
 
 func Compare(a, b string) int {

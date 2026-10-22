@@ -18,6 +18,7 @@ import (
 	"devlok/internal/db"
 	"devlok/internal/devlokerr"
 	"devlok/internal/hosts"
+	"devlok/internal/instance"
 	"devlok/internal/phpcfg"
 	"devlok/internal/platform"
 	"devlok/internal/ports"
@@ -91,6 +92,9 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 	if err != nil {
 		return Result{}, err
 	}
+	_ = os.Remove(supervisorStopPath(p.stateDir))
+	endPause := beginSupervisorPause(p.stateDir)
+	defer endPause()
 	if _, err := os.Stat(p.stackState); os.IsNotExist(err) {
 		cleanupRuntimeProcesses(p.stateDir)
 	}
@@ -153,9 +157,10 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 	}
 
 	var dbc db.DatabaseCreds
+	var dbm *db.Manager
 	mysqlPort := 0
 	if mysqlEnabled {
-		dbm, err := db.New(db.Options{StateDir: p.stateDir, Version: mysqlVersion, Port: p.manifest.Ports.MySQL, Progress: opts.Progress})
+		dbm, err = db.New(db.Options{StateDir: p.stateDir, Version: mysqlVersion, Port: p.manifest.Ports.MySQL, Progress: opts.Progress})
 		if err != nil {
 			return Result{}, err
 		}
@@ -373,6 +378,15 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 		_ = sm.Stop("php")
 		return Result{}, err
 	}
+	specs := []supervisor.Spec{phpSpec, nginxSpec}
+	if mysqlEnabled {
+		specs = append(specs, dbm.Spec())
+	}
+	if err := writeSupervisorSpecs(p.stateDir, specs); err != nil {
+		res.Warnings = append(res.Warnings, "Supervisor latar tidak dapat disiapkan: "+err.Error())
+	} else if err := startSupervisor(p.stateDir); err != nil {
+		res.Warnings = append(res.Warnings, "Supervisor latar tidak dapat dijalankan: "+err.Error())
+	}
 	return res, nil
 }
 
@@ -381,6 +395,11 @@ func Down(stateDir string) error {
 	if err != nil {
 		return err
 	}
+	state := stateDirOrDefault(stateDir)
+	endPause := beginSupervisorPause(state)
+	defer endPause()
+	_ = os.Remove(dirs.stackState)
+	_ = os.Remove(supervisorSpecsPath(state))
 	sm, err := supervisor.NewManager(dirs.services)
 	if err != nil {
 		return err
@@ -398,11 +417,11 @@ func Down(stateDir string) error {
 			}
 		}
 	}
-	_ = os.Remove(dirs.stackState)
+	cleanupRuntimeProcesses(state)
+	StopSupervisor(state)
 	if len(errs) > 0 {
 		return devlokerr.New(devlokerr.CodeStateInconsistent, "Sebagian service gagal dihentikan.", strings.Join(errs, "; "))
 	}
-	cleanupRuntimeProcesses(stateDirOrDefault(stateDir))
 	return nil
 }
 
@@ -548,6 +567,111 @@ func stateDirs(stateDir string) (runtimeDirs, error) {
 		services:   filepath.Join(state, "services.json"),
 		stackState: filepath.Join(state, "stack.json"),
 	}, nil
+}
+
+type supervisorFile struct {
+	Schema int               `json:"schema"`
+	Specs  []supervisor.Spec `json:"specs"`
+}
+
+func supervisorSpecsPath(stateDir string) string {
+	return filepath.Join(stateDir, "state", "supervisor.json")
+}
+
+func supervisorPausePath(stateDir string) string {
+	return filepath.Join(stateDir, "state", "supervisor.pause")
+}
+
+func supervisorStopPath(stateDir string) string {
+	return filepath.Join(stateDir, "state", "supervisor.stop")
+}
+
+func StopSupervisor(stateDir string) {
+	state := stateDirOrDefault(stateDir)
+	_ = os.WriteFile(supervisorStopPath(state), []byte("stop\n"), 0o600)
+	deadline := time.Now().Add(15 * time.Second)
+	for time.Now().Before(deadline) {
+		lock, err := instance.Acquire("supervisor:" + state)
+		if err == nil {
+			_ = lock.Close()
+			_ = os.Remove(supervisorStopPath(state))
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	_ = os.Remove(supervisorStopPath(state))
+}
+
+func writeSupervisorSpecs(stateDir string, specs []supervisor.Spec) error {
+	if len(specs) == 0 {
+		return nil
+	}
+	data, err := json.MarshalIndent(supervisorFile{Schema: 1, Specs: specs}, "", "  ")
+	if err != nil {
+		return err
+	}
+	data = append(data, '\n')
+	path := supervisorSpecsPath(stateDir)
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		return err
+	}
+	tmp := path + ".tmp"
+	if err := os.WriteFile(tmp, data, 0o600); err != nil {
+		return err
+	}
+	_ = os.Remove(path)
+	return os.Rename(tmp, path)
+}
+
+func LoadSupervisorSpecs(stateDir string) ([]supervisor.Spec, error) {
+	if stateDir == "" {
+		var err error
+		stateDir, err = platform.Current().StateDir()
+		if err != nil {
+			return nil, err
+		}
+	}
+	data, err := os.ReadFile(supervisorSpecsPath(stateDir))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	if len(data) > 1<<20 {
+		return nil, devlokerr.New(devlokerr.CodeStateInconsistent, "Konfigurasi supervisor terlalu besar.", "")
+	}
+	var sf supervisorFile
+	if err := json.Unmarshal(data, &sf); err != nil || sf.Schema != 1 {
+		return nil, devlokerr.New(devlokerr.CodeStateInconsistent, "Konfigurasi supervisor rusak.", "Jalankan dl down lalu dl up.")
+	}
+	return sf.Specs, nil
+}
+
+func SupervisorPaused(stateDir string) bool {
+	if stateDir == "" {
+		var err error
+		stateDir, err = platform.Current().StateDir()
+		if err != nil {
+			return false
+		}
+	}
+	info, err := os.Stat(supervisorPausePath(stateDir))
+	if err != nil {
+		return false
+	}
+	if time.Since(info.ModTime()) > 60*time.Minute {
+		_ = os.Remove(supervisorPausePath(stateDir))
+		return false
+	}
+	return true
+}
+
+func beginSupervisorPause(stateDir string) func() {
+	path := supervisorPausePath(stateDir)
+	_ = os.MkdirAll(filepath.Dir(path), 0o700)
+	_ = os.WriteFile(path, []byte(time.Now().UTC().Format(time.RFC3339)+"\n"), 0o600)
+	return func() { _ = os.Remove(path) }
 }
 
 func stopExisting(sm *supervisor.Manager) {

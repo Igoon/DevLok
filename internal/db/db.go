@@ -702,6 +702,10 @@ func (m *Manager) pipeSQLFile(ctx context.Context, user, password, database, fil
 	return nil
 }
 
+func (m *Manager) Spec() supervisor.Spec {
+	return m.spec()
+}
+
 func (m *Manager) spec() supervisor.Spec {
 	return supervisor.Spec{
 		Name:       m.ServiceName,

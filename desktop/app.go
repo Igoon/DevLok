@@ -4,10 +4,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"devlok/internal/config"
@@ -23,16 +25,22 @@ import (
 	"devlok/internal/supervisor"
 	"devlok/internal/update"
 	"devlok/internal/version"
+	wruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 type App struct {
-	ctx context.Context
+	ctx           context.Context
+	updateMu      sync.Mutex
+	updateCancel  context.CancelFunc
+	autoMu        sync.Mutex
+	autoLastCheck time.Time
 }
 
 func NewApp() *App { return &App{} }
 
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	go a.autoUpdateLoop(ctx)
 }
 
 type StatusView struct {
@@ -115,9 +123,17 @@ type SiteView struct {
 }
 
 type RuntimeView struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
-	Path    string `json:"path"`
+	Name    string   `json:"name"`
+	Version string   `json:"version"`
+	Path    string   `json:"path"`
+	Bytes   int64    `json:"bytes"`
+	InUse   bool     `json:"in_use"`
+	UsedBy  []string `json:"used_by,omitempty"`
+}
+
+type RuntimeCacheView struct {
+	Bytes int64 `json:"bytes"`
+	Files int   `json:"files"`
 }
 
 func (a *App) Status() StatusView {
@@ -632,13 +648,18 @@ func (a *App) CheckPorts(list []int) []PortCheckView {
 	return out
 }
 func (a *App) runtimeManager() (*rt.Manager, error) {
+	return a.runtimeManagerWithProgress(nil)
+}
+
+func (a *App) runtimeManagerWithProgress(progress func(rt.Progress)) (*rt.Manager, error) {
 	state, err := platform.Current().StateDir()
 	if err != nil {
 		return nil, err
 	}
 	return rt.NewManager(rt.Options{
-		Root:  filepath.Join(state, "runtimes"),
-		Cache: filepath.Join(state, "cache", "downloads"),
+		Root:     filepath.Join(state, "runtimes"),
+		Cache:    filepath.Join(state, "cache", "downloads"),
+		Progress: progress,
 	})
 }
 
@@ -711,9 +732,23 @@ func (a *App) RuntimeList() ([]RuntimeView, error) {
 	if err != nil {
 		return nil, err
 	}
+	uses := a.runtimeUses()
 	out := make([]RuntimeView, 0, len(installed))
 	for _, in := range installed {
-		out = append(out, RuntimeView{Name: in.Name, Version: in.Version, Path: in.Path})
+		var usedBy []string
+		for _, use := range uses {
+			if use.Name == in.Name && versionMatches(in.Version, use.Version) && !containsString(usedBy, use.Project) {
+				usedBy = append(usedBy, use.Project)
+			}
+		}
+		out = append(out, RuntimeView{
+			Name:    in.Name,
+			Version: in.Version,
+			Path:    in.Path,
+			Bytes:   dirSize(in.Path),
+			InUse:   len(usedBy) > 0,
+			UsedBy:  usedBy,
+		})
 	}
 	sort.Slice(out, func(i, j int) bool {
 		if out[i].Name == out[j].Name {
@@ -722,6 +757,230 @@ func (a *App) RuntimeList() ([]RuntimeView, error) {
 		return out[i].Name < out[j].Name
 	})
 	return out, nil
+}
+
+func (a *App) RemoveRuntime(name, version string) (string, error) {
+	usedBy := a.projectsUsingRuntime(name, version)
+	if len(usedBy) > 0 {
+		return "", devlokerr.New(devlokerr.CodeInvalidArgument,
+			fmt.Sprintf("%s %s masih dipakai project %s.", name, version, strings.Join(usedBy, ", ")),
+			"Ubah versi project terkait dulu, lalu hapus runtime ini.")
+	}
+	mgr, err := a.runtimeManager()
+	if err != nil {
+		return "", err
+	}
+	if err := mgr.Remove(name, version); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("Runtime %s %s dihapus.", name, version), nil
+}
+
+func (a *App) RuntimeCache() (RuntimeCacheView, error) {
+	state, err := platform.Current().StateDir()
+	if err != nil {
+		return RuntimeCacheView{}, err
+	}
+	dir := filepath.Join(state, "cache", "downloads")
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return RuntimeCacheView{}, nil
+		}
+		return RuntimeCacheView{}, err
+	}
+	out := RuntimeCacheView{}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		info, err := entry.Info()
+		if err != nil {
+			continue
+		}
+		out.Files++
+		out.Bytes += info.Size()
+	}
+	return out, nil
+}
+
+func (a *App) CleanupRuntimeCache() (string, error) {
+	state, err := platform.Current().StateDir()
+	if err != nil {
+		return "", err
+	}
+	dir := filepath.Join(state, "cache", "downloads")
+	info, _ := a.RuntimeCache()
+	if err := os.RemoveAll(dir); err != nil {
+		return "", devlokerr.Wrap(devlokerr.CodePermissionDenied, err, "Cache runtime tidak dapat dibersihkan.", "")
+	}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("Cache dibersihkan: %d file, %s.", info.Files, formatBytes(info.Bytes)), nil
+}
+
+func (a *App) CleanupUnusedRuntimes() (string, error) {
+	mgr, err := a.runtimeManager()
+	if err != nil {
+		return "", err
+	}
+	installed, err := mgr.ListInstalled()
+	if err != nil {
+		return "", err
+	}
+	var removed []string
+	var bytes int64
+	for _, in := range installed {
+		if in.Name != "php" && in.Name != "nginx" && in.Name != "mysql" && in.Name != "node" {
+			continue
+		}
+		if len(a.projectsUsingRuntime(in.Name, in.Version)) > 0 {
+			continue
+		}
+		superseded := false
+		for _, other := range installed {
+			if other.Name == in.Name && update.SameSeries(other.Version, in.Version) && update.Compare(other.Version, in.Version) > 0 {
+				superseded = true
+				break
+			}
+		}
+		if !superseded {
+			continue
+		}
+		size := dirSize(in.Path)
+		if err := mgr.Remove(in.Name, in.Version); err != nil {
+			return "", err
+		}
+		removed = append(removed, in.Name+" "+in.Version)
+		bytes += size
+	}
+	if len(removed) == 0 {
+		return "Tidak ada versi lama yang tidak terpakai.", nil
+	}
+	return fmt.Sprintf("%d versi lama dihapus (%s): %s.", len(removed), formatBytes(bytes), strings.Join(removed, ", ")), nil
+}
+
+type runtimeUse struct {
+	Name    string
+	Version string
+	Project string
+}
+
+func (a *App) runtimeUses() []runtimeUse {
+	var uses []runtimeUse
+	for _, dir := range a.projectDirs() {
+		m, err := config.Load(filepath.Join(dir, config.FileName))
+		if err != nil {
+			continue
+		}
+		for _, service := range []string{"php", "nginx", "mysql", "node"} {
+			version := projectServiceVersion(m, service)
+			if version != "" {
+				uses = append(uses, runtimeUse{Name: service, Version: version, Project: dir})
+			}
+		}
+	}
+	return uses
+}
+
+func (a *App) projectsUsingRuntime(name, version string) []string {
+	var out []string
+	for _, use := range a.runtimeUses() {
+		if use.Name == name && versionMatches(version, use.Version) && !containsString(out, use.Project) {
+			out = append(out, use.Project)
+		}
+	}
+	return out
+}
+
+func (a *App) projectDirs() []string {
+	var dirs []string
+	if ws, err := stack.WorkspaceDir(); err == nil {
+		if entries, err := os.ReadDir(ws); err == nil {
+			for _, entry := range entries {
+				if entry.IsDir() {
+					dirs = append(dirs, filepath.Join(ws, entry.Name()))
+				}
+			}
+		}
+	}
+	if state, err := platform.Current().StateDir(); err == nil {
+		if extra, err := projects.List(state); err == nil {
+			dirs = append(dirs, extra...)
+		}
+	}
+	seen := map[string]bool{}
+	out := make([]string, 0, len(dirs))
+	for _, dir := range dirs {
+		key := strings.ToLower(filepath.Clean(dir))
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		out = append(out, dir)
+	}
+	return out
+}
+
+func projectServiceVersion(m *config.Manifest, service string) string {
+	switch service {
+	case "php":
+		if m.Web.PHP != "" {
+			return m.Web.PHP
+		}
+		return m.Runtime["php"]
+	case "nginx":
+		return m.Runtime["nginx"]
+	case "mysql":
+		return m.Services["mysql"]
+	case "node":
+		return m.Runtime["node"]
+	}
+	return ""
+}
+
+func versionMatches(installed, used string) bool {
+	if installed == "" || used == "" {
+		return false
+	}
+	return installed == used || strings.HasPrefix(installed, used+".") || strings.HasPrefix(used, installed+".")
+}
+
+func containsString(list []string, want string) bool {
+	for _, item := range list {
+		if item == want {
+			return true
+		}
+	}
+	return false
+}
+
+func dirSize(root string) int64 {
+	var total int64
+	_ = filepath.WalkDir(root, func(_ string, entry os.DirEntry, err error) error {
+		if err != nil || entry.IsDir() {
+			return nil
+		}
+		if info, err := entry.Info(); err == nil {
+			total += info.Size()
+		}
+		return nil
+	})
+	return total
+}
+
+func formatBytes(bytes int64) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%d B", bytes)
+	}
+	div, exp := int64(unit), 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGT"[exp])
 }
 
 func (a *App) Logs(service string, lines int) (string, error) {
@@ -793,6 +1052,168 @@ func toServiceViews(services []supervisor.Status) []ServiceView {
 	return out
 }
 
+const updateProgressEvent = "update:progress"
+
+type UpdateProgressView struct {
+	Kind       string `json:"kind"`
+	Phase      string `json:"phase"`
+	Name       string `json:"name,omitempty"`
+	Version    string `json:"version,omitempty"`
+	Downloaded int64  `json:"downloaded"`
+	Total      int64  `json:"total"`
+	Percent    int    `json:"percent"`
+	Message    string `json:"message,omitempty"`
+}
+
+func (a *App) emitUpdateProgress(p UpdateProgressView) {
+	if p.Total > 0 {
+		p.Percent = int(p.Downloaded * 100 / p.Total)
+	}
+	if p.Phase == "done" {
+		p.Percent = 100
+	}
+	if p.Percent < 0 {
+		p.Percent = 0
+	}
+	if p.Percent > 100 {
+		p.Percent = 100
+	}
+	if a.ctx == nil {
+		return
+	}
+	wruntime.EventsEmit(a.ctx, updateProgressEvent, p)
+}
+
+func (a *App) emitUpdateError(kind, name, version string, err error) {
+	a.emitUpdateProgress(UpdateProgressView{
+		Kind:    kind,
+		Phase:   "error",
+		Name:    name,
+		Version: version,
+		Message: err.Error(),
+	})
+}
+
+func (a *App) CancelUpdate() {
+	a.updateMu.Lock()
+	cancel := a.updateCancel
+	a.updateMu.Unlock()
+	if cancel != nil {
+		cancel()
+	}
+}
+
+func (a *App) startUpdateContext(timeout time.Duration) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	a.updateMu.Lock()
+	if a.updateCancel != nil {
+		a.updateCancel()
+	}
+	a.updateCancel = cancel
+	a.updateMu.Unlock()
+	return ctx, cancel
+}
+
+func (a *App) finishUpdate(cancel context.CancelFunc) {
+	cancel()
+	a.updateMu.Lock()
+	a.updateCancel = nil
+	a.updateMu.Unlock()
+}
+
+func (a *App) UpdatePreferences() (update.Preferences, error) {
+	state, err := platform.Current().StateDir()
+	if err != nil {
+		return update.Preferences{}, err
+	}
+	return update.LoadPreferences(state)
+}
+
+func (a *App) SaveUpdatePreferences(prefs update.Preferences) error {
+	state, err := platform.Current().StateDir()
+	if err != nil {
+		return err
+	}
+	if err := update.SavePreferences(state, prefs); err != nil {
+		return err
+	}
+	a.autoMu.Lock()
+	a.autoLastCheck = time.Time{}
+	a.autoMu.Unlock()
+	return nil
+}
+
+func (a *App) autoUpdateLoop(ctx context.Context) {
+	ticker := time.NewTicker(time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			a.autoUpdateTick()
+		}
+	}
+}
+
+func (a *App) autoUpdateTick() {
+	state, err := platform.Current().StateDir()
+	if err != nil {
+		return
+	}
+	prefs, err := update.LoadPreferences(state)
+	if err != nil {
+		trayLog("auto update config: " + err.Error())
+		return
+	}
+	if !prefs.AutoUpdateApp && !prefs.AutoUpdateRuntime {
+		return
+	}
+	interval := time.Duration(prefs.IntervalMinutes) * time.Minute
+	a.autoMu.Lock()
+	due := a.autoLastCheck.IsZero() || time.Since(a.autoLastCheck) >= interval
+	if due {
+		a.autoLastCheck = time.Now()
+	}
+	a.autoMu.Unlock()
+	if !due {
+		return
+	}
+	if a.updateInProgress() {
+		trayLog("auto update dilewati: update lain sedang berjalan")
+		return
+	}
+	if prefs.AutoUpdateRuntime {
+		message, err := a.updateRuntimes(prefs.AutoUpdateRuntimeSeries)
+		if err != nil {
+			trayLog("auto runtime update: " + err.Error())
+		} else if message != "" {
+			trayLog("auto runtime update: " + message)
+		}
+	}
+	if !prefs.AutoUpdateApp {
+		return
+	}
+	appUpdate, err := a.checkAppUpdate(state)
+	if err != nil {
+		trayLog("auto app update check: " + err.Error())
+		return
+	}
+	if appUpdate == nil {
+		return
+	}
+	trayLog("auto app update: " + appUpdate.Latest)
+	if err := a.ApplyAppUpdate(); err != nil {
+		trayLog("auto app update: " + err.Error())
+	}
+}
+
+func (a *App) updateInProgress() bool {
+	a.updateMu.Lock()
+	defer a.updateMu.Unlock()
+	return a.updateCancel != nil
+}
+
 type UpdateInfoView struct {
 	Current     string                 `json:"current"`
 	App         *update.AppUpdate      `json:"app_update,omitempty"`
@@ -827,21 +1248,36 @@ func (a *App) UpdateInfo() (UpdateInfoView, error) {
 }
 
 func (a *App) InstallRuntimeUpdate(name, version string) (string, error) {
-	mgr, err := a.runtimeManager()
+	a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "start", Name: name, Version: version})
+	mgr, err := a.runtimeManagerWithProgress(func(p rt.Progress) {
+		a.emitUpdateProgress(UpdateProgressView{
+			Kind:       "runtime",
+			Phase:      p.Phase,
+			Name:       p.Name,
+			Version:    p.Version,
+			Downloaded: p.Downloaded,
+			Total:      p.Total,
+		})
+	})
 	if err != nil {
+		a.emitUpdateError("runtime", name, version, err)
 		return "", err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
-	defer cancel()
+	ctx, cancel := a.startUpdateContext(30 * time.Minute)
+	defer a.finishUpdate(cancel)
 	inst, _, err := mgr.Install(ctx, name, version)
 	if err != nil {
+		a.emitUpdateError("runtime", name, version, err)
 		return "", err
 	}
 	project := a.trayProjectPath()
 	if project == "" {
+		a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "done", Name: inst.Name, Version: inst.Version})
 		return "Runtime " + inst.Name + " " + inst.Version + " terpasang. Belum ada site aktif untuk diperbarui.", nil
 	}
+	a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "configure", Name: inst.Name, Version: inst.Version})
 	if err := a.SetServiceVersion(project, name, inst.Version); err != nil {
+		a.emitUpdateError("runtime", name, inst.Version, err)
 		return "", err
 	}
 	message := "Runtime " + inst.Name + " " + inst.Version + " terpasang dan project diperbarui."
@@ -850,19 +1286,131 @@ func (a *App) InstallRuntimeUpdate(name, version string) (string, error) {
 	}
 	if name != "node" {
 		if st, err := stack.LoadState(""); err == nil && sameTrayPath(st.ProjectDir, project) {
+			a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "restart", Name: inst.Name, Version: inst.Version})
 			if err := stack.Down(""); err != nil {
+				a.emitUpdateError("runtime", name, inst.Version, err)
 				return message, err
 			}
 			upCtx, upCancel := context.WithTimeout(context.Background(), 30*time.Minute)
 			defer upCancel()
 			if _, err := stack.Up(upCtx, stack.Options{ProjectDir: project}); err != nil {
+				a.emitUpdateError("runtime", name, inst.Version, err)
 				return message, err
 			}
 			message += " Stack direstart."
 		}
 	}
+	a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "done", Name: inst.Name, Version: inst.Version})
 	return message, nil
 }
+func (a *App) UpdateAllPatches() (string, error) {
+	message, err := a.updateRuntimes(false)
+	if err != nil {
+		return "", err
+	}
+	if message == "" {
+		return "Tidak ada patch runtime untuk dipasang.", nil
+	}
+	return message, nil
+}
+
+func (a *App) updateRuntimes(includeNewSeries bool) (string, error) {
+	checkMgr, err := a.runtimeManager()
+	if err != nil {
+		return "", err
+	}
+	updates, err := update.Check(checkMgr)
+	if err != nil {
+		return "", err
+	}
+	var patches []update.RuntimeUpdate
+	for _, u := range updates {
+		if u.Name == "mysql" {
+			continue
+		}
+		if u.Kind == update.KindPatch || (includeNewSeries && u.Kind == update.KindNew) {
+			patches = append(patches, u)
+		}
+	}
+	if len(patches) == 0 {
+		return "", nil
+	}
+	a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "start", Name: "semua patch"})
+	mgr, err := a.runtimeManagerWithProgress(func(p rt.Progress) {
+		a.emitUpdateProgress(UpdateProgressView{
+			Kind:       "runtime",
+			Phase:      p.Phase,
+			Name:       p.Name,
+			Version:    p.Version,
+			Downloaded: p.Downloaded,
+			Total:      p.Total,
+		})
+	})
+	if err != nil {
+		a.emitUpdateError("runtime", "semua patch", "", err)
+		return "", err
+	}
+	ctx, cancel := a.startUpdateContext(30 * time.Minute)
+	defer a.finishUpdate(cancel)
+	var installed []update.RuntimeUpdate
+	var failures []string
+	for _, u := range patches {
+		if ctx.Err() != nil {
+			a.emitUpdateError("runtime", "semua patch", "", ctx.Err())
+			return "", ctx.Err()
+		}
+		if _, _, err := mgr.Install(ctx, u.Name, u.Latest); err != nil {
+			failures = append(failures, u.Name+" "+u.Latest+": "+err.Error())
+			continue
+		}
+		installed = append(installed, u)
+	}
+	project := a.trayProjectPath()
+	changed := false
+	if project != "" {
+		if m, err := loadManifest(project); err == nil {
+			for _, u := range installed {
+				current := projectServiceVersion(m, u.Name)
+				if current == "" || !update.SameSeries(current, u.Latest) || update.Compare(current, u.Latest) >= 0 {
+					continue
+				}
+				if err := a.SetServiceVersion(project, u.Name, u.Latest); err != nil {
+					failures = append(failures, u.Name+" "+u.Latest+": "+err.Error())
+					continue
+				}
+				changed = true
+			}
+		}
+	}
+	if changed {
+		a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "restart", Name: "semua patch"})
+		if st, err := stack.LoadState(""); err == nil && sameTrayPath(st.ProjectDir, project) {
+			if err := stack.Down(""); err != nil {
+				failures = append(failures, "stop stack: "+err.Error())
+			} else {
+				upCtx, upCancel := context.WithTimeout(context.Background(), 30*time.Minute)
+				defer upCancel()
+				if _, err := stack.Up(upCtx, stack.Options{ProjectDir: project}); err != nil {
+					failures = append(failures, "start stack: "+err.Error())
+				}
+			}
+		}
+	}
+	if len(failures) > 0 {
+		err := devlokerr.New(devlokerr.CodeDependencyMissing,
+			fmt.Sprintf("%d patch dipasang, %d gagal: %s", len(installed), len(failures), strings.Join(failures, "; ")),
+			"Periksa koneksi lalu ulangi update.")
+		a.emitUpdateError("runtime", "semua patch", "", err)
+		return "", err
+	}
+	a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "done", Name: "semua patch"})
+	message := fmt.Sprintf("%d update runtime dipasang.", len(installed))
+	if changed {
+		message += " Project diperbarui."
+	}
+	return message, nil
+}
+
 func (a *App) DownloadAppUpdate() (string, error) {
 	state, err := platform.Current().StateDir()
 	if err != nil {
@@ -875,9 +1423,18 @@ func (a *App) DownloadAppUpdate() (string, error) {
 	if appUpdate == nil {
 		return "", devlokerr.New(devlokerr.CodeInvalidArgument, "Tidak ada update aplikasi.", "")
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
-	defer cancel()
-	return update.Download(ctx, appUpdate, filepath.Join(state, "cache", "updates"))
+	a.emitUpdateProgress(UpdateProgressView{Kind: "app", Phase: "start", Version: appUpdate.Latest})
+	ctx, cancel := a.startUpdateContext(15 * time.Minute)
+	defer a.finishUpdate(cancel)
+	path, err := update.DownloadWithProgress(ctx, appUpdate, filepath.Join(state, "cache", "updates"), func(done, total int64) {
+		a.emitUpdateProgress(UpdateProgressView{Kind: "app", Phase: "download", Version: appUpdate.Latest, Downloaded: done, Total: total})
+	})
+	if err != nil {
+		a.emitUpdateError("app", "", appUpdate.Latest, err)
+		return "", err
+	}
+	a.emitUpdateProgress(UpdateProgressView{Kind: "app", Phase: "done", Version: appUpdate.Latest})
+	return path, nil
 }
 
 func (a *App) ApplyAppUpdate() error {
@@ -892,15 +1449,26 @@ func (a *App) ApplyAppUpdate() error {
 	if appUpdate == nil {
 		return devlokerr.New(devlokerr.CodeInvalidArgument, "Tidak ada update aplikasi.", "")
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
-	defer cancel()
-	path, err := update.Download(ctx, appUpdate, filepath.Join(state, "cache", "updates"))
+	a.emitUpdateProgress(UpdateProgressView{Kind: "app", Phase: "start", Version: appUpdate.Latest})
+	ctx, cancel := a.startUpdateContext(15 * time.Minute)
+	defer a.finishUpdate(cancel)
+	path, err := update.DownloadWithProgress(ctx, appUpdate, filepath.Join(state, "cache", "updates"), func(done, total int64) {
+		a.emitUpdateProgress(UpdateProgressView{Kind: "app", Phase: "download", Version: appUpdate.Latest, Downloaded: done, Total: total})
+	})
 	if err != nil {
+		a.emitUpdateError("app", "", appUpdate.Latest, err)
+		return err
+	}
+	a.emitUpdateProgress(UpdateProgressView{Kind: "app", Phase: "installer", Version: appUpdate.Latest})
+	if err := stack.Down(""); err != nil {
+		a.emitUpdateError("app", "", appUpdate.Latest, err)
 		return err
 	}
 	if err := update.LaunchInstallerDetached(path); err != nil {
+		a.emitUpdateError("app", "", appUpdate.Latest, err)
 		return err
 	}
+	a.emitUpdateProgress(UpdateProgressView{Kind: "app", Phase: "done", Version: appUpdate.Latest})
 	go a.quitApp()
 	return nil
 }
@@ -914,6 +1482,9 @@ func (a *App) RollbackAppUpdate() error {
 	backup := update.RollbackBackupDir(appDir)
 	if _, err := os.Stat(filepath.Join(backup, "devlok-gui.exe")); err != nil {
 		return devlokerr.New(devlokerr.CodeDependencyMissing, "Backup aplikasi sebelumnya tidak ditemukan.", "Rollback hanya tersedia setelah upgrade melalui installer DevLok.")
+	}
+	if err := stack.Down(""); err != nil {
+		return err
 	}
 	if err := update.ScheduleRollback(appDir); err != nil {
 		return err

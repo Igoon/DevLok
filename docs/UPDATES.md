@@ -35,7 +35,28 @@ Update runtime tersedia:
 Pasang versi baru dengan: dl runtime add <nama>@<versi>
 ```
 
-GUI/tray juga menampilkan menu **Updates (N)** jika ada update aplikasi atau runtime. Mengeklik menu tersebut menampilkan daftar update. Pemeriksaan tidak mengunduh atau memasang apa pun. Signed manifest di `config/update.json` selalu diprioritaskan; GitHub fallback dipakai hanya jika config tidak ada.
+GUI/tray juga menampilkan menu **Updates (N)** jika ada update aplikasi atau runtime. Mengeklik menu tersebut menampilkan daftar update. Pemeriksaan manual tidak mengunduh atau memasang apa pun kecuali opsi auto-update aktif. Signed manifest di `config/update.json` selalu diprioritaskan; GitHub fallback dipakai hanya jika config tidak ada.
+
+## Auto-update dari GUI
+
+Tab **Update** punya preferensi otomatis yang disimpan di `%USERPROFILE%\.devlok\config\preferences.json`:
+
+```json
+{
+  "schema": 1,
+  "auto_update_app": false,
+  "auto_update_runtime": false,
+  "auto_update_runtime_series": false,
+  "interval_minutes": 360
+}
+```
+
+- `auto_update_runtime`: pasang patch untuk seri runtime yang sudah terpasang, perbarui project aktif, lalu restart stack sekali.
+- `auto_update_runtime_series`: izinkan upgrade seri baru (mis. PHP 8.4 ke 8.5). Default mati.
+- `auto_update_app`: unduh dan jalankan installer DevLok otomatis. Stack dihentikan dan GUI ditutup sebelum installer.
+- `interval_minutes`: jeda pemeriksaan, 5-10080 menit.
+
+Auto-update berjalan hanya selama GUI DevLok hidup. Supervisor latar tetap menjaga service tetapi tidak melakukan update. Update aplikasi otomatis tidak berjalan diam-diam: opsi harus diaktifkan eksplisit dan installer tetap memakai mekanisme update normal.
 
 Fallback GitHub memakai API resmi dan checksum asset `.sha256`. Ini tidak memakai signature Ed25519, sehingga trust berakar pada keamanan repo GitHub. Untuk verifikasi rantai penuh, gunakan signed manifest.
 
@@ -51,23 +72,23 @@ Mengganti versi project dilakukan lewat tab Konfigurasi, menu tray Version, atau
 
 - Registry berisi URL resmi, ukuran, dan SHA256.
 - Versi baru dipasang berdampingan, bukan menimpa versi lama.
-- Project tetap memakai versi di manifest/lock sampai diubah.
+- Project tetap memakai versi di manifest/lock sampai diubah manual atau oleh aksi update GUI/auto-update patch.
 - Setelah versi project diubah, stack divalidasi dan direstart.
 - Config yang tidak valid membatalkan start; versi lama tetap tersedia.
 - MySQL lintas mayor membutuhkan backup dan pengujian; jangan mengandalkan downgrade.
 
 ## Update Aplikasi DevLok
 
-Belum ada auto-update. Rencana v0.1.1:
+Alur update aplikasi:
 
-1. Manifest rilis bertanda tangan.
+1. Manifest rilis bertanda tangan (atau GitHub Releases fallback).
 2. Pemeriksaan versi aplikasi.
-3. Unduh installer/portable, verifikasi signature dan SHA256.
-4. Minta pengguna menghentikan stack sebelum apply.
-5. Installer atau helper mengganti binary setelah proses lama berhenti.
+3. Unduh installer, verifikasi signature dan SHA256.
+4. Hentikan stack dan supervisor sebelum apply.
+5. Installer mengganti binary setelah proses lama berhenti.
 6. Installer menyimpan binary sebelumnya; rollback dijalankan dengan `dl update rollback --yes` atau tray Tools > Rollback app update.
 
-Apply tidak berjalan diam-diam: pengguna harus mengonfirmasi dan installer tetap interaktif. Rollback memulihkan binary dari `backup\previous` yang dibuat installer.
+Apply manual meminta konfirmasi. Apply otomatis hanya berjalan jika `auto_update_app` diaktifkan dan tetap menghentikan stack lebih dulu. Rollback memulihkan binary dari `backup\previous` yang dibuat installer.
 
 ## Update Dependency Project
 

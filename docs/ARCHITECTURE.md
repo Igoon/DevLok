@@ -141,6 +141,7 @@ Runtime tidak pernah ditulis ke dalam folder project. Yang masuk repo hanya mani
 - Restart policy dan backoff.
 - Rekonsiliasi state saat startup.
 - Mengumpulkan stdout/stderr ke logger.
+- Supervisor latar (`dl supervise`) membaca spek dari `state/supervisor.json`, memeriksa PID/health, dan restart dengan backoff. Pause file mencegah race saat `up`/`down`; stop flag menghentikannya sebelum installer.
 
 ### 5.4 `internal/ports`
 

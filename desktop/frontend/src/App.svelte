@@ -82,11 +82,21 @@
   let updateInfo: any = null
   let updateBusy = false
   let updateNotice = ''
+  let updateProgress: any = null
+  let lastUpdateRetry: (() => void) | null = null
+  let runtimeCache: any = { bytes: 0, files: 0 }
+  let updatePrefs: any = {
+    auto_update_app: false,
+    auto_update_runtime: false,
+    auto_update_runtime_series: false,
+    interval_minutes: 360
+  }
+  let prefsBusy = false
+  let prefsNotice = ''
   let refreshToken = 0
   let pmaURL = ''
 
-  const serviceRuntimeNames = new Set(['nginx', 'php', 'mysql', 'node', 'phpmyadmin'])
-  $: extraRuntimes = runtimes.filter((r) => !serviceRuntimeNames.has(r.name))
+  $: patchUpdates = updateInfo?.runtimes?.filter((u: any) => u.kind === 'patch') || []
 
   $: cfgDirty =
     cfgPath !== '' &&
@@ -149,13 +159,14 @@
   async function loadConfig(path: string) {
     if (!path) return
     try {
-      const [c, nginx, php, mysql, node, rl] = await Promise.all([
+      const [c, nginx, php, mysql, node, rl, cache] = await Promise.all([
         api().ProjectConfig(path),
         api().ServiceVersions('nginx'),
         api().ServiceVersions('php'),
         api().ServiceVersions('mysql'),
         api().ServiceVersions('node'),
-        api().RuntimeList()
+        api().RuntimeList(),
+        api().RuntimeCache()
       ])
       cfgPath = path
       cfgDomain = c.domain || ''
@@ -170,6 +181,7 @@
       cfgDB = !!c.database
       cfgPMA = !!c.phpmyadmin
       runtimes = rl
+      runtimeCache = cache
       cfgOptions = { nginx, php, mysql, node }
       cfgVersions = {
         nginx: matchVersion(nginx, c.versions?.nginx),
@@ -428,7 +440,9 @@
     error = ''
     updateNotice = ''
     try {
-      updateInfo = await api().UpdateInfo()
+      const [info, prefs] = await Promise.all([api().UpdateInfo(), api().UpdatePreferences()])
+      updateInfo = info
+      updatePrefs = prefs
     } catch (e) {
       error = message(e)
     } finally {
@@ -436,17 +450,34 @@
     }
   }
 
+  async function saveUpdatePrefs() {
+    prefsBusy = true
+    error = ''
+    prefsNotice = ''
+    try {
+      await api().SaveUpdatePreferences(updatePrefs)
+      prefsNotice = 'Preferensi update disimpan.'
+    } catch (e) {
+      error = message(e)
+    } finally {
+      prefsBusy = false
+    }
+  }
+
   async function downloadAppUpdate() {
     updateBusy = true
     error = ''
     updateNotice = ''
+    lastUpdateRetry = () => downloadAppUpdate()
     try {
       const path = await api().DownloadAppUpdate()
       updateNotice = 'Installer terverifikasi: ' + path
+      lastUpdateRetry = null
     } catch (e) {
       error = message(e)
     } finally {
       updateBusy = false
+      clearProgressSoon()
     }
   }
 
@@ -455,12 +486,56 @@
     updateBusy = true
     error = ''
     updateNotice = ''
+    lastUpdateRetry = () => applyAppUpdate()
     try {
       await api().ApplyAppUpdate()
       updateNotice = 'Installer dijadwalkan. DevLok akan ditutup.'
+      lastUpdateRetry = null
     } catch (e) {
       error = message(e)
+    } finally {
       updateBusy = false
+      clearProgressSoon()
+    }
+  }
+
+  function cancelUpdate() {
+    void api().CancelUpdate()
+  }
+
+  async function refreshRuntimes() {
+    const [rl, cache] = await Promise.all([api().RuntimeList(), api().RuntimeCache()])
+    runtimes = rl
+    runtimeCache = cache
+  }
+
+  async function cleanupUnused() {
+    if (!confirm('Hapus versi runtime lama yang tidak dipakai project?')) return
+    busy = 'Membersihkan runtime'
+    error = ''
+    notice = ''
+    try {
+      notice = await api().CleanupUnusedRuntimes()
+      await refreshRuntimes()
+    } catch (e) {
+      error = message(e)
+    } finally {
+      busy = ''
+    }
+  }
+
+  async function cleanupCache() {
+    if (!confirm('Hapus semua arsip runtime di cache? Runtime yang sudah terpasang tetap aman, update berikutnya akan mengunduh ulang.')) return
+    busy = 'Membersihkan cache'
+    error = ''
+    notice = ''
+    try {
+      notice = await api().CleanupRuntimeCache()
+      await refreshRuntimes()
+    } catch (e) {
+      error = message(e)
+    } finally {
+      busy = ''
     }
   }
 
@@ -478,19 +553,94 @@
     }
   }
 
+  function formatBytes(n: number) {
+    if (!n || n <= 0) return '0 B'
+    const units = ['B', 'KB', 'MB', 'GB']
+    let value = n
+    let unit = 0
+    while (value >= 1024 && unit < units.length - 1) {
+      value /= 1024
+      unit++
+    }
+    return value.toFixed(unit === 0 ? 0 : 1) + ' ' + units[unit]
+  }
+
+  function progressLabel(p: any) {
+    const target = p.name ? p.name + (p.version ? ' ' + p.version : '') : 'DevLok ' + (p.version || '')
+    switch (p.phase) {
+      case 'start': return 'Menyiapkan ' + target
+      case 'download': return 'Mengunduh ' + target
+      case 'verify': return 'Memverifikasi checksum ' + target
+      case 'extract': return 'Mengekstrak ' + target
+      case 'configure': return 'Memperbarui project ke ' + target
+      case 'restart': return 'Restart stack'
+      case 'installer': return 'Menjalankan installer ' + target
+      case 'done': return 'Selesai: ' + target
+      case 'error': return 'Gagal: ' + target
+      default: return target
+    }
+  }
+
+  function clearProgressSoon() {
+    window.setTimeout(() => {
+      if (updateProgress?.phase !== 'error') updateProgress = null
+    }, 1500)
+  }
+
   async function updateRuntime(u: any) {
-    const extra = u.name === 'mysql' ? '\n\nData MySQL tidak dimigrasikan otomatis. Backup database lama sebelum berpindah versi mayor.' : ''
+    let extra = u.name === 'mysql' ? '\n\nData MySQL tidak dimigrasikan otomatis. Backup database lama sebelum berpindah versi mayor.' : ''
+    if (u.kind === 'new') {
+      extra += '\n\nIni seri versi baru (' + u.series + '), bukan patch. Periksa kompatibilitas project sebelum melanjutkan.'
+    }
     if (!confirm('Pasang ' + u.name + ' ' + u.latest + ' dan ubah project aktif?' + extra)) return
     updateBusy = true
     error = ''
     updateNotice = ''
+    lastUpdateRetry = () => updateRuntime(u)
     try {
       updateNotice = await api().InstallRuntimeUpdate(u.name, u.latest)
       await loadUpdates()
+      await refreshRuntimes()
+      lastUpdateRetry = null
     } catch (e) {
       error = message(e)
     } finally {
       updateBusy = false
+      clearProgressSoon()
+    }
+  }
+
+  async function updateAllPatches() {
+    if (!confirm('Pasang semua patch runtime dan perbarui project aktif?')) return
+    updateBusy = true
+    error = ''
+    updateNotice = ''
+    lastUpdateRetry = () => updateAllPatches()
+    try {
+      updateNotice = await api().UpdateAllPatches()
+      await loadUpdates()
+      await refreshRuntimes()
+      lastUpdateRetry = null
+    } catch (e) {
+      error = message(e)
+    } finally {
+      updateBusy = false
+      clearProgressSoon()
+    }
+  }
+
+  async function removeRuntime(r: any) {
+    if (!confirm('Hapus runtime ' + r.name + ' ' + r.version + '?\n\nFile runtime akan dihapus dari disk.')) return
+    busy = 'Hapus runtime'
+    error = ''
+    notice = ''
+    try {
+      notice = await api().RemoveRuntime(r.name, r.version)
+      await refreshRuntimes()
+    } catch (e) {
+      error = message(e)
+    } finally {
+      busy = ''
     }
   }
 
@@ -558,10 +708,21 @@
   onMount(() => {
     refresh(false)
     timer = window.setInterval(() => refresh(true), 3000)
+    window.runtime?.EventsOn('update:progress', (p: any) => {
+      updateProgress = p
+      if (p.phase === 'start') updateBusy = true
+      if (p.phase === 'done' || p.phase === 'error') updateBusy = false
+      if (p.phase === 'done') {
+        window.setTimeout(() => {
+          if (updateProgress === p) updateProgress = null
+        }, 1500)
+      }
+    })
   })
 
   onDestroy(() => {
     if (timer) window.clearInterval(timer)
+    window.runtime?.EventsOff('update:progress')
   })
 </script>
 
@@ -904,18 +1065,35 @@
           </div>
         </div>
 
-        <h2>Tool tambahan terpasang</h2>
-        {#if extraRuntimes.length > 0}
+        <h2>Runtime terpasang</h2>
+        {#if runtimes.length > 0}
           <table>
-            <thead><tr><th>Nama</th><th>Versi</th><th>Path</th></tr></thead>
+            <thead><tr><th>Nama</th><th>Versi</th><th>Ukuran</th><th>Status</th><th>Path</th><th>Aksi</th></tr></thead>
             <tbody>
-              {#each extraRuntimes as r}
-                <tr><td>{r.name}</td><td>{r.version}</td><td class="muted">{r.path}</td></tr>
+              {#each runtimes as r}
+                <tr>
+                  <td>{r.name}</td>
+                  <td>{r.version}</td>
+                  <td>{formatBytes(r.bytes)}</td>
+                  <td>{r.in_use ? 'dipakai' : 'tidak dipakai'}</td>
+                  <td class="muted">{r.path}</td>
+                  <td>
+                    <button
+                      on:click={() => removeRuntime(r)}
+                      disabled={!!busy || r.in_use}
+                      title={r.in_use ? 'Dipakai: ' + (r.used_by || []).join(', ') : ''}
+                    >Hapus</button>
+                  </td>
+                </tr>
               {/each}
             </tbody>
           </table>
+          <div class="form-row" style="margin-top:8px">
+            <button on:click={cleanupUnused} disabled={!!busy || updateBusy}>Hapus versi lama</button>
+            <button on:click={cleanupCache} disabled={!!busy || updateBusy}>Bersihkan cache ({formatBytes(runtimeCache.bytes)})</button>
+          </div>
         {:else}
-          <p class="muted">Tidak ada tool tambahan terpasang.</p>
+          <p class="muted">Tidak ada runtime terpasang.</p>
         {/if}
 
         <div class="form-row" style="margin-top:12px">
@@ -935,8 +1113,77 @@
         <button on:click={loadUpdates} disabled={updateBusy}>Periksa update</button>
       </div>
 
+      <h2>Pembaruan otomatis</h2>
+      <div class="prefs-box">
+        <label class="check">
+          <input type="checkbox" bind:checked={updatePrefs.auto_update_app} />
+          Update aplikasi otomatis
+        </label>
+        <label class="check">
+          <input type="checkbox" bind:checked={updatePrefs.auto_update_runtime} />
+          Update runtime/service otomatis
+        </label>
+        <label class="check">
+          <input
+            type="checkbox"
+            bind:checked={updatePrefs.auto_update_runtime_series}
+            disabled={!updatePrefs.auto_update_runtime}
+          />
+          Ikut upgrade seri baru (mis. PHP 8.4 ke 8.5)
+        </label>
+        <div class="form-row">
+          <label class="muted">
+            Interval
+            <select bind:value={updatePrefs.interval_minutes}>
+              <option value={15}>15 menit</option>
+              <option value={60}>1 jam</option>
+              <option value={360}>6 jam</option>
+              <option value={1440}>24 jam</option>
+            </select>
+          </label>
+          <button on:click={saveUpdatePrefs} disabled={prefsBusy}>Simpan preferensi</button>
+          {#if prefsNotice}<span class="muted">{prefsNotice}</span>{/if}
+        </div>
+        <p class="muted">
+          Update aplikasi otomatis menutup DevLok dan menghentikan stack sebelum installer dijalankan.
+          Runtime hanya menerima patch seri terpasang kecuali opsi seri baru diaktifkan.
+        </p>
+      </div>
+
       {#if updateNotice}
         <div class="notice-box">{updateNotice}</div>
+      {/if}
+
+      {#if updateProgress}
+        <div class="progress-box" class:failed={updateProgress.phase === 'error'}>
+          <div class="progress-head">
+            <span>{progressLabel(updateProgress)}</span>
+            {#if updateProgress.phase === 'download' && updateProgress.total > 0}
+              <strong>{updateProgress.percent}%</strong>
+            {:else if updateProgress.phase === 'done'}
+              <strong>100%</strong>
+            {/if}
+          </div>
+          <div
+            class="progress-track"
+            class:indeterminate={updateProgress.phase !== 'download' && updateProgress.phase !== 'done' && updateProgress.phase !== 'error'}
+          >
+            <div class="progress-fill" style="width:{updateProgress.phase === 'done' ? 100 : updateProgress.percent}%"></div>
+          </div>
+          {#if updateProgress.phase === 'download' && updateProgress.total > 0}
+            <div class="muted">{formatBytes(updateProgress.downloaded)} / {formatBytes(updateProgress.total)}</div>
+          {:else if updateProgress.message}
+            <div class="muted">{updateProgress.message}</div>
+          {/if}
+          <div class="form-row" style="margin-top:8px">
+            {#if updateProgress.phase === 'error' && lastUpdateRetry}
+              <button on:click={() => lastUpdateRetry?.()} disabled={updateBusy}>Coba lagi</button>
+            {/if}
+            {#if updateBusy && updateProgress.phase !== 'done' && updateProgress.phase !== 'error' && updateProgress.phase !== 'installer'}
+              <button class="danger" on:click={cancelUpdate}>Batal</button>
+            {/if}
+          </div>
+        </div>
       {/if}
 
       {#if updateInfo}
@@ -966,6 +1213,11 @@
         {/if}
 
         <h2>Update runtime</h2>
+        {#if patchUpdates.length > 0}
+          <div class="form-row" style="margin-bottom:10px">
+            <button class="primary" on:click={updateAllPatches} disabled={updateBusy}>Update semua patch ({patchUpdates.length})</button>
+          </div>
+        {/if}
         {#if !updateInfo.runtimes || updateInfo.runtimes.length === 0}
           <p class="muted">Semua runtime terpasang sudah versi terbaru.</p>
         {:else}
@@ -974,8 +1226,13 @@
               <div class="site">
                 <div class="site-head">
                   <strong>{u.name}</strong>
-                  <span class="pill running">{u.installed} &rarr; {u.latest}</span>
+                  {#if u.kind === 'new'}
+                    <span class="pill">seri baru {u.series}</span>
+                  {:else}
+                    <span class="pill running">patch {u.series}</span>
+                  {/if}
                 </div>
+                <div class="muted">{u.installed} &rarr; {u.latest}</div>
                 <div class="form-row">
                   <button class="primary" on:click={() => updateRuntime(u)} disabled={updateBusy}>Update ke {u.latest}</button>
                   <button on:click={() => copyRuntimeCommand(u)}>Salin perintah</button>

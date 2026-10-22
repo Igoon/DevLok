@@ -4,6 +4,25 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-10-22
+
+### Added
+
+- Deteksi update runtime per seri terpasang (mis. PHP 8.4.26 ke 8.4.27) dan deteksi seri baru (mis. PHP 8.5.x) secara terpisah.
+- Hapus runtime terpasang dari tab Konfigurasi; runtime yang masih dipakai project mana pun ditolak.
+- Progress bar untuk unduh/verifikasi/ekstrak update runtime dan unduh installer update aplikasi.
+- Tombol Batal dan Coba lagi pada proses update.
+- Update semua patch runtime sekaligus dengan satu restart stack.
+- Tampilan ukuran runtime, status pemakaian per project, hapus versi lama, dan bersihkan cache unduhan.
+- Preferensi auto-update di tab Update: aplikasi, patch runtime, upgrade seri baru, dan interval pemeriksaan.
+- Supervisor latar (`dl supervise`) memantau liveness dan health service, lalu restart dengan backoff setelah GUI/CLI ditutup.
+- Registry PHP 8.4.27 dan 8.5.12.
+
+### Changed
+
+- Auto-update aplikasi dan runtime berjalan selama GUI hidup; update aplikasi tetap menghentikan stack sebelum installer.
+- Quit dari tray tidak lagi menghentikan stack; gunakan Stop All atau `dl down`. Update/rollback aplikasi tetap menghentikan stack sebelum installer.
+
 ## [0.1.7] - 2026-10-22
 
 ### Fixed

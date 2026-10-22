@@ -189,7 +189,7 @@ func (a *App) onTrayReady() {
 		go a.trayAbout()
 	})
 	systray.AddSeparator()
-	mQuit := systray.AddMenuItem("Quit", "Keluar dari DevLok")
+	mQuit := systray.AddMenuItem("Quit", "Keluar dari DevLok; stack tetap berjalan")
 
 	mShow.Click(func() {
 		wruntime.WindowShow(a.ctx)
@@ -723,7 +723,11 @@ func (a *App) refreshTrayUpdates(manual bool) {
 		lines = append(lines, line)
 	}
 	for _, u := range updates {
-		lines = append(lines, fmt.Sprintf("%s %s -> %s", u.Name, u.Installed, u.Latest))
+		line := fmt.Sprintf("%s %s -> %s", u.Name, u.Installed, u.Latest)
+		if u.Kind == update.KindNew {
+			line += " (seri baru " + u.Series + ")"
+		}
+		lines = append(lines, line)
 	}
 	msg := strings.Join(lines, "\n")
 	if appUpdate != nil && appUpdate.URL != "" {
@@ -794,6 +798,10 @@ func (a *App) trayApplyAppUpdate() {
 		a.trayError("Update", err)
 		return
 	}
+	if err := stack.Down(""); err != nil {
+		a.trayError("Update", err)
+		return
+	}
 	if err := update.LaunchInstallerDetached(path); err != nil {
 		a.trayError("Update", err)
 		return
@@ -814,6 +822,10 @@ func (a *App) trayRollbackAppUpdate() {
 		return
 	}
 	if !a.trayConfirm("Rollback ke binary DevLok sebelumnya?\n\nStack akan dihentikan, GUI ditutup, binary dipulihkan, lalu GUI dijalankan kembali.") {
+		return
+	}
+	if err := stack.Down(""); err != nil {
+		a.trayError("Rollback", err)
 		return
 	}
 	if err := update.ScheduleRollback(appDir); err != nil {
@@ -1578,7 +1590,6 @@ func trayLog(msg string) {
 func (a *App) quitApp() {
 	quitting.Store(true)
 	go func() {
-		_ = stack.Down("")
 		systray.Quit()
 		wruntime.Quit(a.ctx)
 	}()

@@ -67,7 +67,8 @@ Dibandingkan Laragon, DevLok menangani:
 - Tab **Sites** untuk daftar project dan pembuatan site baru.
 - Tab **Logs** untuk melihat log Nginx, PHP, MySQL, dan aplikasi.
 - Tab **Konfigurasi** untuk domain, alias, document root, HTTPS, database, port, versi service, dan komponen.
-- Tab **Update** untuk cek update aplikasi/runtime, download installer, apply, dan rollback.
+- Tab **Update** untuk cek update aplikasi/runtime, download installer, apply, dan rollback. Update runtime dipisah antara patch seri terpasang (mis. 8.4.26 ke 8.4.27) dan seri baru (mis. 8.5.x), dengan progress bar untuk unduh, verifikasi, ekstrak, update project, dan restart stack.
+- Preferensi **Pembaruan otomatis**: update aplikasi, patch runtime, upgrade seri baru, dan interval pemeriksaan. Default mati; update aplikasi otomatis tetap menghentikan stack sebelum installer.
 - Tab **Import** untuk scan dan migrasi project Laragon.
 - Pemeriksaan port langsung: free atau in use beserta nama proses.
 - Simpan konfigurasi otomatis me-restart stack jika sedang berjalan.
@@ -81,7 +82,7 @@ Dibandingkan Laragon, DevLok menangani:
 - **Restart Stack** untuk menerapkan perubahan konfigurasi.
 - Menu **Tools**: folder project, terminal, editor, copy URL, folder config, folder log, About.
 - Label berubah otomatis mengikuti status service, termasuk perubahan dari GUI.
-- Show DevLok, Open site, phpMyAdmin, dan Quit.
+- Show DevLok, Open site, phpMyAdmin, dan Quit. Quit tidak menghentikan stack; supervisor latar tetap menjaga service sampai Stop All atau `dl down`.
 - Submenu site untuk mengaktifkan atau membuka project.
 - Submenu versi Nginx, PHP, MySQL, dan Node.js dengan tanda cek.
 - Menu MySQL: phpMyAdmin, Start/Stop MySQL, version, create database, change/get root password, backup semua database, my.ini, mysqld.log, folder data, dan folder backup.
@@ -99,6 +100,10 @@ Dibandingkan Laragon, DevLok menangani:
 - Runtime dipasang di state directory, bukan dicampur dengan tool sistem.
 - Versi runtime dapat dipilih per project.
 - Pemeriksaan update runtime lokal lewat `dl update` dan menu tray **Updates (N)**; tidak ada auto-install.
+- Deteksi update patch untuk setiap versi terpasang (mis. PHP 8.4.26 ke 8.4.27) dan deteksi seri baru (mis. PHP 8.5.x) secara terpisah.
+- Hapus runtime terpasang dari tab Konfigurasi atau `dl runtime remove`; runtime yang masih dipakai project mana pun ditolak.
+- Tab Konfigurasi menampilkan ukuran tiap runtime, status pemakaian, aksi hapus versi lama, dan pembersihan cache unduhan.
+- Update semua patch runtime sekaligus; proses update dapat dibatalkan atau diulang dari progress bar.
 - Nginx, PHP, MySQL, Node.js, Composer, Adminer, phpMyAdmin, dan Notepad++ portable.
 
 ### Service dan Supervisi

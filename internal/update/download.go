@@ -12,13 +12,20 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"devlok/internal/devlokerr"
 )
 
 const maxAppDownload = 512 << 20
 
+type DownloadProgress func(downloaded, total int64)
+
 func Download(ctx context.Context, rel *AppUpdate, dir string) (string, error) {
+	return DownloadWithProgress(ctx, rel, dir, nil)
+}
+
+func DownloadWithProgress(ctx context.Context, rel *AppUpdate, dir string, progress DownloadProgress) (string, error) {
 	if rel == nil {
 		return "", devlokerr.New(devlokerr.CodeInvalidArgument, "Tidak ada rilis aplikasi untuk diunduh.", "")
 	}
@@ -64,7 +71,11 @@ func Download(ctx context.Context, rel *AppUpdate, dir string) (string, error) {
 		return "", devlokerr.Wrap(devlokerr.CodePermissionDenied, err, "File update tidak dapat ditulis.", "")
 	}
 	h := sha256.New()
-	written, copyErr := io.Copy(io.MultiWriter(f, h), io.LimitReader(resp.Body, maxAppDownload+1))
+	reader := io.Reader(io.LimitReader(resp.Body, maxAppDownload+1))
+	if progress != nil {
+		reader = &progressReader{r: reader, total: resp.ContentLength, cb: progress}
+	}
+	written, copyErr := io.Copy(io.MultiWriter(f, h), reader)
 	closeErr := f.Close()
 	if copyErr != nil || closeErr != nil {
 		_ = os.Remove(tmp)
@@ -87,6 +98,28 @@ func Download(ctx context.Context, rel *AppUpdate, dir string) (string, error) {
 		return "", devlokerr.Wrap(devlokerr.CodePermissionDenied, err, "File update tidak dapat diselesaikan.", "")
 	}
 	return out, nil
+}
+
+type progressReader struct {
+	r     io.Reader
+	total int64
+	done  int64
+	last  time.Time
+	cb    DownloadProgress
+}
+
+func (p *progressReader) Read(b []byte) (int, error) {
+	n, err := p.r.Read(b)
+	p.done += int64(n)
+	if p.cb != nil && (time.Since(p.last) > 100*time.Millisecond || err == io.EOF) {
+		p.last = time.Now()
+		total := p.total
+		if total < 0 {
+			total = 0
+		}
+		p.cb(p.done, total)
+	}
+	return n, err
 }
 
 func safeName(name string) string {

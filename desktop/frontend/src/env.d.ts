@@ -1,5 +1,9 @@
 ﻿declare global {
   interface Window {
+    runtime?: {
+      EventsOn(event: string, callback: (...data: any[]) => void): void
+      EventsOff(event: string, ...additionalEvents: string[]): void
+    }
     go?: {
       main?: {
         App?: {
@@ -22,6 +26,15 @@
           OpenEditor(path: string): Promise<void>
           OpenTerminal(path: string): Promise<void>
           RuntimeList(): Promise<any[]>
+          RemoveRuntime(name: string, version: string): Promise<string>
+          RuntimeCache(): Promise<any>
+          CleanupRuntimeCache(): Promise<string>
+          CleanupUnusedRuntimes(): Promise<string>
+          InstallRuntimeUpdate(name: string, version: string): Promise<string>
+          UpdateAllPatches(): Promise<string>
+          CancelUpdate(): Promise<void>
+          UpdatePreferences(): Promise<any>
+          SaveUpdatePreferences(prefs: any): Promise<void>
           Logs(service: string, lines: number): Promise<string>
           Version(): Promise<string>
         }

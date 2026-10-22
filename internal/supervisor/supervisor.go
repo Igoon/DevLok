@@ -303,6 +303,10 @@ func healthPort(h Health) int {
 	return 80
 }
 
+func HealthOK(h Health) bool {
+	return healthOK(h)
+}
+
 func healthOK(h Health) bool {
 	if h.HTTPURL != "" {
 		client := &http.Client{
@@ -411,6 +415,33 @@ func (m *Manager) List() []Status {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.listLocked()
+}
+
+func (m *Manager) Reconcile() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	changed := false
+	for name, st := range m.orphan {
+		if st.State != StateRunning && st.State != StateRestarting {
+			continue
+		}
+		alive := false
+		if st.PID > 0 {
+			started, err := platform.Current().ProcessStartTime(st.PID)
+			if err == nil && absDuration(started.Sub(st.StartedAt)) <= 3*time.Second {
+				alive = true
+			}
+		}
+		if !alive {
+			st.State = StateStopped
+			st.PID = 0
+			m.orphan[name] = st
+			changed = true
+		}
+	}
+	if changed {
+		_ = m.saveLocked()
+	}
 }
 
 func (m *Manager) listLocked() []Status {
