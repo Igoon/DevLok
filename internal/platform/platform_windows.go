@@ -170,6 +170,12 @@ func (windowsPlatform) OpenEditor(path string) error {
 	return exec.Command("notepad.exe", path).Start()
 }
 
+func (windowsPlatform) OpenApp(path string) error {
+	cmd := exec.Command(path)
+	hidden.Hide(cmd)
+	return cmd.Start()
+}
+
 func (windowsPlatform) FlushDNS() error {
 	cmd := exec.Command("ipconfig", "/flushdns")
 	hidden.Hide(cmd)
@@ -177,3 +183,5 @@ func (windowsPlatform) FlushDNS() error {
 }
 
 func (windowsPlatform) ExeSuffix() string { return ".exe" }
+
+func (windowsPlatform) AppSuffix() string { return "" }

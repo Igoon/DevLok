@@ -92,6 +92,13 @@ func (otherPlatform) OpenEditor(path string) error {
 	return exec.Command("xdg-open", path).Start()
 }
 
+func (otherPlatform) OpenApp(path string) error {
+	if runtime.GOOS == "darwin" {
+		return exec.Command("open", path).Start()
+	}
+	return exec.Command(path).Start()
+}
+
 func (otherPlatform) FlushDNS() error {
 	if runtime.GOOS == "darwin" {
 		return exec.Command("dscacheutil", "-flushcache").Run()
@@ -100,3 +107,5 @@ func (otherPlatform) FlushDNS() error {
 }
 
 func (otherPlatform) ExeSuffix() string { return "" }
+
+func (otherPlatform) AppSuffix() string { return "" }

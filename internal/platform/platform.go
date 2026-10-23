@@ -24,8 +24,10 @@ type Platform interface {
 	OpenFolder(path string) error
 	OpenTerminal(dir string, env []string) error
 	OpenEditor(path string) error
+	OpenApp(path string) error
 	FlushDNS() error
 	ExeSuffix() string
+	AppSuffix() string
 }
 
 func Current() Platform {

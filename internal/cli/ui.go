@@ -3,8 +3,8 @@ package cli
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -26,10 +26,7 @@ func newUICommand() *cobra.Command {
 				return err
 			}
 			requestShow()
-			c := exec.Command(exe)
-			c.Stdout = nil
-			c.Stderr = nil
-			if err := c.Start(); err != nil {
+			if err := platform.Current().OpenApp(exe); err != nil {
 				return devlokerr.Wrap(devlokerr.CodeDependencyMissing, err, "GUI tidak dapat dijalankan.", "")
 			}
 			fmt.Fprintln(cmd.OutOrStdout(), "GUI dibuka:", exe)
@@ -41,27 +38,51 @@ func newUICommand() *cobra.Command {
 }
 
 func findGUI() (string, error) {
-	var candidates []string
+	p := platform.Current()
+	appSuffix := p.AppSuffix()
+
+	var dirs []string
 	if self, err := os.Executable(); err == nil {
 		dir := filepath.Dir(self)
-		candidates = append(candidates,
-			filepath.Join(dir, "devlok-gui.exe"),
-			filepath.Join(dir, "..", "..", "desktop", "build", "bin", "devlok-gui.exe"),
+		dirs = append(dirs,
+			dir,
+			filepath.Join(dir, "..", "..", "desktop", "build", "bin"),
 		)
 	}
 	if cwd, err := os.Getwd(); err == nil {
-		candidates = append(candidates,
-			filepath.Join(cwd, "devlok-gui.exe"),
-			filepath.Join(cwd, "build", "bin", "devlok-gui.exe"),
-			filepath.Join(cwd, "desktop", "build", "bin", "devlok-gui.exe"),
+		dirs = append(dirs,
+			cwd,
+			filepath.Join(cwd, "build", "bin"),
+			filepath.Join(cwd, "desktop", "build", "bin"),
 		)
 	}
-	for _, p := range candidates {
-		if info, err := os.Stat(p); err == nil && !info.IsDir() {
-			return p, nil
+
+	var names []string
+	if appSuffix != "" {
+		names = append(names, "devlok-gui"+appSuffix, "DevLok"+appSuffix)
+	}
+	names = append(names, "devlok-gui"+p.ExeSuffix())
+
+	for _, dir := range dirs {
+		for _, name := range names {
+			candidate := filepath.Join(dir, name)
+			info, err := os.Stat(candidate)
+			if err != nil {
+				continue
+			}
+			if !info.IsDir() || strings.HasSuffix(candidate, ".app") {
+				return candidate, nil
+			}
 		}
 	}
-	return "", devlokerr.New(devlokerr.CodeDependencyMissing, "devlok-gui.exe tidak ditemukan.", "Jalankan wails build di folder desktop.")
+	return "", devlokerr.New(devlokerr.CodeDependencyMissing, "GUI DevLok tidak ditemukan.", guiBuildHint())
+}
+
+func guiBuildHint() string {
+	if platform.Current().AppSuffix() != "" {
+		return "Jalankan scripts/build-macos.sh, atau wails build di folder desktop."
+	}
+	return "Jalankan wails build di folder desktop."
 }
 
 func requestShow() {

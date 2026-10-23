@@ -134,6 +134,13 @@ func (darwinPlatform) OpenEditor(path string) error {
 	return exec.Command("open", "-t", path).Start()
 }
 
+func (darwinPlatform) OpenApp(path string) error {
+	if strings.HasSuffix(path, ".app") {
+		return exec.Command("open", path).Start()
+	}
+	return exec.Command(path).Start()
+}
+
 func (darwinPlatform) FlushDNS() error {
 	cmd := exec.Command("dscacheutil", "-flushcache")
 	out, err := cmd.CombinedOutput()
@@ -145,6 +152,8 @@ func (darwinPlatform) FlushDNS() error {
 }
 
 func (darwinPlatform) ExeSuffix() string { return "" }
+
+func (darwinPlatform) AppSuffix() string { return ".app" }
 
 func shellQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", "'\\''") + "'"
