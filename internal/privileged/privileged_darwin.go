@@ -46,7 +46,7 @@ func run(operation string, domains []string) error {
 		parts = append(parts, shellQuote(a))
 	}
 	command := strings.Join(parts, " ")
-	script := fmt.Sprintf(`do shell script "%s" with administrator privileges`, appleQuote(command))
+	script := fmt.Sprintf(`do shell script %s with administrator privileges`, appleQuote(command))
 	cmd := exec.Command("osascript", "-e", script)
 	out, err := cmd.CombinedOutput()
 	if err != nil {

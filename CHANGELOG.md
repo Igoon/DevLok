@@ -22,6 +22,7 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 - Warning `dl up` di macOS diperbaiki: tidak lagi memunculkan "manifest meminta ." saat manifest tidak mengisi versi Nginx, dan pesan versi per project diperjelas. Pesan gagal hosts kini menampilkan output osascript asli.
 - Nginx di macOS/Linux kini memakai `daemon off;` sehingga master tetap foreground dan dilacak supervisor; sebelumnya nginx daemonize sehingga dianggap "berhenti sebelum siap".
 - `dl site list` menampilkan kolom `PATH` sehingga folder project terlihat langsung.
+- Sinkronisasi hosts macOS diperbaiki: skrip `osascript` sebelumnya mengutip ganda (`do shell script ""…""`) sehingga selalu gagal `syntax error (-2740)`; kini hosts dapat ditulis setelah prompt administrator.
 
 ### Changed
 
