@@ -20,7 +20,7 @@ cd desktop
 wails build -clean
 cd "$ROOT"
 
-app="$(find desktop/build/bin -maxdepth 1 -name '*.app' -print -quit)"
+app="$(find desktop/build -maxdepth 2 -name '*.app' -print -quit)"
 if [ -z "$app" ]; then
   echo "app bundle tidak ditemukan" >&2
   exit 1

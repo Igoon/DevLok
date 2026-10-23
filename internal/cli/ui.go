@@ -47,13 +47,16 @@ func findGUI() (string, error) {
 		dirs = append(dirs,
 			dir,
 			filepath.Join(dir, "..", "..", "desktop", "build", "bin"),
+			filepath.Join(dir, "..", "..", "desktop", "build"),
 		)
 	}
 	if cwd, err := os.Getwd(); err == nil {
 		dirs = append(dirs,
 			cwd,
 			filepath.Join(cwd, "build", "bin"),
+			filepath.Join(cwd, "build"),
 			filepath.Join(cwd, "desktop", "build", "bin"),
+			filepath.Join(cwd, "desktop", "build"),
 		)
 	}
 	if appSuffix != "" {

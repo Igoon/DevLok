@@ -47,7 +47,7 @@ jobs:
           APPLE_API_KEY_P8_BASE64: ${{ secrets.APPLE_API_KEY_P8_BASE64 }}
         run: |
           set -e
-          app=$(find desktop/build/bin -maxdepth 1 -name '*.app' -print -quit)
+          app=$(find desktop/build -maxdepth 2 -name '*.app' -print -quit)
           if [ -z "$app" ]; then
             echo "app bundle tidak ditemukan"
             find desktop/build -maxdepth 3 -type f | head -n 50
