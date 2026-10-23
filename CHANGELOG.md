@@ -12,6 +12,7 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 - `OpenApp` macOS melaporkan error `open` (mis. Gatekeeper menolak) alih-alih gagal diam-diam.
 - `dl ui`, `scripts/build-macos.sh`, dan workflow `macos-build` mencari bundle `.app` di `desktop/build` juga, bukan hanya `desktop/build/bin`.
 - GUI macOS tidak lagi crash saat startup: tray systray dinonaktifkan di macOS karena `systray.Run` menabrak main thread Cocoa milik Wails (`SIGABRT`).
+- Ikon aplikasi macOS/Windows kini memakai ikon DevLok "DL": `desktop/build/appicon.png` (1024×1024) dibuat oleh `scripts/make-icon.py` dan ikut di-commit, menggantikan ikon default Wails.
 
 ### Changed
 

@@ -29,7 +29,8 @@ Thumbs.db
 devlok-*.zip
 
 # Desktop build
-/desktop/build/
+/desktop/build/*
+!/desktop/build/appicon.png
 /desktop/frontend/node_modules/
 /desktop/frontend/wailsjs/
 /desktop/frontend/dist/
