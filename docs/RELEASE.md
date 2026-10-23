@@ -69,6 +69,15 @@ Aset rilis:
 - `DevLok-Setup-<versi>.exe`
 - `DevLok-Setup-<versi>.exe.sha256`
 
+## macOS
+
+Job `macos` pada `release.yml` membangun `macos-15` (arm64) dan `macos-15-intel` setelah job Windows, lalu melampirkan aset ke GitHub Release yang sama:
+
+- `DevLok-macos-arm64.dmg` + `.dmg.sha256`, `DevLok-macos-arm64.zip`
+- `DevLok-macos-intel.dmg` + `.dmg.sha256`, `DevLok-macos-intel.zip`
+
+DMG unsigned kecuali GitHub Secrets signing/notarization tersedia (lihat [MACOS-SIGNING.md](MACOS-SIGNING.md)).
+
 Installer saat ini belum ditandatangani Authenticode. Windows SmartScreen dapat menampilkan peringatan.
 
 ## Manifest Update

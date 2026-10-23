@@ -2,7 +2,7 @@
 
 ## Status
 
-Dukungan macOS masih tahap pengembangan. Build `.app`/`.dmg` tersedia sebagai artifact GitHub Actions, belum sebagai release resmi.
+Dukungan macOS masih tahap pengembangan. Build `.app`/`.dmg` tersedia sebagai artifact GitHub Actions dan dilampirkan ke GitHub Release oleh workflow `release` (`DevLok-macos-arm64`/`-intel`), unsigned kecuali secret signing tersedia.
 
 ## Prasyarat
 
