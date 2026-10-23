@@ -51,7 +51,7 @@ Data MySQL, kredensial, log, certificate, dan runtime shim berada di state dir D
 - MySQL Homebrew dengan data DevLok.
 - phpMyAdmin.
 - Hosts melalui `osascript` dengan administrator prompt.
-- Trust CA melalui `security`.
+- Trust CA melalui `security` (login keychain); untrust memakai `security delete-certificate`.
 - Build GUI Wails dan `.app`.
 - `dl ui` menemukan bundle `.app` di folder build dan `/Applications`/`~/Applications`.
 - `KillProcessesUnder` memakai `pgrep -f` untuk membersihkan proses di bawah folder runtime.

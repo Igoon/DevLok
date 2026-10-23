@@ -54,7 +54,7 @@ func run(operation string, domains []string) error {
 		if msg == "" {
 			msg = err.Error()
 		}
-		return devlokerr.New(devlokerr.CodeElevationRequired, "Hosts membutuhkan izin Administrator.", msg)
+		return devlokerr.New(devlokerr.CodeElevationRequired, "Hosts membutuhkan izin Administrator: "+msg, "Setujui prompt administrator macOS untuk memperbarui /etc/hosts.")
 	}
 	return nil
 }

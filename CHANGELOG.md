@@ -16,6 +16,8 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 - Deteksi pemilik port macOS memakai `lsof` (sebelumnya tidak tersedia) sehingga `dl ports` menampilkan proses/PID di macOS.
 - GUI macOS: tab Konfigurasi tidak lagi kosong. `ServiceVersions` mengembalikan versi Homebrew di macOS alih-alih error, dan kegagalan satu service kini tidak mematikan seluruh muatan tab (`Promise.allSettled`). `SetServiceVersion` di macOS tidak lagi resolve ke registry.
 - Pencarian `brew` tidak lagi bergantung `PATH` (fallback ke `/opt/homebrew/bin/brew`, `/usr/local/bin/brew`).
+- Trust CA macOS kini berfungsi: `tlsca` memakai `security add-trusted-cert`/`delete-certificate` ke login keychain (sebelumnya memakai stub `store_other.go` yang selalu error).
+- Warning `dl up` di macOS diperbaiki: tidak lagi memunculkan "manifest meminta ." saat manifest tidak mengisi versi Nginx, dan pesan versi per project diperjelas. Pesan gagal hosts kini menampilkan output osascript asli.
 
 ### Changed
 

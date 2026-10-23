@@ -135,11 +135,11 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 	}
 	var preWarnings []string
 	if platform.Current().Name() == "darwin" {
-		if !sameMinor(nginx.Version, nginxVersion) {
-			preWarnings = append(preWarnings, "Nginx Homebrew "+nginx.Version+" dipakai; manifest meminta "+nginxVersion+".")
+		if nginxVersion != "" && !sameMinor(nginx.Version, nginxVersion) {
+			preWarnings = append(preWarnings, "Nginx Homebrew "+nginx.Version+" dipakai; versi per project ("+nginxVersion+") tidak didukung di macOS.")
 		}
-		if !sameMinor(php.Version, phpVersion) {
-			preWarnings = append(preWarnings, "PHP Homebrew "+php.Version+" dipakai; manifest meminta "+phpVersion+".")
+		if phpVersion != "" && !sameMinor(php.Version, phpVersion) {
+			preWarnings = append(preWarnings, "PHP Homebrew "+php.Version+" dipakai; versi per project ("+phpVersion+") tidak didukung di macOS.")
 		}
 	}
 	mysqlEnabled := p.manifest.ComponentEnabled("mysql")
