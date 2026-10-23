@@ -134,18 +134,6 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 		return Result{}, err
 	}
 	var preWarnings []string
-	if platform.Current().Name() == "darwin" {
-		var brewMismatch []string
-		if nginxVersion != "" && !sameMinor(nginx.Version, nginxVersion) {
-			brewMismatch = append(brewMismatch, "Nginx "+nginx.Version+" (diminta "+nginxVersion+")")
-		}
-		if phpVersion != "" && !sameMinor(php.Version, phpVersion) {
-			brewMismatch = append(brewMismatch, "PHP "+php.Version+" (diminta "+phpVersion+")")
-		}
-		if len(brewMismatch) > 0 {
-			preWarnings = append(preWarnings, "Runtime Homebrew dipakai: "+strings.Join(brewMismatch, ", ")+"; versi per project tidak didukung di macOS.")
-		}
-	}
 	mysqlEnabled := p.manifest.ComponentEnabled("mysql")
 	pmaEnabled := mysqlEnabled && p.manifest.ComponentEnabled("phpmyadmin")
 	var pma rt.Installed
@@ -700,11 +688,6 @@ func chooseHTTPSPort(explicit int) (int, error) {
 	return choosePort(explicit, "HTTPS", 443, 8443)
 }
 
-func sameMinor(actual, requested string) bool {
-	a := strings.Split(actual, ".")
-	b := strings.Split(requested, ".")
-	return len(a) >= 2 && len(b) >= 2 && a[0] == b[0] && a[1] == b[1]
-}
 func choosePort(explicit int, label string, fallback ...int) (int, error) {
 	if explicit > 0 {
 		st := ports.Check(explicit)

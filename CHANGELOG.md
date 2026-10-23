@@ -4,6 +4,11 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+### Fixed
+
+- GUI macOS: `window.confirm` tidak didukung WKWebView sehingga tombol Hapus runtime, Bersihkan cache, dan konfirmasi update tidak bereaksi; kini memakai dialog native Wails lewat binding `App.Confirm`.
+- Start All/deploy di macOS tidak lagi menampilkan warning "Runtime Homebrew dipakai ... versi per project tidak didukung" (memang by-design di macOS).
+
 ## [0.2.0] - 2026-10-24
 
 ### Fixed

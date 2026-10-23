@@ -865,6 +865,22 @@ func (a *App) RuntimeList() ([]RuntimeView, error) {
 	return out, nil
 }
 
+func (a *App) Confirm(title, message string) (bool, error) {
+	if title == "" {
+		title = "DevLok"
+	}
+	res, err := wruntime.MessageDialog(a.ctx, wruntime.MessageDialogOptions{
+		Type:    wruntime.QuestionDialog,
+		Title:   title,
+		Message: message,
+		Buttons: []string{"Ya", "Batal"},
+	})
+	if err != nil {
+		return false, err
+	}
+	return res == "Ya", nil
+}
+
 func (a *App) RemoveRuntime(name, version string) (string, error) {
 	usedBy := a.projectsUsingRuntime(name, version)
 	if len(usedBy) > 0 {

@@ -135,6 +135,14 @@
     return options.find((v) => v.startsWith(current + '.')) || options[0]
   }
 
+  async function ask(message: string, title = 'Konfirmasi'): Promise<boolean> {
+    try {
+      return await (api() as any).Confirm(title, message)
+    } catch {
+      return false
+    }
+  }
+
   async function checkPorts() {
     const list = [cfgHTTP, cfgHTTPS, cfgMySQLPort, cfgPHPPort].map(parsePort).filter((p) => p > 0)
     if (list.length === 0) {
@@ -496,7 +504,7 @@
   }
 
   async function applyAppUpdate() {
-    if (!confirm('Jalankan installer update? DevLok akan ditutup dan stack dihentikan.')) return
+    if (!(await ask('Jalankan installer update? DevLok akan ditutup dan stack dihentikan.'))) return
     updateBusy = true
     error = ''
     updateNotice = ''
@@ -524,7 +532,7 @@
   }
 
   async function cleanupUnused() {
-    if (!confirm('Hapus versi runtime lama yang tidak dipakai project?')) return
+    if (!(await ask('Hapus versi runtime lama yang tidak dipakai project?'))) return
     busy = 'Membersihkan runtime'
     error = ''
     notice = ''
@@ -539,7 +547,7 @@
   }
 
   async function cleanupCache() {
-    if (!confirm('Hapus semua arsip runtime di cache? Runtime yang sudah terpasang tetap aman, update berikutnya akan mengunduh ulang.')) return
+    if (!(await ask('Hapus semua arsip runtime di cache? Runtime yang sudah terpasang tetap aman, update berikutnya akan mengunduh ulang.'))) return
     busy = 'Membersihkan cache'
     error = ''
     notice = ''
@@ -554,7 +562,7 @@
   }
 
   async function rollbackAppUpdate() {
-    if (!confirm('Rollback ke binary DevLok sebelumnya? DevLok akan ditutup.')) return
+    if (!(await ask('Rollback ke binary DevLok sebelumnya? DevLok akan ditutup.'))) return
     updateBusy = true
     error = ''
     updateNotice = ''
@@ -606,7 +614,7 @@
     if (u.kind === 'new') {
       extra += '\n\nIni seri versi baru (' + u.series + '), bukan patch. Periksa kompatibilitas project sebelum melanjutkan.'
     }
-    if (!confirm('Pasang ' + u.name + ' ' + u.latest + ' dan ubah project aktif?' + extra)) return
+    if (!(await ask('Pasang ' + u.name + ' ' + u.latest + ' dan ubah project aktif?' + extra))) return
     updateBusy = true
     error = ''
     updateNotice = ''
@@ -625,7 +633,7 @@
   }
 
   async function updateAllPatches() {
-    if (!confirm('Pasang semua patch runtime dan perbarui project aktif?')) return
+    if (!(await ask('Pasang semua patch runtime dan perbarui project aktif?'))) return
     updateBusy = true
     error = ''
     updateNotice = ''
@@ -644,7 +652,7 @@
   }
 
   async function removeRuntime(r: any) {
-    if (!confirm('Hapus runtime ' + r.name + ' ' + r.version + '?\n\nFile runtime akan dihapus dari disk.')) return
+    if (!(await ask('Hapus runtime ' + r.name + ' ' + r.version + '?\n\nFile runtime akan dihapus dari disk.'))) return
     busy = 'Hapus runtime'
     error = ''
     notice = ''
