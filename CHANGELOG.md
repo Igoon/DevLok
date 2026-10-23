@@ -4,6 +4,8 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-24
+
 ### Fixed
 
 - `dl ui` kini menemukan bundle `.app` di macOS; sebelumnya hanya mencari `devlok-gui.exe` sehingga GUI tidak pernah diluncurkan di Mac.
