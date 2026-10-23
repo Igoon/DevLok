@@ -12,6 +12,8 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 ### Changed
 
 - Workflow `macos-build` menghasilkan artifact arm64 (`macos-15`) dan intel (`macos-15-intel`), dengan nama `DevLok-macos-arm64` dan `DevLok-macos-intel`.
+- `dl ui` juga mencari bundle `.app` di `/Applications` dan `~/Applications`.
+- `KillProcessesUnder` macOS memakai `pgrep -f` untuk membersihkan proses di bawah folder runtime; `WriteHosts` macOS menulis `/etc/hosts` secara langsung.
 
 ## [0.1.10] - 2026-10-22
 

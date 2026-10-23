@@ -56,6 +56,12 @@ func findGUI() (string, error) {
 			filepath.Join(cwd, "desktop", "build", "bin"),
 		)
 	}
+	if appSuffix != "" {
+		dirs = append(dirs, "/Applications")
+		if home, err := os.UserHomeDir(); err == nil {
+			dirs = append(dirs, filepath.Join(home, "Applications"))
+		}
+	}
 
 	var names []string
 	if appSuffix != "" {

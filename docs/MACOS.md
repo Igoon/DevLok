@@ -24,6 +24,9 @@ phpMyAdmin diunduh otomatis oleh DevLok.
 ./dl up --path /path/ke/project
 ./dl status
 ./dl down
+
+# GUI: temukan bundle .app di folder build atau /Applications
+./dl ui
 ```
 
 Port default macOS:
@@ -50,8 +53,10 @@ Data MySQL, kredensial, log, certificate, dan runtime shim berada di state dir D
 - Hosts melalui `osascript` dengan administrator prompt.
 - Trust CA melalui `security`.
 - Build GUI Wails dan `.app`.
+- `dl ui` menemukan bundle `.app` di folder build dan `/Applications`/`~/Applications`.
+- `KillProcessesUnder` memakai `pgrep -f` untuk membersihkan proses di bawah folder runtime.
 - DMG unsigned berisi aplikasi, symlink Applications, README prasyarat, dan `dl-helper` di dalam bundle.
-- CI Intel dan Apple Silicon.
+- CI Intel dan Apple Silicon (`macos-build` menghasilkan artifact arm64 dan intel).
 
 ## Tanpa Apple Developer Berbayar
 

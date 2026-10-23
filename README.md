@@ -16,7 +16,7 @@ Local development environment untuk Windows: Nginx + PHP + MySQL, dengan GUI dan
 
 Sudah tersedia: manifest loader/validator, logger JSONL, platform Windows, `doctor`, `init`, `version`, runtime manager (SHA256 + ekstraksi aman), deteksi port dan owner, supervisor proses (Job Object, health check, restart, rekonsiliasi), generator config Nginx, hosts terkelola, CA lokal + TLS per domain, stack `up/down/status`, MySQL per project (password DPAPI, database/user acak), backup/restore/seed, lockfile dan verifikasi checksum, export environment, import Laragon, `run/shell` dengan env project, GUI Wails, phpMyAdmin, editor teks, single-instance lock, dan CI Windows/macOS.
 
-Belum tersedia: migrasi schema manifest, forwarding perintah lewat named pipe, browser fallback, dan dukungan macOS.
+Belum tersedia: migrasi schema manifest, forwarding perintah lewat named pipe, dan browser fallback. Dukungan macOS ada di jalur v0.2.0: CLI dan GUI bisa dibangun dan dijalankan memakai runtime Homebrew (lihat [docs/MACOS.md](docs/MACOS.md)); installer, signing, notarization, dan update aplikasi macOS belum tersedia.
 
 ## Masalah yang diselesaikan
 
@@ -150,6 +150,20 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-release.
 ```
 
 Binary GUI dihasilkan di `desktop\build\bin\devlok-gui.exe`. `dl ui` mencarinya otomatis.
+
+### macOS
+
+Prasyarat: Xcode Command Line Tools, Homebrew, Go, Node 22, Wails v2.17.0, dan runtime Homebrew.
+
+```bash
+brew install nginx php mysql
+go install github.com/wailsapp/wails/v2/cmd/wails@v2.17.0
+go build -trimpath -o dl ./cmd/dl
+./scripts/build-macos.sh   # menghasilkan dist/DevLok-macos-local.{zip,dmg}
+./dl ui
+```
+
+`wails build` di macOS menghasilkan `desktop/build/bin/DevLok.app`, dan `dl ui` mencarinya di folder build, lalu `/Applications`. Workflow CI `macos-build` memproduksi artifact `arm64` dan `intel`.
 
 ## Catatan menjalankan
 

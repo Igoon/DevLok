@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -41,8 +42,11 @@ func (darwinPlatform) ReadHosts() ([]byte, error) {
 	return os.ReadFile("/etc/hosts")
 }
 
-func (darwinPlatform) WriteHosts([]byte) error {
-	return errors.New("managed hosts writer belum tersedia; gunakan helper")
+func (darwinPlatform) WriteHosts(data []byte) error {
+	if err := os.WriteFile("/etc/hosts", data, 0o644); err != nil {
+		return fmt.Errorf("tulis /etc/hosts: %w", err)
+	}
+	return nil
 }
 
 func (darwinPlatform) TrustCA(certPath string) error {
@@ -83,8 +87,32 @@ func (darwinPlatform) KillTree(pid int) error {
 	return nil
 }
 
-func (darwinPlatform) KillProcessesUnder(string) ([]int, error) {
-	return nil, nil
+func (darwinPlatform) KillProcessesUnder(root string) ([]int, error) {
+	clean := filepath.Clean(root)
+	if clean == "" || clean == "." || clean == string(os.PathSeparator) {
+		return nil, nil
+	}
+	out, err := exec.Command("pgrep", "-f", regexp.QuoteMeta(clean)).Output()
+	if err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
+			return nil, nil
+		}
+		return nil, err
+	}
+	self := os.Getpid()
+	var pids []int
+	for _, field := range strings.Fields(string(out)) {
+		pid, err := strconv.Atoi(field)
+		if err != nil || pid <= 0 || pid == self {
+			continue
+		}
+		pids = append(pids, pid)
+	}
+	for _, pid := range pids {
+		_ = darwinPlatform{}.KillTree(pid)
+	}
+	return pids, nil
 }
 
 func (darwinPlatform) ProcessStartTime(pid int) (time.Time, error) {
