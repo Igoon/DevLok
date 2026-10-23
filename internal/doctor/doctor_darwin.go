@@ -27,6 +27,11 @@ func platformChecks(plat platform.Platform) []Check {
 	for _, formula := range []string{"nginx", "php", "mysql"} {
 		out = append(out, checkBrewFormula(ctx, formula))
 	}
+	if v := brew.Version(ctx, "dnsmasq"); v != "" {
+		out = append(out, Check{Name: "dnsmasq", Status: StatusOK, Message: "dnsmasq " + v + " tersedia (wildcard domain opsional)."})
+	} else {
+		out = append(out, Check{Name: "dnsmasq", Status: StatusOK, Message: "dnsmasq tidak terpasang (opsional; lihat docs/MACOS.md untuk wildcard *.test)."})
+	}
 	return out
 }
 

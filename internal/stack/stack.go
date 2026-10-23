@@ -135,11 +135,15 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 	}
 	var preWarnings []string
 	if platform.Current().Name() == "darwin" {
+		var brewMismatch []string
 		if nginxVersion != "" && !sameMinor(nginx.Version, nginxVersion) {
-			preWarnings = append(preWarnings, "Nginx Homebrew "+nginx.Version+" dipakai; versi per project ("+nginxVersion+") tidak didukung di macOS.")
+			brewMismatch = append(brewMismatch, "Nginx "+nginx.Version+" (diminta "+nginxVersion+")")
 		}
 		if phpVersion != "" && !sameMinor(php.Version, phpVersion) {
-			preWarnings = append(preWarnings, "PHP Homebrew "+php.Version+" dipakai; versi per project ("+phpVersion+") tidak didukung di macOS.")
+			brewMismatch = append(brewMismatch, "PHP "+php.Version+" (diminta "+phpVersion+")")
+		}
+		if len(brewMismatch) > 0 {
+			preWarnings = append(preWarnings, "Runtime Homebrew dipakai: "+strings.Join(brewMismatch, ", ")+"; versi per project tidak didukung di macOS.")
 		}
 	}
 	mysqlEnabled := p.manifest.ComponentEnabled("mysql")

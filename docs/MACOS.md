@@ -35,6 +35,28 @@ Port default macOS:
 - HTTPS: `8443`
 - MySQL: `3306`, fallback otomatis ke port bebas.
 
+## Wildcard domain (opsional, dnsmasq)
+
+`/etc/hosts` tidak mendukung wildcard. Untuk `*.test` (mis. `apa.test`) tanpa entri hosts per-domain, pakai resolver lokal:
+
+```bash
+brew install dnsmasq
+mkdir -p "$HOME/.devlok/dns"
+cat > "$HOME/.devlok/dns/dnsmasq.conf" <<'EOF'
+port=5353
+listen-address=127.0.0.1
+bind-interfaces
+no-resolv
+address=/test/127.0.0.1
+EOF
+/opt/homebrew/opt/dnsmasq/sbin/dnsmasq --conf-file="$HOME/.devlok/dns/dnsmasq.conf"
+
+sudo mkdir -p /etc/resolver
+printf 'nameserver 127.0.0.1\nport 5353\n' | sudo tee /etc/resolver/test
+```
+
+Setelah itu `test` dan subdomainnya diselesaikan ke `127.0.0.1` oleh dnsmasq (port 5353, tanpa root); entri hosts per-domain tidak lagi diperlukan. `dl doctor` melaporkan apakah dnsmasq terpasang.
+
 ## State
 
 ```text
