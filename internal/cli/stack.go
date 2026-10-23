@@ -255,6 +255,18 @@ func newSiteListCommand(jsonOut *bool) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			dirs := map[string]string{}
+			if entries, err := os.ReadDir(ws); err == nil {
+				for _, e := range entries {
+					if !e.IsDir() {
+						continue
+					}
+					dir := filepath.Join(ws, e.Name())
+					if m, err := config.Load(filepath.Join(dir, config.FileName)); err == nil {
+						dirs[m.Name] = dir
+					}
+				}
+			}
 			seen := map[string]bool{}
 			for _, m := range list {
 				seen[m.Name] = true
@@ -267,6 +279,7 @@ func newSiteListCommand(jsonOut *bool) *cobra.Command {
 							continue
 						}
 						seen[m.Name] = true
+						dirs[m.Name] = dir
 						list = append(list, *m)
 					}
 				}
@@ -276,9 +289,9 @@ func newSiteListCommand(jsonOut *bool) *cobra.Command {
 				return writeJSON(cmd.OutOrStdout(), "site.list", true, list)
 			}
 			tw := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 2, 2, ' ', 0)
-			fmt.Fprintln(tw, "NAME\tDOMAIN\tROOT\tPHP")
+			fmt.Fprintln(tw, "NAME\tDOMAIN\tROOT\tPHP\tPATH")
 			for _, p := range list {
-				fmt.Fprintf(tw, "%s\t%s\t%s\t%s\n", p.Name, p.BaseDomain(), p.Web.Root, p.Web.PHP)
+				fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\n", p.Name, p.BaseDomain(), p.Web.Root, p.Web.PHP, dirs[p.Name])
 			}
 			return tw.Flush()
 		},
