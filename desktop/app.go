@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"devlok/internal/brew"
 	"devlok/internal/config"
 	"devlok/internal/db"
 	"devlok/internal/devlokerr"
@@ -402,6 +403,9 @@ func (a *App) MySQLVersions() ([]string, error) {
 }
 
 func (a *App) ServiceVersions(service string) ([]string, error) {
+	if platform.Current().Name() == "darwin" {
+		return brewServiceVersions(service), nil
+	}
 	mgr, err := a.runtimeManager()
 	if err != nil {
 		return nil, err
@@ -424,6 +428,20 @@ func (a *App) ServiceVersions(service string) ([]string, error) {
 	return out, nil
 }
 
+func brewServiceVersions(service string) []string {
+	switch service {
+	case "nginx", "php", "mysql", "node":
+	default:
+		return nil
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if v := brew.Version(ctx, service); v != "" {
+		return []string{v}
+	}
+	return nil
+}
+
 func (a *App) SetMySQLVersion(path, version string) error {
 	return a.SetServiceVersion(path, "mysql", version)
 }
@@ -434,15 +452,22 @@ func (a *App) SetServiceVersion(path, service, version string) error {
 	if err != nil {
 		return err
 	}
-	mgr, err := a.runtimeManager()
-	if err != nil {
-		return err
+	exact := version
+	artifactSHA := ""
+	artifactURL := ""
+	if platform.Current().Name() != "darwin" {
+		mgr, err := a.runtimeManager()
+		if err != nil {
+			return err
+		}
+		res, err := mgr.Resolve(service, version)
+		if err != nil {
+			return err
+		}
+		exact = res.Version.Version
+		artifactSHA = res.Artifact.SHA256
+		artifactURL = res.Artifact.URL
 	}
-	res, err := mgr.Resolve(service, version)
-	if err != nil {
-		return err
-	}
-	exact := res.Version.Version
 	switch service {
 	case "mysql":
 		if m.Services == nil {
@@ -473,7 +498,7 @@ func (a *App) SetServiceVersion(path, service, version string) error {
 	}
 	lockPath := filepath.Join(path, config.LockFileName)
 	if lock, err := config.LoadLock(lockPath); err == nil {
-		lr := config.LockedRuntime{Version: exact, SHA256: res.Artifact.SHA256, URL: res.Artifact.URL}
+		lr := config.LockedRuntime{Version: exact, SHA256: artifactSHA, URL: artifactURL}
 		switch service {
 		case "mysql":
 			if lock.Services == nil {
@@ -482,8 +507,8 @@ func (a *App) SetServiceVersion(path, service, version string) error {
 			lock.Services["mysql"] = lr
 		case "nginx":
 			lock.Web.Version = exact
-			lock.Web.SHA256 = res.Artifact.SHA256
-			lock.Web.URL = res.Artifact.URL
+			lock.Web.SHA256 = artifactSHA
+			lock.Web.URL = artifactURL
 		case "php", "node":
 			if lock.Runtime == nil {
 				lock.Runtime = map[string]config.LockedRuntime{}

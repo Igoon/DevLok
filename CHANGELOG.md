@@ -14,6 +14,8 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 - GUI macOS tidak lagi crash saat startup: `systray.Run` tidak lagi dipanggil di goroutine; tray macOS memakai `systray.Register` dan menjadwalkan `nativeStart` ke main queue Cocoa via cgo `dispatch_async_f`, sehingga tidak menabrak run loop Wails.
 - Ikon aplikasi macOS/Windows kini memakai ikon DevLok "DL": `desktop/build/appicon.png` (1024×1024) dibuat oleh `scripts/make-icon.py` dan ikut di-commit, menggantikan ikon default Wails.
 - Deteksi pemilik port macOS memakai `lsof` (sebelumnya tidak tersedia) sehingga `dl ports` menampilkan proses/PID di macOS.
+- GUI macOS: tab Konfigurasi tidak lagi kosong. `ServiceVersions` mengembalikan versi Homebrew di macOS alih-alih error, dan kegagalan satu service kini tidak mematikan seluruh muatan tab (`Promise.allSettled`). `SetServiceVersion` di macOS tidak lagi resolve ke registry.
+- Pencarian `brew` tidak lagi bergantung `PATH` (fallback ke `/opt/homebrew/bin/brew`, `/usr/local/bin/brew`).
 
 ### Changed
 

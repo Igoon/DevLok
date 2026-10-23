@@ -56,6 +56,7 @@ Data MySQL, kredensial, log, certificate, dan runtime shim berada di state dir D
 - `dl ui` menemukan bundle `.app` di folder build dan `/Applications`/`~/Applications`.
 - `KillProcessesUnder` memakai `pgrep -f` untuk membersihkan proses di bawah folder runtime.
 - Pemilik port lewat `lsof` (port default HTTP 8080 / HTTPS 8443).
+- Tab Konfigurasi GUI terisi: versi Nginx/PHP/MySQL/Node diambil dari Homebrew (tidak bisa dipin per project).
 - DMG unsigned berisi aplikasi, symlink Applications, README prasyarat, dan `dl-helper` di dalam bundle.
 - CI Intel dan Apple Silicon (`macos-build` menghasilkan artifact arm64 dan intel).
 

@@ -129,9 +129,10 @@
   }
 
   function matchVersion(options: string[], current: string) {
-    if (!current) return ''
+    if (options.length === 0) return current || ''
+    if (!current) return options[0]
     if (options.includes(current)) return current
-    return options.find((v) => v.startsWith(current + '.')) || current
+    return options.find((v) => v.startsWith(current + '.')) || options[0]
   }
 
   async function checkPorts() {
@@ -159,7 +160,7 @@
   async function loadConfig(path: string) {
     if (!path) return
     try {
-      const [c, nginx, php, mysql, node, rl, cache] = await Promise.all([
+      const settled = await Promise.allSettled([
         api().ProjectConfig(path),
         api().ServiceVersions('nginx'),
         api().ServiceVersions('php'),
@@ -168,6 +169,15 @@
         api().RuntimeList(),
         api().RuntimeCache()
       ])
+      const val = (i: number) => (settled[i].status === 'fulfilled' ? (settled[i] as any).value : undefined)
+      const c = val(0)
+      if (!c) throw new Error('Konfigurasi project tidak dapat dimuat.')
+      const nginx: string[] = val(1) || []
+      const php: string[] = val(2) || []
+      const mysql: string[] = val(3) || []
+      const node: string[] = val(4) || []
+      const rl = val(5) || []
+      const cache = val(6) || { bytes: 0, files: 0 }
       cfgPath = path
       cfgDomain = c.domain || ''
       cfgAliases = (c.aliases || []).join(', ')
@@ -291,10 +301,14 @@
   async function loadComponents(path: string) {
     if (!path) return
     try {
-      const [c, versions] = await Promise.all([api().Components(path), api().MySQLVersions()])
+      const settled = await Promise.allSettled([api().Components(path), api().MySQLVersions()])
+      const val = (i: number) => (settled[i].status === 'fulfilled' ? (settled[i] as any).value : undefined)
+      const c = val(0)
+      if (!c) throw new Error('Komponen project tidak dapat dimuat.')
+      const versions: string[] = val(1) || []
       dbEnabled = !!c.database
       pmaEnabled = !!c.phpmyadmin
-      mysqlVersions = versions || []
+      mysqlVersions = versions
       mysqlVersion = c.mysql_version || mysqlVersions[0] || '8.4'
       if (mysqlVersion && !mysqlVersions.includes(mysqlVersion)) {
         const match = mysqlVersions.find((v) => v.startsWith(mysqlVersion + '.'))
