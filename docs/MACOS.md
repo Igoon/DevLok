@@ -48,6 +48,7 @@ Data MySQL, kredensial, log, certificate, dan runtime shim berada di state dir D
 
 - Nginx Homebrew.
 - PHP-FPM Homebrew.
+- `dl doctor` memeriksa Homebrew dan formula `nginx`/`php`/`mysql`.
 - MySQL Homebrew dengan data DevLok.
 - phpMyAdmin.
 - Hosts melalui `osascript` dengan administrator prompt.

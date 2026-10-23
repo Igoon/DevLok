@@ -123,7 +123,7 @@ func checkHosts(plat platform.Platform) Check {
 	}
 	f, err := os.OpenFile(path, os.O_WRONLY, 0)
 	if err != nil {
-		return Check{Name: "hosts", Status: StatusWarn, Message: "Hosts tidak dapat ditulis tanpa elevation.", Hint: "DevLok akan meminta UAC saat menambah site."}
+		return Check{Name: "hosts", Status: StatusWarn, Message: "Hosts tidak dapat ditulis tanpa elevation.", Hint: "DevLok akan meminta izin administrator saat menambah site."}
 	}
 	_ = f.Close()
 	return Check{Name: "hosts", Status: StatusOK, Message: path + " (writable)"}

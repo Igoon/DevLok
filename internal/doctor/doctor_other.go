@@ -1,4 +1,4 @@
-//go:build !windows
+//go:build !windows && !darwin
 
 package doctor
 
@@ -8,6 +8,6 @@ func platformChecks(plat platform.Platform) []Check {
 	return []Check{{
 		Name:    "platform",
 		Status:  StatusOK,
-		Message: "Pemeriksaan platform " + plat.Name() + " belum lengkap pada v0.1.0.",
+		Message: "Pemeriksaan platform " + plat.Name() + " belum tersedia.",
 	}}
 }

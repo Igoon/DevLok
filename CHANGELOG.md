@@ -29,6 +29,7 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 - Workflow `macos-build` menghasilkan artifact arm64 (`macos-15`) dan intel (`macos-15-intel`), dengan nama `DevLok-macos-arm64` dan `DevLok-macos-intel`.
 - Workflow `release` kini juga membangun macOS (arm64 + intel) dan melampirkan `DevLok-macos-<arch>.dmg`/`.zip` + `.sha256` ke GitHub Release.
 - `dl ui` juga mencari bundle `.app` di `/Applications` dan `~/Applications`.
+- `dl doctor` di macOS memeriksa Homebrew dan ketersediaan formula `nginx`, `php`, `mysql` (sebelumnya stub "belum lengkap").
 - `KillProcessesUnder` macOS memakai `pgrep -f` untuk membersihkan proses di bawah folder runtime; `WriteHosts` macOS menulis `/etc/hosts` secara langsung.
 - `internal/update` dipisah per platform: eksekusi installer/rollback berada di `install_windows.go`; macOS/Linux mengembalikan `CodeUnsupported` dengan hint alih-alih mencoba `cmd.exe`. `InstallerCommand` tetap lintas platform.
 
