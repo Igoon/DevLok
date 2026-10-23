@@ -80,6 +80,7 @@ Data MySQL, kredensial, log, certificate, dan runtime shim berada di state dir D
 - `KillProcessesUnder` memakai `pgrep -f` untuk membersihkan proses di bawah folder runtime.
 - Pemilik port lewat `lsof` (port default HTTP 8080 / HTTPS 8443).
 - Tab Konfigurasi GUI terisi: versi Nginx/PHP/MySQL/Node diambil dari Homebrew (tidak bisa dipin per project).
+- Formula Homebrew berversi didukung: bila `php@8.4`, `mysql@8.4`, dst. terpasang, seri tersebut dipakai otomatis dan muncul di dropdown Konfigurasi. Pasang dengan `brew install php@8.4` / `brew install mysql@8.4`.
 - DMG unsigned berisi aplikasi, symlink Applications, README prasyarat, dan `dl-helper` di dalam bundle.
 - CI Intel dan Apple Silicon (`macos-build` menghasilkan artifact arm64 dan intel).
 
@@ -122,5 +123,5 @@ Untuk distribusi publik yang aman, tetap diperlukan Apple Developer Program berb
 - Belum dinotarisasi; Gatekeeper dapat memblokir.
 - Update aplikasi macOS belum tersedia.
 - Runtime harus dipasang manual lewat Homebrew.
-- Versi runtime mengikuti Homebrew, bukan versi per project.
+- Versi runtime mengikuti Homebrew. Seri spesifik didukung bila formula berversi terpasang (`php@8.4`, `mysql@8.4`, dst.); jika tidak, formula `php`/`mysql` terpasang yang dipakai.
 - DevLok belum mengelola `brew services`.

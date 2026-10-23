@@ -436,10 +436,20 @@ func brewServiceVersions(service string) []string {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if v := brew.Version(ctx, service); v != "" {
-		return []string{v}
+	seen := map[string]bool{}
+	var out []string
+	add := func(v string) {
+		if v == "" || seen[v] {
+			return
+		}
+		seen[v] = true
+		out = append(out, v)
 	}
-	return nil
+	add(brew.Version(ctx, service))
+	for _, v := range brew.InstalledVersioned(ctx, service) {
+		add(v)
+	}
+	return out
 }
 
 func (a *App) SetMySQLVersion(path, version string) error {

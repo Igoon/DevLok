@@ -4,6 +4,10 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+### Added
+
+- macOS: dukungan formula Homebrew berversi. Bila `php@8.4`, `mysql@8.4`, dst. terpasang, DevLok otomatis memakai seri tersebut dan menampilkannya di dropdown Konfigurasi; `brew install php@8.4` cukup untuk pin seri 8.4.
+
 ### Fixed
 
 - GUI macOS: `window.confirm` tidak didukung WKWebView sehingga tombol Hapus runtime, Bersihkan cache, dan konfirmasi update tidak bereaksi; kini memakai dialog native Wails lewat binding `App.Confirm`.

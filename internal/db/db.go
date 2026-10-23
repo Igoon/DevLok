@@ -239,11 +239,12 @@ func (m *Manager) Ensure(ctx context.Context) error {
 
 func (m *Manager) install(ctx context.Context) error {
 	if platform.Current().Name() == "darwin" {
-		prefix, err := brew.Prefix(ctx, "mysql")
+		formula := brew.InstalledFormula(ctx, "mysql", m.InstallVersion)
+		prefix, err := brew.Prefix(ctx, formula)
 		if err != nil {
 			return err
 		}
-		version := brew.Version(ctx, "mysql")
+		version := brew.Version(ctx, formula)
 		if version == "" {
 			version = "brew"
 		}

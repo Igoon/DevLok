@@ -20,7 +20,7 @@ func installPlatformRuntime(ctx context.Context, mgr *rt.Manager, name, constrai
 	case "nginx":
 		return brewNginx(ctx, stateDir)
 	case "php":
-		return brewPHP(ctx)
+		return brewPHP(ctx, constraint)
 	default:
 		return installRuntime(ctx, mgr, name, constraint, wantSHA)
 	}
@@ -60,15 +60,16 @@ func brewNginx(ctx context.Context, stateDir string) (rt.Installed, error) {
 	return rt.Installed{Name: "nginx", Version: version, Path: shim}, nil
 }
 
-func brewPHP(ctx context.Context) (rt.Installed, error) {
-	prefix, err := brew.Prefix(ctx, "php")
+func brewPHP(ctx context.Context, requested string) (rt.Installed, error) {
+	formula := brew.InstalledFormula(ctx, "php", requested)
+	prefix, err := brew.Prefix(ctx, formula)
 	if err != nil {
 		return rt.Installed{}, err
 	}
 	phpBin := filepath.Join(prefix, "bin", "php")
 	out, err := exec.CommandContext(ctx, phpBin, "-r", "echo PHP_VERSION;").Output()
 	if err != nil {
-		return rt.Installed{}, devlokerr.Wrap(devlokerr.CodeDependencyMissing, err, "PHP Homebrew tidak dapat dijalankan.", "Jalankan brew install php.")
+		return rt.Installed{}, devlokerr.Wrap(devlokerr.CodeDependencyMissing, err, "PHP Homebrew tidak dapat dijalankan.", "Jalankan brew install "+formula+".")
 	}
 	version := strings.TrimSpace(string(out))
 	if version == "" {

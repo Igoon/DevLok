@@ -48,3 +48,38 @@ func Version(ctx context.Context, formula string) string {
 	}
 	return strings.Split(fields[len(fields)-1], "_")[0]
 }
+
+func Series(v string) string {
+	parts := strings.Split(strings.TrimSpace(v), ".")
+	if len(parts) >= 2 {
+		return parts[0] + "." + parts[1]
+	}
+	return strings.TrimSpace(v)
+}
+
+func InstalledFormula(ctx context.Context, name, requested string) string {
+	if series := Series(requested); series != "" {
+		candidate := name + "@" + series
+		if Version(ctx, candidate) != "" {
+			return candidate
+		}
+	}
+	return name
+}
+
+func InstalledVersioned(ctx context.Context, name string) []string {
+	out, err := exec.CommandContext(ctx, binary(), "list", "--versions").Output()
+	if err != nil {
+		return nil
+	}
+	prefix := name + "@"
+	var versions []string
+	for _, line := range strings.Split(string(out), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) < 2 || !strings.HasPrefix(fields[0], prefix) {
+			continue
+		}
+		versions = append(versions, strings.Split(fields[len(fields)-1], "_")[0])
+	}
+	return versions
+}
