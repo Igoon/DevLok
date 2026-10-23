@@ -11,6 +11,7 @@ import (
 
 	"devlok/internal/devlokerr"
 	"devlok/internal/hidden"
+	"devlok/internal/platform"
 	"devlok/internal/usercfg"
 )
 
@@ -110,6 +111,9 @@ func validateServer(srv Server) error {
 func renderMain(cfg Config) string {
 	var b strings.Builder
 	b.WriteString("worker_processes 1;\n")
+	if platform.Current().Name() != "windows" {
+		b.WriteString("daemon off;\n")
+	}
 	b.WriteString("error_log " + quote(cfg.LogsDir+"/error.log") + " warn;\n")
 	b.WriteString("pid " + quote(cfg.LogsDir+"/nginx.pid") + ";\n\n")
 	b.WriteString("events {\n    worker_connections 2048;\n}\n\n")
