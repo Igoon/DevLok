@@ -92,7 +92,7 @@ Untuk distribusi publik yang aman, tetap diperlukan Apple Developer Program berb
 
 ## Batasan
 
-- Tray/menu bar dinonaktifkan di macOS: `systray.Run` menabrak main thread Cocoa milik Wails. Kontrol start/stop tetap tersedia di jendela GUI.
+- Tray/menu bar macOS memakai `systray` dengan `nativeStart` dijadwalkan ke main queue Cocoa (`dispatch_async_f`); perlu pengujian di perangkat.
 - Installer macOS belum tersedia.
 - Aplikasi belum ditandatangani Developer ID.
 - Belum dinotarisasi; Gatekeeper dapat memblokir.
