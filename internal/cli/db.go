@@ -25,12 +25,47 @@ func newDBCommand(jsonOut *bool) *cobra.Command {
 	cmd.AddCommand(newDBListCommand(jsonOut))
 	cmd.AddCommand(newDBCreateCommand(jsonOut))
 	cmd.AddCommand(newDBDropCommand(jsonOut))
+	cmd.AddCommand(newDBResetCommand(jsonOut))
 	cmd.AddCommand(newDBBackupCommand(jsonOut))
 	cmd.AddCommand(newDBRestoreCommand(jsonOut))
 	cmd.AddCommand(newDBSeedCommand(jsonOut))
 	cmd.AddCommand(newDBShellCommand())
 	cmd.AddCommand(newDBCredsCommand(jsonOut))
 	cmd.AddCommand(newDBAdminCommand())
+	return cmd
+}
+
+func newDBResetCommand(jsonOut *bool) *cobra.Command {
+	var yes bool
+	cmd := &cobra.Command{
+		Use:   "reset",
+		Short: "Pindahkan datadir MySQL dan inisialisasi ulang",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if !yes {
+				return devlokerr.New(devlokerr.CodeCanceled, "Konfirmasi diperlukan untuk reset.", "Tambahkan --yes. Datadir lama dipindahkan ke folder .bak, bukan dihapus.")
+			}
+			mgr, err := newDBManager("", nil)
+			if err != nil {
+				return err
+			}
+			ctx, cancel := context.WithTimeout(cmd.Context(), 2*time.Minute)
+			defer cancel()
+			backup, err := mgr.Reset(ctx)
+			if err != nil {
+				return err
+			}
+			if *jsonOut {
+				return writeJSON(cmd.OutOrStdout(), "db.reset", true, map[string]string{"backup": backup})
+			}
+			if backup != "" {
+				fmt.Fprintf(cmd.OutOrStdout(), "Data MySQL dipindahkan ke:\n%s\nJalankan dl up untuk inisialisasi ulang.\n", backup)
+			} else {
+				fmt.Fprintln(cmd.OutOrStdout(), "Tidak ada datadir. Jalankan dl up untuk inisialisasi.")
+			}
+			return nil
+		},
+	}
+	cmd.Flags().BoolVar(&yes, "yes", false, "Konfirmasi reset")
 	return cmd
 }
 

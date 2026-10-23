@@ -86,6 +86,7 @@ Nama service: `nginx`, `php@8.4`, `mysql@8.4`.
 dl db list
 dl db create [name] [--mysql 8.4]
 dl db drop <name> --yes
+dl db reset --yes
 dl db backup <name> [-o file.sql.gz]
 dl db restore <name> -f file.sql.gz --yes
 dl db seed [name]

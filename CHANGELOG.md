@@ -8,12 +8,13 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 - macOS: dukungan formula Homebrew berversi. Bila `php@8.4`, `mysql@8.4`, dst. terpasang, DevLok otomatis memakai seri tersebut dan menampilkannya di dropdown Konfigurasi; `brew install php@8.4` cukup untuk pin seri 8.4.
 - phpMyAdmin dipilih otomatis berdasarkan seri PHP: PHP >= 8.4 memakai `6.x` bila tersedia di registry, selain itu `5.2.x` (fallback otomatis).
+- `dl db reset --yes` untuk memindahkan datadir MySQL ke folder `.bak` dan menginisialisasi ulang (mis. setelah berpindah versi MySQL yang menolak datadir lama).
 
 ### Fixed
 
 - GUI macOS: `window.confirm` tidak didukung WKWebView sehingga tombol Hapus runtime, Bersihkan cache, dan konfirmasi update tidak bereaksi; kini memakai dialog native Wails lewat binding `App.Confirm`.
 - Start All/deploy di macOS tidak lagi menampilkan warning "Runtime Homebrew dipakai ... versi per project tidak didukung" (memang by-design di macOS).
-- Pesan kegagalan start MySQL kini menyertakan tail log error MySQL, sehingga penyebab (mis. datadir dibuat versi lain) terlihat.
+- Pesan kegagalan start MySQL kini menyertakan tail log error MySQL dan menyarankan `dl db reset --yes` bila datadir dibuat versi lain.
 
 ## [0.2.0] - 2026-10-24
 

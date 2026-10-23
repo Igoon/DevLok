@@ -206,7 +206,12 @@ func (m *Manager) Ensure(ctx context.Context) error {
 	if !running {
 		if _, err := sm.Start(m.spec()); err != nil {
 			if tail := readTail(m.LogPath, 30); tail != "" {
-				return devlokerr.New(devlokerr.CodeDependencyMissing, "MySQL "+m.Install.Version+" tidak dapat dijalankan.", tail)
+				hint := tail
+				lower := strings.ToLower(tail)
+				if strings.Contains(lower, "initialized") || strings.Contains(lower, "incompatible") || strings.Contains(lower, "upgrade") || strings.Contains(lower, "data dictionary") {
+					hint = "Datadir MySQL tampak dibuat oleh versi MySQL lain. Jalankan `dl db reset --yes` lalu `dl up` untuk inisialisasi ulang.\n" + tail
+				}
+				return devlokerr.New(devlokerr.CodeDependencyMissing, "MySQL "+m.Install.Version+" tidak dapat dijalankan.", hint)
 			}
 			return err
 		}
@@ -238,6 +243,31 @@ func (m *Manager) Ensure(ctx context.Context) error {
 		return devlokerr.Wrap(devlokerr.CodeStateInconsistent, err, "Root MySQL tidak dapat login dengan kredensial tersimpan.", "Hapus data MySQL atau perbaiki password secara manual.")
 	}
 	return nil
+}
+
+func (m *Manager) Reset(ctx context.Context) (string, error) {
+	if err := m.install(ctx); err != nil {
+		return "", err
+	}
+	if m.Install.Version != "" {
+		m.ServiceName = "mysql-" + strings.ReplaceAll(m.Install.Version, ".", "-")
+	}
+	sm, err := supervisor.NewManager(m.servicesPath())
+	if err != nil {
+		return "", err
+	}
+	_ = sm.Stop(m.ServiceName)
+	_ = sm.Stop("mysql-" + strings.ReplaceAll(m.Version, ".", "-"))
+	backup := ""
+	if info, err := os.Stat(m.DataDir); err == nil && info.IsDir() {
+		backup = m.DataDir + ".bak-" + time.Now().Format("20060102-150405")
+		if err := os.Rename(m.DataDir, backup); err != nil {
+			return "", devlokerr.Wrap(devlokerr.CodePermissionDenied, err, "Data MySQL tidak dapat dipindahkan.", "")
+		}
+	}
+	_ = os.Remove(m.statePath())
+	_ = os.Remove(m.credsPath())
+	return backup, nil
 }
 
 func (m *Manager) install(ctx context.Context) error {

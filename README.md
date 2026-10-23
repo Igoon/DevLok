@@ -209,6 +209,7 @@ dl edit [path]
 dl db list
 dl db create [name]
 dl db drop <name> --yes
+dl db reset --yes
 dl db backup [name] [-o file.sql.gz]
 dl db restore <name> -f file.sql.gz --yes
 dl db seed [name]
