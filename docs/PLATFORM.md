@@ -132,7 +132,7 @@ Implementasi:
 - [ ] Hosts, CA trust, kill tree, port owner teruji nyata.
 - [ ] Runtime arm64 dan amd64 tersedia di registry.
 - [ ] `.app` berjalan tanpa terminal.
-- [ ] Tray dan menu bar berfungsi.
+- [ ] Tray dan menu bar berfungsi (dinonaktifkan di macOS: `systray.Run` bentrok dengan main thread Wails; lihat docs/MACOS.md).
 - [ ] Notarization lulus `spctl --assess`.
 - [ ] Dokumentasi perbedaan perilaku diperbarui.
 

@@ -55,6 +55,7 @@ Data MySQL, kredensial, log, certificate, dan runtime shim berada di state dir D
 - Build GUI Wails dan `.app`.
 - `dl ui` menemukan bundle `.app` di folder build dan `/Applications`/`~/Applications`.
 - `KillProcessesUnder` memakai `pgrep -f` untuk membersihkan proses di bawah folder runtime.
+- Pemilik port lewat `lsof` (port default HTTP 8080 / HTTPS 8443).
 - DMG unsigned berisi aplikasi, symlink Applications, README prasyarat, dan `dl-helper` di dalam bundle.
 - CI Intel dan Apple Silicon (`macos-build` menghasilkan artifact arm64 dan intel).
 
@@ -91,6 +92,7 @@ Untuk distribusi publik yang aman, tetap diperlukan Apple Developer Program berb
 
 ## Batasan
 
+- Tray/menu bar dinonaktifkan di macOS: `systray.Run` menabrak main thread Cocoa milik Wails. Kontrol start/stop tetap tersedia di jendela GUI.
 - Installer macOS belum tersedia.
 - Aplikasi belum ditandatangani Developer ID.
 - Belum dinotarisasi; Gatekeeper dapat memblokir.
