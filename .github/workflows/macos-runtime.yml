@@ -26,6 +26,7 @@ jobs:
         shell: bash
         run: |
           set -e
+          trap 'rc=$?; if [ $rc -ne 0 ]; then echo "== FAILED rc=$rc =="; cat up.log 2>/dev/null || true; ./dl status || true; for f in "$HOME/Library/Application Support/DevLok/logs/nginx/"*.log "$HOME/Library/Application Support/DevLok/logs/php-error.log"; do [ -f "$f" ] && { echo "--- $f"; tail -n 40 "$f"; }; done; fi' EXIT
           project="$RUNNER_TEMP/devlok-mac-test"
           mkdir -p "$project/public"
           cat > "$project/.devlok.yaml" <<'YAML'
@@ -56,7 +57,11 @@ jobs:
             ./dl status || true
             exit $code
           fi
-          body=$(curl -fsS --retry 5 --retry-delay 1 http://127.0.0.1:8080/)
+          body=""
+          for i in $(seq 1 20); do
+            body=$(curl -fsS http://127.0.0.1:8080/ 2>/dev/null) && break
+            sleep 1
+          done
           echo "body=$body"
           test "$body" = "devlok-mac-ok"
           ./dl status
