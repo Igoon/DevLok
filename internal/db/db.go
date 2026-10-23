@@ -205,6 +205,9 @@ func (m *Manager) Ensure(ctx context.Context) error {
 	}
 	if !running {
 		if _, err := sm.Start(m.spec()); err != nil {
+			if tail := readTail(m.LogPath, 30); tail != "" {
+				return devlokerr.New(devlokerr.CodeDependencyMissing, "MySQL "+m.Install.Version+" tidak dapat dijalankan.", tail)
+			}
 			return err
 		}
 	}

@@ -124,4 +124,5 @@ Untuk distribusi publik yang aman, tetap diperlukan Apple Developer Program berb
 - Update aplikasi macOS belum tersedia.
 - Runtime harus dipasang manual lewat Homebrew.
 - Versi runtime mengikuti Homebrew. Seri spesifik didukung bila formula berversi terpasang (`php@8.4`, `mysql@8.4`, dst.); jika tidak, formula `php`/`mysql` terpasang yang dipakai.
+- Data MySQL disimpan per seri yang diminta (mis. `8.4`). Berpindah antar biner seri berbeda pada seri yang sama (mis. `mysql` lalu `mysql@8.4`) dapat membuat `mysqld` menolak start karena datadir dibuat versi lain. Hapus `data/mysql/<seri>` lalu `dl up` untuk inisialisasi ulang.
 - DevLok belum mengelola `brew services`.

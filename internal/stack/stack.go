@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -139,7 +140,7 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 	var pma rt.Installed
 	pmaOK := false
 	if pmaEnabled {
-		if inst, _, err := mgr.Install(ctx, "phpmyadmin", "5.2"); err != nil {
+		if inst, _, err := installPhpMyAdmin(ctx, mgr, php.Version); err != nil {
 			preWarnings = append(preWarnings, "phpMyAdmin tidak dapat disiapkan: "+err.Error())
 		} else {
 			pma = inst
@@ -686,6 +687,38 @@ func chooseHTTPSPort(explicit int) (int, error) {
 		return choosePort(0, "HTTPS", 8443, 9443)
 	}
 	return choosePort(explicit, "HTTPS", 443, 8443)
+}
+
+func installPhpMyAdmin(ctx context.Context, mgr *rt.Manager, phpVersion string) (rt.Installed, bool, error) {
+	preferred := "5.2"
+	if versionAtLeast(phpVersion, 8, 4) {
+		preferred = "6"
+	}
+	inst, ok, err := mgr.Install(ctx, "phpmyadmin", preferred)
+	if err == nil || preferred == "5.2" {
+		return inst, ok, err
+	}
+	inst, ok, err2 := mgr.Install(ctx, "phpmyadmin", "5.2")
+	if err2 == nil {
+		return inst, ok, nil
+	}
+	return rt.Installed{}, false, err
+}
+
+func versionAtLeast(v string, major, minor int) bool {
+	parts := strings.Split(strings.TrimSpace(v), ".")
+	if len(parts) < 2 {
+		return false
+	}
+	maj, err1 := strconv.Atoi(parts[0])
+	min, err2 := strconv.Atoi(parts[1])
+	if err1 != nil || err2 != nil {
+		return false
+	}
+	if maj != major {
+		return maj > major
+	}
+	return min >= minor
 }
 
 func choosePort(explicit int, label string, fallback ...int) (int, error) {
