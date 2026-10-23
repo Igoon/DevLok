@@ -164,7 +164,15 @@ func (darwinPlatform) OpenEditor(path string) error {
 
 func (darwinPlatform) OpenApp(path string) error {
 	if strings.HasSuffix(path, ".app") {
-		return exec.Command("open", path).Start()
+		out, err := exec.Command("open", path).CombinedOutput()
+		if err != nil {
+			msg := strings.TrimSpace(string(out))
+			if msg == "" {
+				msg = err.Error()
+			}
+			return fmt.Errorf("open %s: %s", path, msg)
+		}
+		return nil
 	}
 	return exec.Command(path).Start()
 }

@@ -8,6 +8,8 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 - `dl ui` kini menemukan bundle `.app` di macOS; sebelumnya hanya mencari `devlok-gui.exe` sehingga GUI tidak pernah diluncurkan di Mac.
 - `scripts/build-macos.sh` membangun `dl-helper` setelah `wails build -clean` agar helper tidak terhapus, dan memakai `find -print -quit` yang aman dari `pipefail`.
+- Lock single-instance macOS/Linux mendeteksi lock basi (PID pemegang sudah mati) sehingga GUI tidak lagi keluar diam-diam tanpa menampilkan window setelah proses sebelumnya berhenti paksa.
+- `OpenApp` macOS melaporkan error `open` (mis. Gatekeeper menolak) alih-alih gagal diam-diam.
 
 ### Changed
 
