@@ -11,6 +11,7 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 - Lock single-instance macOS/Linux mendeteksi lock basi (PID pemegang sudah mati) sehingga GUI tidak lagi keluar diam-diam tanpa menampilkan window setelah proses sebelumnya berhenti paksa.
 - `OpenApp` macOS melaporkan error `open` (mis. Gatekeeper menolak) alih-alih gagal diam-diam.
 - `dl ui`, `scripts/build-macos.sh`, dan workflow `macos-build` mencari bundle `.app` di `desktop/build` juga, bukan hanya `desktop/build/bin`.
+- GUI macOS tidak lagi crash saat startup: tray systray dinonaktifkan di macOS karena `systray.Run` menabrak main thread Cocoa milik Wails (`SIGABRT`).
 
 ### Changed
 

@@ -89,14 +89,6 @@ func (a *App) beforeClose(ctx context.Context) bool {
 	return true
 }
 
-func (a *App) startTray() {
-	go systray.Run(a.onTrayReady, a.onTrayExit)
-}
-
-func (a *App) stopTray() {
-	systray.Quit()
-}
-
 func (a *App) onTrayExit() {
 	trayReady.Store(false)
 	trayLog("exit")
