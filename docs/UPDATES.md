@@ -86,6 +86,7 @@ Mengganti versi project dilakukan lewat tab Konfigurasi, menu tray Version, atau
 - Setelah versi project diubah, stack divalidasi dan direstart.
 - Config yang tidak valid membatalkan start; versi lama tetap tersedia.
 - MySQL lintas mayor membutuhkan backup dan pengujian; jangan mengandalkan downgrade.
+- Tool (phpMyAdmin, Notepad++, Adminer) ikut diperiksa dan dapat di-update lewat tab Update / `dl update` + `dl runtime add <nama>@<versi>`. Tool tidak mengubah versi project; update phpMyAdmin/Adminer me-restart stack bila aktif.
 
 ## Update Aplikasi DevLok
 

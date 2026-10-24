@@ -1074,6 +1074,14 @@ func projectServiceVersion(m *config.Manifest, service string) string {
 	return ""
 }
 
+func isServiceRuntime(name string) bool {
+	switch name {
+	case "nginx", "php", "mysql", "node":
+		return true
+	}
+	return false
+}
+
 func versionMatches(installed, used string) bool {
 	if installed == "" || used == "" {
 		return false
@@ -1410,20 +1418,25 @@ func (a *App) InstallRuntimeUpdate(name, version string) (string, error) {
 		return "", err
 	}
 	project := a.trayProjectPath()
-	if project == "" {
-		a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "done", Name: inst.Name, Version: inst.Version})
-		return "Runtime " + inst.Name + " " + inst.Version + " terpasang. Belum ada site aktif untuk diperbarui.", nil
+	service := isServiceRuntime(name)
+	message := "Runtime " + inst.Name + " " + inst.Version + " terpasang."
+	if service {
+		if project != "" {
+			a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "configure", Name: inst.Name, Version: inst.Version})
+			if err := a.SetServiceVersion(project, name, inst.Version); err != nil {
+				a.emitUpdateError("runtime", name, inst.Version, err)
+				return "", err
+			}
+			message += " dan project diperbarui."
+		} else {
+			message += " Belum ada site aktif untuk diperbarui."
+		}
+		if name == "mysql" {
+			message += " Data MySQL tidak dimigrasikan otomatis; restore dump lama bila diperlukan."
+		}
 	}
-	a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "configure", Name: inst.Name, Version: inst.Version})
-	if err := a.SetServiceVersion(project, name, inst.Version); err != nil {
-		a.emitUpdateError("runtime", name, inst.Version, err)
-		return "", err
-	}
-	message := "Runtime " + inst.Name + " " + inst.Version + " terpasang dan project diperbarui."
-	if name == "mysql" {
-		message += " Data MySQL tidak dimigrasikan otomatis; restore dump lama bila diperlukan."
-	}
-	if name != "node" {
+	restart := (service && name != "node") || name == "phpmyadmin" || name == "adminer"
+	if project != "" && restart {
 		if st, err := stack.LoadState(""); err == nil && sameTrayPath(st.ProjectDir, project) {
 			a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "restart", Name: inst.Name, Version: inst.Version})
 			if err := stack.Down(""); err != nil {
@@ -1584,7 +1597,13 @@ func (a *App) updateRuntimes(includeNewSeries bool) (string, error) {
 			}
 		}
 	}
-	if changed {
+	restart := changed
+	for _, u := range installed {
+		if u.Name == "phpmyadmin" || u.Name == "adminer" {
+			restart = true
+		}
+	}
+	if restart {
 		a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "restart", Name: "semua patch"})
 		if st, err := stack.LoadState(""); err == nil && sameTrayPath(st.ProjectDir, project) {
 			if err := stack.Down(""); err != nil {
