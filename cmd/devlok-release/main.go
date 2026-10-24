@@ -54,8 +54,9 @@ type releaseApp struct {
 }
 
 type releasePayload struct {
-	App      releaseApp    `json:"app"`
-	Runtimes []rt.Registry `json:"runtimes,omitempty"`
+	App      releaseApp            `json:"app"`
+	Apps     map[string]releaseApp `json:"apps,omitempty"`
+	Runtimes []rt.Registry         `json:"runtimes,omitempty"`
 }
 
 func payloadCommand(args []string) {
@@ -68,6 +69,10 @@ func payloadCommand(args []string) {
 	published := fs.String("published-at", "", "published timestamp")
 	runtimesPath := fs.String("runtimes", "", "runtimes json")
 	out := fs.String("out", "", "output payload json")
+	macosArmURL := fs.String("macos-arm64-url", "", "macOS arm64 asset URL")
+	macosArmSHA := fs.String("macos-arm64-sha256", "", "macOS arm64 asset SHA256")
+	macosIntelURL := fs.String("macos-intel-url", "", "macOS intel asset URL")
+	macosIntelSHA := fs.String("macos-intel-sha256", "", "macOS intel asset SHA256")
 	_ = fs.Parse(args)
 	if *version == "" || *rawURL == "" || *sha == "" || *out == "" {
 		fail("payload: -version, -url, -sha256, -out wajib")
@@ -92,16 +97,35 @@ func payloadCommand(args []string) {
 	if *published == "" {
 		*published = time.Now().UTC().Format(time.RFC3339)
 	}
+	base := releaseApp{
+		Version:     *version,
+		Notes:       *notes,
+		Severity:    *severity,
+		PublishedAt: *published,
+	}
 	p := releasePayload{
-		App: releaseApp{
-			Version:     *version,
-			URL:         *rawURL,
-			SHA256:      *sha,
-			Notes:       *notes,
-			Severity:    *severity,
-			PublishedAt: *published,
-		},
+		App: func() releaseApp {
+			a := base
+			a.URL = *rawURL
+			a.SHA256 = *sha
+			return a
+		}(),
 		Runtimes: regs,
+	}
+	apps := map[string]releaseApp{}
+	addApp := func(key, u, s string) {
+		if u == "" || s == "" {
+			return
+		}
+		a := base
+		a.URL = u
+		a.SHA256 = s
+		apps[key] = a
+	}
+	addApp("darwin/arm64", *macosArmURL, *macosArmSHA)
+	addApp("darwin/amd64", *macosIntelURL, *macosIntelSHA)
+	if len(apps) > 0 {
+		p.Apps = apps
 	}
 	data, err := json.MarshalIndent(p, "", "  ")
 	if err != nil {

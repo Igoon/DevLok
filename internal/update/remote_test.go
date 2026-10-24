@@ -61,6 +61,37 @@ func TestRemoteCheck(t *testing.T) {
 	}
 }
 
+func TestRemoteCheckPlatformApp(t *testing.T) {
+	pub, priv, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	key := runtime.GOOS + "/" + runtime.GOARCH
+	base := AppRelease{Version: "99.0.0", URL: "https://example.com/default.bin", SHA256: strings.Repeat("a", 64)}
+	platform := AppRelease{Version: "99.0.0", URL: "https://example.com/platform.bin", SHA256: strings.Repeat("b", 64)}
+	raw, err := json.Marshal(payload{App: &base, Apps: map[string]*AppRelease{key: &platform}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	sig := ed25519.Sign(priv, raw)
+	body, err := json.Marshal(envelope{Schema: 1, Payload: base64.StdEncoding.EncodeToString(raw), Signature: base64.StdEncoding.EncodeToString(sig)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write(body)
+	}))
+	defer srv.Close()
+	cfg := &Config{Schema: 1, ManifestURL: srv.URL, PublicKey: base64.StdEncoding.EncodeToString(pub)}
+	got, err := RemoteCheck(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got == nil || got.URL != platform.URL {
+		t.Fatalf("expected platform URL %q, got %+v", platform.URL, got)
+	}
+}
+
 func TestRemoteCheckRejectsBadSignature(t *testing.T) {
 	pub, priv, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {

@@ -145,9 +145,25 @@ Payload yang ditandatangani:
     "severity": "security",
     "notes": "Perbaikan keamanan",
     "published_at": "2026-10-20T00:00:00Z"
+  },
+  "apps": {
+    "darwin/arm64": {
+      "version": "0.1.1",
+      "url": "https://contoh.com/devlok/DevLok-macos-arm64.dmg",
+      "sha256": "64_HEX_CHARACTERS",
+      "severity": "security"
+    },
+    "darwin/amd64": {
+      "version": "0.1.1",
+      "url": "https://contoh.com/devlok/DevLok-macos-intel.dmg",
+      "sha256": "64_HEX_CHARACTERS",
+      "severity": "security"
+    }
   }
 }
 ```
+
+`app` adalah rilis default (Windows). Opsional `apps` memetakan `GOOS/GOARCH` ke rilis khusus platform; client memakai entri `apps[<os>/<arch>]` bila ada, selain itu `app`. Di macOS, `dl update apply` membuka DMG untuk pemasangan manual.
 
 Ketentuan:
 

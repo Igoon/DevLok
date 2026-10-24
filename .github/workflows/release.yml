@@ -88,35 +88,6 @@ jobs:
           Remove-Item $pfx -Force
           $hash = (Get-FileHash -LiteralPath $setup.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
           [IO.File]::WriteAllText($setup.FullName + ".sha256", "$hash  $($setup.Name)`n", (New-Object Text.UTF8Encoding($false)))
-      - name: Build runtime registry payload
-        run: go run ./cmd/devlok-release registries -out dist\runtimes.json
-      - name: Sign update manifest
-        shell: powershell
-        env:
-          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
-          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
-        run: |
-          $ErrorActionPreference = "Stop"
-          trap { Write-Host "::error title=manifest::$($_.Exception.Message)"; exit 1 }
-          if (-not $env:UPDATE_SIGNING_KEY) { Write-Host "Manifest signing dilewati: secret tidak tersedia."; exit 0 }
-          $pkg = Get-ChildItem dist\DevLok -Directory | Select-Object -First 1
-          $version = (Get-Content (Join-Path $pkg.FullName "VERSION")).Trim()
-          $setup = Get-ChildItem dist\DevLok-Setup-*.exe | Select-Object -First 1
-          $hash = (Get-FileHash -LiteralPath $setup.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
-          $url = "https://github.com/Igoon/DevLok/releases/download/$env:TAG/$($setup.Name)"
-          $published = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-          $payloadPath = Join-Path $env:RUNNER_TEMP "update-payload.json"
-          $keyPath = Join-Path $env:RUNNER_TEMP "update-signing.key"
-          & go run ./cmd/devlok-release payload -version $version -url $url -sha256 $hash -severity feature -notes "DevLok $version" -published-at $published -runtimes dist\runtimes.json -out $payloadPath
-          if ($LASTEXITCODE -ne 0) { throw "payload manifest gagal" }
-          try { $keyData = [Convert]::FromBase64String($env:UPDATE_SIGNING_KEY.Trim()) }
-          catch { Write-Host "::error title=manifest key::$($_.Exception.Message)"; exit 1 }
-          if ($keyData.Length -notin 32, 64) { Write-Host "::error title=manifest key::panjang key $($keyData.Length) byte, harus 32 atau 64"; exit 1 }
-          Set-Content -LiteralPath $keyPath -Value ([Convert]::ToBase64String($keyData)) -NoNewline -Encoding ascii
-          $signOut = & go run ./cmd/devlok-release sign -key $keyPath -payload $payloadPath -out dist\updates.json 2>&1
-          $signOut
-          if ($LASTEXITCODE -ne 0) { Write-Host "::error title=manifest sign::$($signOut -join ' ')"; exit 1 }
-          Remove-Item $keyPath, $payloadPath -Force
       - name: Installer smoke test
         shell: powershell
         run: |
@@ -139,7 +110,6 @@ jobs:
             dist/*.zip
             dist/*.exe
             dist/*.sha256
-            dist/updates.json
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
@@ -152,7 +122,6 @@ jobs:
             dist/*.zip
             dist/*.exe
             dist/*.sha256
-            dist/updates.json
   macos:
     needs: windows
     strategy:
@@ -265,8 +234,65 @@ jobs:
             dist/DevLok-macos-${{ matrix.arch }}.zip
             dist/DevLok-macos-${{ matrix.arch }}.dmg
             dist/DevLok-macos-${{ matrix.arch }}.dmg.sha256
+  manifest:
+    needs: [windows, macos]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache: true
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Build runtime registry payload
+        run: go run ./cmd/devlok-release registries -out runtimes.json
+      - name: Build and sign update manifest
+        shell: powershell
+        env:
+          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
+          TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          trap { Write-Host "::error title=manifest::$($_.Exception.Message)"; exit 1 }
+          function Get-Sha($file) { (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant() }
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          $setup = Get-ChildItem artifacts -Recurse -Filter "DevLok-Setup-*.exe" | Select-Object -First 1
+          if (-not $setup) { throw "installer Windows tidak ditemukan" }
+          $ver = $setup.BaseName -replace '^DevLok-Setup-', ''
+          $base = "https://github.com/Igoon/DevLok/releases/download/$env:TAG"
+          $payloadPath = Join-Path $PWD "update-payload.json"
+          $pargs = @("payload", "-version", $ver, "-url", "$base/$($setup.Name)", "-sha256", (Get-Sha $setup.FullName),
+            "-severity", "feature", "-notes", "DevLok $ver",
+            "-published-at", (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            "-runtimes", "runtimes.json", "-out", $payloadPath)
+          $arm = Get-ChildItem artifacts -Recurse -Filter "DevLok-macos-arm64.dmg" | Select-Object -First 1
+          if ($arm) { $pargs += @("-macos-arm64-url", "$base/$($arm.Name)", "-macos-arm64-sha256", (Get-Sha $arm.FullName)) }
+          $intel = Get-ChildItem artifacts -Recurse -Filter "DevLok-macos-intel.dmg" | Select-Object -First 1
+          if ($intel) { $pargs += @("-macos-intel-url", "$base/$($intel.Name)", "-macos-intel-sha256", (Get-Sha $intel.FullName)) }
+          & go run ./cmd/devlok-release @pargs
+          if ($LASTEXITCODE -ne 0) { throw "payload manifest gagal" }
+          if (-not $env:UPDATE_SIGNING_KEY) { Write-Host "Manifest signing dilewati: secret tidak tersedia."; exit 0 }
+          try { $keyData = [Convert]::FromBase64String($env:UPDATE_SIGNING_KEY.Trim()) }
+          catch { Write-Host "::error title=manifest key::$($_.Exception.Message)"; exit 1 }
+          if ($keyData.Length -notin 32, 64) { Write-Host "::error title=manifest key::panjang key $($keyData.Length) byte, harus 32 atau 64"; exit 1 }
+          $keyPath = Join-Path $env:RUNNER_TEMP "update-signing.key"
+          Set-Content -LiteralPath $keyPath -Value ([Convert]::ToBase64String($keyData)) -NoNewline -Encoding ascii
+          $signOut = & go run ./cmd/devlok-release sign -key $keyPath -payload $payloadPath -out "dist/updates.json" 2>&1
+          $signOut
+          if ($LASTEXITCODE -ne 0) { Write-Host "::error title=manifest sign::$($signOut -join ' ')"; exit 1 }
+          Remove-Item $keyPath, $payloadPath -Force
+      - name: Publish update manifest
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          files: dist/updates.json
+          fail_on_unmatched_files: false
   verify-update:
-    needs: windows
+    needs: manifest
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4

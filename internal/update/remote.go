@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -54,8 +55,9 @@ type envelope struct {
 }
 
 type payload struct {
-	App      *AppRelease   `json:"app"`
-	Runtimes []rt.Registry `json:"runtimes,omitempty"`
+	App      *AppRelease            `json:"app"`
+	Apps     map[string]*AppRelease `json:"apps,omitempty"`
+	Runtimes []rt.Registry          `json:"runtimes,omitempty"`
 }
 
 func ConfigPath(stateDir string) string {
@@ -88,33 +90,39 @@ func RemoteCheck(ctx context.Context, cfg *Config) (*AppUpdate, error) {
 	if err != nil {
 		return nil, err
 	}
-	if p.App == nil {
+	app := p.App
+	if p.Apps != nil {
+		if r, ok := p.Apps[runtime.GOOS+"/"+runtime.GOARCH]; ok && r != nil {
+			app = r
+		}
+	}
+	if app == nil {
 		return nil, nil
 	}
-	if p.App.Version == "" || p.App.URL == "" {
+	if app.Version == "" || app.URL == "" {
 		return nil, devlokerr.New(devlokerr.CodeInvalidArgument, "Rilis aplikasi di manifest tidak lengkap.", "")
 	}
-	if len(p.App.SHA256) != 64 {
+	if len(app.SHA256) != 64 {
 		return nil, devlokerr.New(devlokerr.CodeInvalidArgument, "SHA256 rilis aplikasi tidak valid.", "")
 	}
-	if _, err := hex.DecodeString(p.App.SHA256); err != nil {
+	if _, err := hex.DecodeString(app.SHA256); err != nil {
 		return nil, devlokerr.New(devlokerr.CodeInvalidArgument, "SHA256 rilis aplikasi tidak valid.", "")
 	}
-	if u, err := url.Parse(p.App.URL); err != nil || (u.Scheme != "https" && !(u.Scheme == "http" && loopbackHost(u.Hostname()))) {
+	if u, err := url.Parse(app.URL); err != nil || (u.Scheme != "https" && !(u.Scheme == "http" && loopbackHost(u.Hostname()))) {
 		return nil, devlokerr.New(devlokerr.CodeInvalidArgument, "URL rilis aplikasi harus HTTPS.", "")
 	}
 	current := version.Current().Version
-	if Compare(p.App.Version, current) <= 0 {
+	if Compare(app.Version, current) <= 0 {
 		return nil, nil
 	}
 	return &AppUpdate{
 		Current:     current,
-		Latest:      p.App.Version,
-		URL:         p.App.URL,
-		SHA256:      strings.ToLower(p.App.SHA256),
-		Notes:       p.App.Notes,
-		Severity:    p.App.Severity,
-		PublishedAt: p.App.PublishedAt,
+		Latest:      app.Version,
+		URL:         app.URL,
+		SHA256:      strings.ToLower(app.SHA256),
+		Notes:       app.Notes,
+		Severity:    app.Severity,
+		PublishedAt: app.PublishedAt,
 	}, nil
 }
 
