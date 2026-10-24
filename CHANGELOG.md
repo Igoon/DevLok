@@ -4,6 +4,8 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-24
+
 ### Added
 
 - Signed update manifest (`updates.json`) mendukung rilis per-platform lewat map `apps` (`darwin/arm64`, `darwin/amd64`); `cmd/devlok-release payload` menerima `-macos-arm64-url/-sha256` dan `-macos-intel-url/-sha256`, dan workflow `release` membangun manifest di job `manifest` setelah Windows + macOS.
