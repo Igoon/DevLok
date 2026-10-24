@@ -4,6 +4,8 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-10-24
+
 ### Fixed
 
 - Dashboard: tombol **Editor** kini ada di toolbar (tersedia juga saat stack berjalan). Sebelumnya hanya muncul di state "stack belum berjalan".
