@@ -163,7 +163,7 @@ Payload yang ditandatangani:
 }
 ```
 
-`app` adalah rilis default (Windows). Opsional `apps` memetakan `GOOS/GOARCH` ke rilis khusus platform; client memakai entri `apps[<os>/<arch>]` bila ada, selain itu `app`. Di macOS, `dl update apply` membuka DMG untuk pemasangan manual.
+`app` adalah rilis default (Windows). Opsional `apps` memetakan `GOOS/GOARCH` ke rilis khusus platform; client memakai entri `apps[<os>/<arch>]` bila ada, selain itu `app`. Di macOS, `dl update apply` mengganti bundle `DevLok.app` (dari DMG/ZIP) lalu relaunch; fallback membuka DMG bila folder aplikasi tidak writable.
 
 Ketentuan:
 

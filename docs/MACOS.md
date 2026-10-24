@@ -121,7 +121,7 @@ Untuk distribusi publik yang aman, tetap diperlukan Apple Developer Program berb
 - Installer macOS belum tersedia.
 - Aplikasi belum ditandatangani Developer ID.
 - Belum dinotarisasi; Gatekeeper dapat memblokir.
-- Update aplikasi macOS: `dl update` mendeteksi aset `DevLok-macos-<arch>.dmg`, `dl update download` mengunduh + verifikasi SHA256, dan `dl update apply` membuka DMG untuk pemasangan manual. Instal otomatis dan rollback belum tersedia.
+- Update aplikasi macOS: `dl update` mendeteksi aset `DevLok-macos-<arch>.dmg`, `dl update download` mengunduh + verifikasi SHA256. `dl update apply` melakukan self-update: stage `.app` dari DMG/ZIP, ganti bundle secara atomik lewat skrip terpisah, lalu relaunch (fallback membuka DMG bila folder tidak writable). Instal senyap penuh + rollback menunggu notarization.
 - Update runtime macOS lewat Homebrew: tab Update dan `dl update` menampilkan paket usang (`brew outdated` untuk nginx/php/mysql/node); tombol Update menjalankan `brew upgrade <formula>` lalu me-restart stack bila aktif.
 - Runtime harus dipasang manual lewat Homebrew.
 - Versi runtime mengikuti Homebrew. Seri spesifik didukung bila formula berversi terpasang (`php@8.4`, `mysql@8.4`, dst.); jika tidak, formula `php`/`mysql` terpasang yang dipakai.
