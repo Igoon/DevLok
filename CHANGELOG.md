@@ -4,6 +4,8 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-24
+
 ### Added
 
 - macOS: dukungan formula Homebrew berversi. Bila `php@8.4`, `mysql@8.4`, dst. terpasang, DevLok otomatis memakai seri tersebut dan menampilkannya di dropdown Konfigurasi; `brew install php@8.4` cukup untuk pin seri 8.4.
