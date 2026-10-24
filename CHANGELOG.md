@@ -4,6 +4,8 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-10-24
+
 ### Added
 
 - macOS: self-update aplikasi. `dl update apply` / tombol Update men-stage `DevLok.app` dari DMG/ZIP, mengganti bundle secara atomik lewat skrip terpisah setelah app keluar, lalu relaunch (fallback membuka DMG bila folder tidak writable).
