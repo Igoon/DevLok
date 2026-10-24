@@ -1332,7 +1332,7 @@
 
   <footer class="footer">
     <span>DevLok {version}</span>
-    <span class="powered">Powered by DeepSeek-v4-Flash</span>
+    <span class="powered">AI-powered by DeepSeek-v4-Flash</span>
     <span>{busy || 'siap'}</span>
   </footer>
 </div>
