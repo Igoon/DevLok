@@ -4,6 +4,8 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-10-24
+
 ### Added
 
 - macOS: update runtime lewat Homebrew. `dl update` dan tab Update menampilkan paket usang (`brew outdated` untuk nginx/php/mysql/node); tombol/aksi Update menjalankan `brew upgrade <formula>` lalu me-restart stack yang aktif.
