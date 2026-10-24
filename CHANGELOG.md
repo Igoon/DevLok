@@ -4,6 +4,11 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+### Fixed
+
+- Dashboard: tombol **Editor** kini ada di toolbar (tersedia juga saat stack berjalan). Sebelumnya hanya muncul di state "stack belum berjalan".
+- Konfirmasi aksi (update, hapus runtime, bersihkan cache, rollback) kini memakai modal in-app, bukan dialog native Wails, sehingga tidak menggantung/tak terlihat di Windows. Tombol "Periksa update" menampilkan status "Memeriksa…" selama proses.
+
 ## [0.2.6] - 2026-10-24
 
 ### Fixed

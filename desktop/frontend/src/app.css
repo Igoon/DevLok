@@ -212,6 +212,38 @@ pre.logs {
   word-break: break-word;
 }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 8, 16, 0.66);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+.modal {
+  width: min(520px, 100%);
+  background: #111827;
+  border: 1px solid #1e293b;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+.modal h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+.modal-message {
+  margin: 0 0 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 13px;
+}
+.modal-actions {
+  justify-content: flex-end;
+}
+
 .prefs-box {
   display: flex;
   flex-direction: column;

@@ -136,12 +136,19 @@
     return options.find((v) => v.startsWith(current + '.')) || options[0]
   }
 
-  async function ask(message: string, title = 'Konfirmasi'): Promise<boolean> {
-    try {
-      return await (api() as any).Confirm(title, message)
-    } catch {
-      return false
-    }
+  let confirmReq: { title: string; message: string; resolve: (v: boolean) => void } | null = null
+
+  function ask(message: string, title = 'Konfirmasi'): Promise<boolean> {
+    return new Promise((resolve) => {
+      confirmReq = { title, message, resolve }
+    })
+  }
+
+  function answerConfirm(value: boolean) {
+    if (!confirmReq) return
+    const resolve = confirmReq.resolve
+    confirmReq = null
+    resolve(value)
   }
 
   async function checkPorts() {
@@ -777,6 +784,21 @@
     <div class="notice-box">{notice}</div>
   {/if}
 
+  {#if confirmReq}
+    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+    <div class="modal-overlay" on:click={() => answerConfirm(false)}>
+      <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+      <div class="modal" role="dialog" aria-modal="true" tabindex="-1" on:click|stopPropagation={() => {}}>
+        <h3>{confirmReq.title}</h3>
+        <p class="muted modal-message">{confirmReq.message}</p>
+        <div class="form-row modal-actions">
+          <button on:click={() => answerConfirm(false)}>Batal</button>
+          <button class="primary" on:click={() => answerConfirm(true)}>Ya</button>
+        </div>
+      </div>
+    </div>
+  {/if}
+
   {#if tab === 'dashboard'}
   <main class="layout">
     <section class="panel hero">
@@ -861,6 +883,10 @@
         <button class="tool" on:click={() => openTerminal(activePath())} disabled={!activePath() || !!busy}>
           <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></svg>
           Terminal
+        </button>
+        <button class="tool" on:click={() => openEditor(activePath())} disabled={!activePath() || !!busy}>
+          <svg viewBox="0 0 24 24"><path d="M4 20h4L18 10l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>
+          Editor
         </button>
         <button class="tool" on:click={() => openFolder(activePath())} disabled={!activePath() || !!busy}>
           <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
@@ -1134,7 +1160,7 @@
       <h2>Update DevLok</h2>
       <div class="form-row">
         <span class="muted">Versi terpasang: <strong>{version}</strong></span>
-        <button on:click={loadUpdates} disabled={updateBusy}>Periksa update</button>
+        <button on:click={loadUpdates} disabled={updateBusy}>{updateBusy ? 'Memeriksa…' : 'Periksa update'}</button>
       </div>
 
       <h2>Pembaruan otomatis</h2>
