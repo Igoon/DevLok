@@ -81,4 +81,4 @@ jobs:
             exit 1
           fi
           echo "$pma" | grep -qi phpmyadmin
-          ./dl down
+          ./dl down || echo "warning: dl down gagal (cleanup, tidak fatal)"
