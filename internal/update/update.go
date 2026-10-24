@@ -42,7 +42,7 @@ func brewRuntimeUpdates() ([]RuntimeUpdate, error) {
 	defer cancel()
 	list, err := brew.Outdated(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil
 	}
 	var out []RuntimeUpdate
 	for _, o := range list {
