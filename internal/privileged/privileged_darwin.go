@@ -91,3 +91,45 @@ func appleQuote(s string) string {
 	s = strings.ReplaceAll(s, `"`, `\"`)
 	return `"` + s + `"`
 }
+
+func WriteResolver(tld, content string) error {
+	if !validResolverName(tld) {
+		return devlokerr.New(devlokerr.CodeInvalidArgument, "Nama resolver tidak valid: "+tld, "Gunakan huruf kecil, angka, titik, dan tanda hubung.")
+	}
+	command := fmt.Sprintf("mkdir -p /etc/resolver && printf '%%s' %s > %s", shellQuote(content), shellQuote("/etc/resolver/"+tld))
+	return runAdmin(command)
+}
+
+func RemoveResolver(tld string) error {
+	if !validResolverName(tld) {
+		return devlokerr.New(devlokerr.CodeInvalidArgument, "Nama resolver tidak valid: "+tld, "Gunakan huruf kecil, angka, titik, dan tanda hubung.")
+	}
+	return runAdmin("rm -f " + shellQuote("/etc/resolver/"+tld))
+}
+
+func runAdmin(command string) error {
+	script := fmt.Sprintf(`do shell script %s with administrator privileges`, appleQuote(command))
+	cmd := exec.Command("osascript", "-e", script)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		msg := strings.TrimSpace(string(out))
+		if msg == "" {
+			msg = err.Error()
+		}
+		return devlokerr.New(devlokerr.CodeElevationRequired, "Operasi membutuhkan izin Administrator: "+msg, "Setujui prompt administrator macOS.")
+	}
+	return nil
+}
+
+func validResolverName(s string) bool {
+	if s == "" || len(s) > 63 {
+		return false
+	}
+	for _, r := range s {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '.' || r == '-' {
+			continue
+		}
+		return false
+	}
+	return true
+}

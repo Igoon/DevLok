@@ -4,6 +4,11 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+### Added
+
+- macOS: `dl wildcard on|off|status [--tld test]` mengelola wildcard domain lewat dnsmasq (konfigurasi di state dir, port 5353, dan `/etc/resolver/<tld>` via prompt administrator).
+- Docs: checklist kesiapan notarization di `docs/MACOS-SIGNING.md`.
+
 ## [0.2.4] - 2026-10-24
 
 ### Added

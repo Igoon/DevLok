@@ -62,6 +62,7 @@ func newRootCommand() *cobra.Command {
 	root.AddCommand(newRuntimeCommand(&jsonOut))
 	root.AddCommand(newUpdateCommand(&jsonOut))
 	root.AddCommand(newUICommand())
+	root.AddCommand(newWildcardCommand(&jsonOut))
 	root.AddCommand(newSuperviseCommand())
 	root.AddCommand(newVersionCommand(&jsonOut))
 	return root

@@ -81,3 +81,26 @@ xcrun stapler validate DevLok-macos-intel.dmg
 - Simpan backup certificate dan API key.
 - Tanpa secret, artifact tetap unsigned dan Gatekeeper dapat memblokir.
 - Notarization membutuhkan koneksi internet dan waktu beberapa menit.
+
+## Checklist Kesiapan (saat certificate tersedia)
+
+Pipeline signing/notarization sudah ada di `.github/workflows/release.yml` (job `macos`). Yang perlu disiapkan saat Apple certificate tersedia:
+
+1. Apple Developer Program aktif (akun berbayar).
+2. Certificate **Developer ID Application** + private key, diexport `.p12` berpassword.
+3. App Store Connect **Team Key** API (`.p8`, Key ID, Issuer ID).
+4. Tambah GitHub Secrets:
+   - `APPLE_CERT_P12_BASE64`, `APPLE_CERT_PASSWORD`
+   - `APPLE_API_KEY_ID`, `APPLE_API_ISSUER_ID`, `APPLE_API_KEY_P8_BASE64`
+5. Push tag rilis. Job `macos` akan import certificate, menandatangani `dl-helper` dan `DevLok.app` (hardened runtime), membuat ZIP/DMG, submit DMG ke `notarytool`, lalu staple + validate.
+6. Verifikasi di Mac:
+
+   ```bash
+   codesign --verify --deep --strict --verbose=2 /Applications/DevLok.app
+   spctl --assess --type execute --verbose=2 /Applications/DevLok.app
+   xcrun stapler validate DevLok-macos-arm64.dmg
+   ```
+
+7. Self-update: DMG yang sudah dinotarisasi membuat `.app` hasil self-update lolos Gatekeeper tanpa perlu `xattr -dr com.apple.quarantine`.
+
+Tanpa secret, rilis tetap dibuat (unsigned) dan self-update tetap berjalan; Gatekeeper hanya berpotensi memblokir bila file diunduh lewat browser.

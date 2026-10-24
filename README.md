@@ -222,6 +222,7 @@ dl import laragon C:\laragon [--dry-run] [--yes] [--adopt]
 dl run -- php artisan
 dl shell
 dl ui
+dl wildcard on|off|status [--tld test]   # macOS
 ```
 
 Direncanakan (lihat roadmap):

@@ -112,6 +112,14 @@ dl hosts sync
 dl hosts clean
 ```
 
+### Wildcard (macOS)
+
+```bash
+dl wildcard status
+dl wildcard on --tld test
+dl wildcard off --tld test
+```
+
 ### Import
 
 ```powershell
