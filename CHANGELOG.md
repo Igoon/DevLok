@@ -4,10 +4,16 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-10-24
+
 ### Fixed
 
 - macOS: `dl edit` dan tombol buka-editor di tray/GUI kini berfungsi. Sebelumnya `internal/editor` memakai logika Notepad++/Windows dan gagal di Mac; sekarang memilih VS Code/Cursor/Zed/Sublime/TextMate bila terpasang, fallback TextEdit (file) atau Finder (folder).
 - Windows: update runtime kini juga menangani tool (phpMyAdmin, Notepad++, Adminer). Sebelumnya update tool gagal karena mencoba `SetServiceVersion`; tool kini dipasang tanpa mengubah versi project, dan update phpMyAdmin/Adminer me-restart stack bila aktif.
+
+### Changed
+
+- `docs/TESTING.md`: checklist smoke manual Windows GUI/tray.
 
 ## [0.2.5] - 2026-10-24
 
