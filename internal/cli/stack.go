@@ -162,7 +162,7 @@ func newEditCommand() *cobra.Command {
 				return devlokerr.Wrap(devlokerr.CodeInvalidArgument, err, "File tidak ditemukan: "+abs, "")
 			}
 			if err := editor.Open(abs); err != nil {
-				return devlokerr.Wrap(devlokerr.CodeDependencyMissing, err, "Editor tidak dapat dibuka.", "Instal VS Code atau Notepad++.")
+				return devlokerr.Wrap(devlokerr.CodeDependencyMissing, err, "Editor tidak dapat dibuka.", "Instal VS Code, atau editor teks lain.")
 			}
 			fmt.Fprintln(cmd.OutOrStdout(), "Membuka:", abs)
 			return nil

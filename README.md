@@ -126,7 +126,7 @@ components:
 - Tab **Update**: cek update aplikasi/runtime, unduh installer, apply, dan rollback.
 - Tab **Import**: scan Laragon, pilih project, tulis manifest, dan daftarkan project ke GUI tanpa memindahkan folder.
 - `dl site create --no-db` membuat site tanpa database.
-- `dl edit` memakai Notepad++ bila terpasang (`dl runtime add notepadpp`), lalu VS Code, lalu Notepad.
+- `dl edit` di Windows memakai Notepad++ bila terpasang (`dl runtime add notepadpp`), lalu VS Code, lalu Notepad; di macOS memakai VS Code/Cursor/Zed/Sublime/TextMate bila ada, lalu TextEdit/Finder.
 
 ## Build dan jalankan
 
