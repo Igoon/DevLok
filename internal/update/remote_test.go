@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -167,16 +168,27 @@ func TestDownloadRejectsBadChecksum(t *testing.T) {
 }
 
 func TestInstallerCommand(t *testing.T) {
-	name, args, err := InstallerCommand(`C:\tmp\DevLok-Setup.exe`)
-	if err != nil || name != `C:\tmp\DevLok-Setup.exe` || len(args) != 0 {
-		t.Fatalf("unexpected exe command: %q %v %v", name, args, err)
+	if runtime.GOOS == "windows" {
+		name, args, err := InstallerCommand(`C:\tmp\DevLok-Setup.exe`)
+		if err != nil || name != `C:\tmp\DevLok-Setup.exe` || len(args) != 0 {
+			t.Fatalf("unexpected exe command: %q %v %v", name, args, err)
+		}
+		name, args, err = InstallerCommand(`C:\tmp\DevLok.msi`)
+		if err != nil || name != "msiexec.exe" || len(args) != 2 {
+			t.Fatalf("unexpected msi command: %q %v %v", name, args, err)
+		}
+		if _, _, err := InstallerCommand(`C:\tmp\DevLok.zip`); err == nil {
+			t.Fatal("expected unsupported format")
+		}
+		return
 	}
-	name, args, err = InstallerCommand(`C:\tmp\DevLok.msi`)
-	if err != nil || name != "msiexec.exe" || len(args) != 2 {
-		t.Fatalf("unexpected msi command: %q %v %v", name, args, err)
-	}
-	if _, _, err := InstallerCommand(`C:\tmp\DevLok.zip`); err == nil {
-		t.Fatal("expected unsupported format")
+	if runtime.GOOS == "darwin" {
+		if name, _, err := InstallerCommand("/tmp/DevLok-macos-arm64.dmg"); err != nil || name != "/tmp/DevLok-macos-arm64.dmg" {
+			t.Fatalf("unexpected dmg command: %q %v", name, err)
+		}
+		if _, _, err := InstallerCommand("/tmp/DevLok-Setup.exe"); err == nil {
+			t.Fatal("expected exe unsupported on darwin")
+		}
 	}
 }
 

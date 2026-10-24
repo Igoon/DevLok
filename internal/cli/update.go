@@ -77,7 +77,9 @@ func newUpdateCommand(jsonOut *bool) *cobra.Command {
 			if remoteErr != "" {
 				fmt.Fprintf(cmd.ErrOrStderr(), "peringatan: update aplikasi tidak dapat diperiksa: %s\n", remoteErr)
 			}
-			if appUpdate == nil && len(updates) == 0 {
+			if platform.Current().Name() == "darwin" {
+				fmt.Fprintln(cmd.OutOrStdout(), "Runtime dikelola Homebrew; perbarui dengan: brew upgrade nginx php mysql")
+			} else if appUpdate == nil && len(updates) == 0 {
 				fmt.Fprintln(cmd.OutOrStdout(), "Semua runtime terpasang sudah memakai versi terbaru dari registry.")
 			}
 			return nil

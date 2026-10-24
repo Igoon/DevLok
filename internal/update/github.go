@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"runtime"
 	"strings"
 	"time"
 
@@ -121,11 +122,24 @@ func releaseInstaller(rel githubRelease) (string, string) {
 	for _, a := range rel.Assets {
 		assets[a.Name] = a.BrowserDownloadURL
 	}
-	name := "DevLok-Setup-" + strings.TrimPrefix(strings.TrimSpace(rel.TagName), "v") + ".exe"
-	if link := assets[name]; link != "" {
-		return link, assets[name+".sha256"]
+	for _, name := range appAssetCandidates(rel.TagName) {
+		if link := assets[name]; link != "" {
+			return link, assets[name+".sha256"]
+		}
 	}
 	return "", ""
+}
+
+func appAssetCandidates(tag string) []string {
+	ver := strings.TrimPrefix(strings.TrimSpace(tag), "v")
+	if runtime.GOOS == "darwin" {
+		arch := "arm64"
+		if runtime.GOARCH == "amd64" {
+			arch = "intel"
+		}
+		return []string{"DevLok-macos-" + arch + ".dmg", "DevLok-macos-" + arch + ".zip"}
+	}
+	return []string{"DevLok-Setup-" + ver + ".exe"}
 }
 
 func fetchSHA(ctx context.Context, client *http.Client, url string) (string, error) {

@@ -14,6 +14,18 @@ import (
 	"devlok/internal/hidden"
 )
 
+func InstallerCommand(path string) (string, []string, error) {
+	ext := strings.ToLower(filepath.Ext(path))
+	switch ext {
+	case ".exe":
+		return path, nil, nil
+	case ".msi":
+		return "msiexec.exe", []string{"/i", path}, nil
+	default:
+		return "", nil, devlokerr.New(devlokerr.CodeUnsupported, "Format update tidak didukung: "+ext, "Gunakan installer .exe atau .msi.")
+	}
+}
+
 func LaunchInstaller(path string) error {
 	name, args, err := InstallerCommand(path)
 	if err != nil {

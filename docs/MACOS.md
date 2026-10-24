@@ -121,7 +121,8 @@ Untuk distribusi publik yang aman, tetap diperlukan Apple Developer Program berb
 - Installer macOS belum tersedia.
 - Aplikasi belum ditandatangani Developer ID.
 - Belum dinotarisasi; Gatekeeper dapat memblokir.
-- Update aplikasi macOS belum tersedia.
+- Update aplikasi macOS: `dl update` mendeteksi aset `DevLok-macos-<arch>.dmg`, `dl update download` mengunduh + verifikasi SHA256, dan `dl update apply` membuka DMG untuk pemasangan manual. Instal otomatis dan rollback belum tersedia.
+- Update runtime macOS memakai Homebrew: `brew upgrade nginx php mysql` (DevLok tidak mengelola versinya).
 - Runtime harus dipasang manual lewat Homebrew.
 - Versi runtime mengikuti Homebrew. Seri spesifik didukung bila formula berversi terpasang (`php@8.4`, `mysql@8.4`, dst.); jika tidak, formula `php`/`mysql` terpasang yang dipakai.
 - Data MySQL disimpan per seri yang diminta (mis. `8.4`). Berpindah antar biner seri berbeda pada seri yang sama (mis. `mysql` lalu `mysql@8.4`) dapat membuat `mysqld` menolak start karena datadir dibuat versi lain. Hapus `data/mysql/<seri>` lalu `dl up` untuk inisialisasi ulang.

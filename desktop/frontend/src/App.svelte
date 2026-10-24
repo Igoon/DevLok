@@ -4,6 +4,7 @@
   type Status = {
     running: boolean
     health: string
+    platform: string
     project: string
     path: string
     domain: string
@@ -1240,7 +1241,9 @@
             <button class="primary" on:click={updateAllPatches} disabled={updateBusy}>Update semua patch ({patchUpdates.length})</button>
           </div>
         {/if}
-        {#if !updateInfo.runtimes || updateInfo.runtimes.length === 0}
+        {#if status.platform === 'darwin'}
+          <p class="muted">Runtime dikelola Homebrew. Perbarui dengan brew upgrade nginx php mysql.</p>
+        {:else if !updateInfo.runtimes || updateInfo.runtimes.length === 0}
           <p class="muted">Semua runtime terpasang sudah versi terbaru.</p>
         {:else}
           <div class="stack">

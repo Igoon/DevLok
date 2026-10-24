@@ -51,6 +51,7 @@ func (a *App) startup(ctx context.Context) {
 type StatusView struct {
 	Running        bool          `json:"running"`
 	Health         string        `json:"health"`
+	Platform       string        `json:"platform"`
 	Project        string        `json:"project"`
 	Path           string        `json:"path"`
 	Domain         string        `json:"domain"`
@@ -217,6 +218,7 @@ func (a *App) Status() StatusView {
 	return StatusView{
 		Running:        health != "stopped",
 		Health:         health,
+		Platform:       platform.Current().Name(),
 		Project:        st.Name,
 		Path:           st.ProjectDir,
 		Domain:         st.Domain,
