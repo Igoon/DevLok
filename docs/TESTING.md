@@ -140,7 +140,65 @@ Catatan:
 - [ ] Log viewer saat service crash.
 - [ ] Backup/restore database project nyata.
 
-## 10. Data uji
+## 10. Checklist Smoke Manual Windows (GUI/tray)
+
+Persiapan:
+
+- [ ] Hentikan Laragon / service lain yang memakai port 80/443/8080/8443/3306.
+- [ ] Jalankan sebagai user biasa (bukan Administrator).
+- [ ] Build GUI: `wails build` di `desktop`, lalu `build\bin\dl.exe ui`; atau pakai installer terpasang.
+
+A. Launch dan tray
+
+- [ ] Window DevLok muncul.
+- [ ] Ikon tray muncul; hijau saat semua service jalan, abu saat berhenti/parsial.
+- [ ] Menu tray lengkap: Show, Open site, Sites, Start All/Stop All, Restart Stack, versi Nginx/PHP/MySQL/Node, Tools.
+- [ ] Tutup window -> app tetap di tray; buka lagi dari tray.
+
+B. Stack
+
+- [ ] Start All -> `dl status` menunjukkan nginx, php, mysql running.
+- [ ] Buka URL site (HTTP/HTTPS) -> 200.
+- [ ] phpMyAdmin terbuka.
+- [ ] Stop All -> `tasklist | findstr /i "nginx php mysqld"` kosong (tidak ada zombie).
+- [ ] Restart Stack berfungsi.
+
+C. Konfigurasi
+
+- [ ] Tab Konfigurasi memuat versi nginx/php/mysql/node.
+- [ ] Cek port live (free/in use) akurat.
+- [ ] Simpan -> stack restart dan perubahan berlaku.
+
+D. Dialog konfirmasi native (regresi baru)
+
+- [ ] Runtime terpasang -> tombol Hapus memunculkan dialog native Ya/Batal; Batal tidak menghapus, Ya menghapus.
+- [ ] Update -> Bersihkan cache memunculkan dialog native; cache terhapus.
+- [ ] Apply/Rollback app update memunculkan dialog native sebelum bertindak.
+
+E. Editor dan tools
+
+- [ ] `dl edit` di folder project membuka Notepad++ (atau VS Code/Notepad).
+- [ ] Tray -> Tools -> Editor membuka folder project.
+- [ ] `dl runtime add notepadpp` lalu `dl edit` memakai Notepad++ portable DevLok.
+
+F. Update
+
+- [ ] `dl update` / tab Update mendeteksi patch (mis. PHP 8.4.26 -> 8.4.27).
+- [ ] Update satu patch -> project diperbarui + stack restart.
+- [ ] Update semua patch.
+- [ ] Tool (phpMyAdmin/Notepad++) muncul hanya bila registry punya versi lebih baru; update tool selesai tanpa error "Service tidak dikenal".
+- [ ] App update: Download, lalu Apply (installer) atau Rollback (setelah upgrade via installer).
+
+G. Lain-lain
+
+- [ ] Single instance: buka app kedua -> fokus ke window yang sudah ada.
+- [ ] `dl up` memunculkan UAC sekali; hosts memuat blok `# >>> DevLok managed block >>>`.
+- [ ] `dl doctor` tidak berakhir dengan kegagalan fatal.
+- [ ] Log viewer menampilkan log nginx/php/mysql.
+
+Lulus bila semua A-G tercentang. Catat penyimpangan beserta log terkait.
+
+## 11. Data uji
 
 - Project contoh: Laravel minimal, WordPress minimal, PHP polos, Symfony minimal.
 - Repo contoh untuk uji lockfile.
