@@ -1384,6 +1384,9 @@ func (a *App) UpdateInfo() (UpdateInfoView, error) {
 }
 
 func (a *App) InstallRuntimeUpdate(name, version string) (string, error) {
+	if platform.Current().Name() == "darwin" {
+		return a.installBrewRuntime(name, version)
+	}
 	a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "start", Name: name, Version: version})
 	mgr, err := a.runtimeManagerWithProgress(func(p rt.Progress) {
 		a.emitUpdateProgress(UpdateProgressView{
@@ -1439,6 +1442,66 @@ func (a *App) InstallRuntimeUpdate(name, version string) (string, error) {
 	a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "done", Name: inst.Name, Version: inst.Version})
 	return message, nil
 }
+func (a *App) installBrewRuntime(name, version string) (string, error) {
+	a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "start", Name: name, Version: version})
+	ctx, cancel := a.startUpdateContext(30 * time.Minute)
+	defer a.finishUpdate(cancel)
+	if _, err := brew.Upgrade(ctx, name); err != nil {
+		a.emitUpdateError("runtime", name, version, err)
+		return "", err
+	}
+	a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "done", Name: name, Version: version})
+	return a.restartActiveStack("Runtime " + name + " diperbarui via Homebrew."), nil
+}
+
+func (a *App) updateRuntimesBrew(patches []update.RuntimeUpdate) (string, error) {
+	a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "start", Name: "semua patch"})
+	ctx, cancel := a.startUpdateContext(30 * time.Minute)
+	defer a.finishUpdate(cancel)
+	var done []string
+	var failures []string
+	for _, u := range patches {
+		if ctx.Err() != nil {
+			return "", ctx.Err()
+		}
+		if _, err := brew.Upgrade(ctx, u.Name); err != nil {
+			failures = append(failures, u.Name+": "+err.Error())
+			continue
+		}
+		done = append(done, u.Name)
+	}
+	message := a.restartActiveStack("Runtime diperbarui via Homebrew: " + strings.Join(done, ", ") + ".")
+	if len(failures) > 0 {
+		err := devlokerr.New(devlokerr.CodeDependencyMissing,
+			fmt.Sprintf("%d diperbarui, %d gagal: %s", len(done), len(failures), strings.Join(failures, "; ")),
+			"Jalankan brew upgrade secara manual.")
+		a.emitUpdateError("runtime", "semua patch", "", err)
+		return message, err
+	}
+	a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "done", Name: "semua patch"})
+	return message, nil
+}
+
+func (a *App) restartActiveStack(message string) string {
+	project := a.trayProjectPath()
+	if project == "" {
+		return message
+	}
+	if st, err := stack.LoadState(""); err != nil || !sameTrayPath(st.ProjectDir, project) {
+		return message
+	}
+	a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "restart", Name: "stack"})
+	if err := stack.Down(""); err != nil {
+		return message
+	}
+	upCtx, upCancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	defer upCancel()
+	if _, err := stack.Up(upCtx, a.stackOptions(project)); err != nil {
+		return message
+	}
+	return message + " Stack direstart."
+}
+
 func (a *App) UpdateAllPatches() (string, error) {
 	message, err := a.updateRuntimes(false)
 	if err != nil {
@@ -1470,6 +1533,9 @@ func (a *App) updateRuntimes(includeNewSeries bool) (string, error) {
 	}
 	if len(patches) == 0 {
 		return "", nil
+	}
+	if platform.Current().Name() == "darwin" {
+		return a.updateRuntimesBrew(patches)
 	}
 	a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "start", Name: "semua patch"})
 	mgr, err := a.runtimeManagerWithProgress(func(p rt.Progress) {

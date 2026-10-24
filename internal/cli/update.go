@@ -72,12 +72,16 @@ func newUpdateCommand(jsonOut *bool) *cobra.Command {
 				for _, u := range updates {
 					fmt.Fprintf(cmd.OutOrStdout(), "  %s %s -> %s\n", u.Name, u.Installed, u.Latest)
 				}
-				fmt.Fprintln(cmd.OutOrStdout(), "\nPasang versi baru dengan: dl runtime add <nama>@<versi>")
+				if platform.Current().Name() == "darwin" {
+					fmt.Fprintln(cmd.OutOrStdout(), "\nPerbarui dengan: brew upgrade <nama>")
+				} else {
+					fmt.Fprintln(cmd.OutOrStdout(), "\nPasang versi baru dengan: dl runtime add <nama>@<versi>")
+				}
 			}
 			if remoteErr != "" {
 				fmt.Fprintf(cmd.ErrOrStderr(), "peringatan: update aplikasi tidak dapat diperiksa: %s\n", remoteErr)
 			}
-			if platform.Current().Name() == "darwin" {
+			if platform.Current().Name() == "darwin" && len(updates) == 0 {
 				fmt.Fprintln(cmd.OutOrStdout(), "Runtime dikelola Homebrew; perbarui dengan: brew upgrade nginx php mysql")
 			} else if appUpdate == nil && len(updates) == 0 {
 				fmt.Fprintln(cmd.OutOrStdout(), "Semua runtime terpasang sudah memakai versi terbaru dari registry.")

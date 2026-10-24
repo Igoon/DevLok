@@ -1,10 +1,14 @@
 package update
 
 import (
+	"context"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
+	"devlok/internal/brew"
+	"devlok/internal/platform"
 	rt "devlok/internal/runtime"
 )
 
@@ -23,11 +27,35 @@ type RuntimeUpdate struct {
 }
 
 func Check(mgr *rt.Manager) ([]RuntimeUpdate, error) {
+	if platform.Current().Name() == "darwin" {
+		return brewRuntimeUpdates()
+	}
 	installed, err := mgr.ListInstalled()
 	if err != nil {
 		return nil, err
 	}
 	return checkInstalled(installed, mgr.Registries, mgr.OS+"/"+mgr.Arch), nil
+}
+
+func brewRuntimeUpdates() ([]RuntimeUpdate, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	list, err := brew.Outdated(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var out []RuntimeUpdate
+	for _, o := range list {
+		out = append(out, RuntimeUpdate{
+			Name:      o.Name,
+			Kind:      KindPatch,
+			Series:    versionSeries(o.Installed),
+			Installed: o.Installed,
+			Latest:    o.Latest,
+			Newer:     []string{o.Latest},
+		})
+	}
+	return out, nil
 }
 
 func checkInstalled(installed []rt.Installed, regs []rt.Registry, platform string) []RuntimeUpdate {

@@ -668,7 +668,8 @@
   }
 
   function copyRuntimeCommand(u: any) {
-    navigator.clipboard?.writeText('dl runtime add ' + u.name + '@' + u.latest)
+    const cmd = status.platform === 'darwin' ? 'brew upgrade ' + u.name : 'dl runtime add ' + u.name + '@' + u.latest
+    navigator.clipboard?.writeText(cmd)
     updateNotice = 'Perintah disalin.'
   }
 
@@ -1241,10 +1242,12 @@
             <button class="primary" on:click={updateAllPatches} disabled={updateBusy}>Update semua patch ({patchUpdates.length})</button>
           </div>
         {/if}
-        {#if status.platform === 'darwin'}
-          <p class="muted">Runtime dikelola Homebrew. Perbarui dengan brew upgrade nginx php mysql.</p>
-        {:else if !updateInfo.runtimes || updateInfo.runtimes.length === 0}
-          <p class="muted">Semua runtime terpasang sudah versi terbaru.</p>
+        {#if !updateInfo.runtimes || updateInfo.runtimes.length === 0}
+          {#if status.platform === 'darwin'}
+            <p class="muted">Runtime dikelola Homebrew. Perbarui dengan brew upgrade nginx php mysql.</p>
+          {:else}
+            <p class="muted">Semua runtime terpasang sudah versi terbaru.</p>
+          {/if}
         {:else}
           <div class="stack">
             {#each updateInfo.runtimes as u}
