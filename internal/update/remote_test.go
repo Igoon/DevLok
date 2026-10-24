@@ -194,6 +194,7 @@ func TestInstallerCommand(t *testing.T) {
 
 func TestGitHubCheck(t *testing.T) {
 	sum := strings.Repeat("a", 64)
+	name := appAssetCandidates("v99.0.0")[0]
 	mux := http.NewServeMux()
 	mux.HandleFunc("/releases", func(w http.ResponseWriter, r *http.Request) {
 		rel := []githubRelease{{
@@ -201,14 +202,14 @@ func TestGitHubCheck(t *testing.T) {
 			Name:    "DevLok 99",
 			Body:    "notes",
 			Assets: []githubAsset{
-				{Name: "DevLok-Setup-99.0.0.exe", BrowserDownloadURL: "http://" + r.Host + "/setup.exe"},
-				{Name: "DevLok-Setup-99.0.0.exe.sha256", BrowserDownloadURL: "http://" + r.Host + "/setup.exe.sha256"},
+				{Name: name, BrowserDownloadURL: "http://" + r.Host + "/setup.bin"},
+				{Name: name + ".sha256", BrowserDownloadURL: "http://" + r.Host + "/setup.bin.sha256"},
 			},
 		}}
 		_ = json.NewEncoder(w).Encode(rel)
 	})
-	mux.HandleFunc("/setup.exe.sha256", func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte(sum + "  DevLok-Setup-99.0.0.exe\n"))
+	mux.HandleFunc("/setup.bin.sha256", func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(sum + "  " + name + "\n"))
 	})
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
