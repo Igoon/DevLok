@@ -2,7 +2,7 @@
 
 ## 1. Lisensi kode DevLok
 
-DevLok dilisensikan di bawah **Apache License, Version 2.0**. Teks lengkap ada di [`LICENSE`](../LICENSE) dan atribusi di [`NOTICE`](../NOTICE). Copyright 2026 DevLok contributors.
+DevLok dilisensikan di bawah **Apache License, Version 2.0**. Teks lengkap ada di [`LICENSE`](../LICENSE) dan atribusi di [`NOTICE`](../NOTICE). Copyright 2026 I Go On (Igoon).
 
 Alasan: permisif (termasuk penggunaan komersial), ada patent grant dan klausa trademark, serta kompatibel dengan dependency proyek.
 
@@ -82,7 +82,7 @@ Tanpa signing:
 
 ## 8. Kontribusi
 
-- Kontribusi memakai **DCO** (`git commit -s`), dengan kontribusi dilisensikan di bawah Apache-2.0. CLA belum diterapkan; dapat ditambahkan bila dibutuhkan untuk dual-license.
+- Kontribusi memakai **DCO** (`git commit -s`; lihat [DCO](../DCO) dan [CONTRIBUTING.md](../CONTRIBUTING.md)), dengan kontribusi dilisensikan di bawah Apache-2.0. CLA belum diterapkan; dapat ditambahkan bila dibutuhkan untuk dual-license.
 - Kontribusi kode harus kompatibel dengan lisensi proyek.
 - Jangan menambahkan dependency dengan lisensi yang tidak kompatibel.
 - Dependency baru harus melalui review lisensi.

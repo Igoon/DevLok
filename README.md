@@ -298,8 +298,12 @@ Catatan: `internal/api` (HTTP lokal untuk browser fallback) belum dibuat; untuk 
 | M7 Installer dan hardening | Installer, release, updater, dan rollback selesai; Authenticode menunggu certificate |
 | macOS (v0.2.x) | Selesai: CLI, GUI, tray, CA/hosts, config, self-update aplikasi, update runtime Homebrew, `dl wildcard`; notarization menunggu certificate |
 
+## Kontribusi
+
+Kontribusi diterima dengan **DCO** — setiap commit disertai `git commit -s`. Lihat [CONTRIBUTING.md](CONTRIBUTING.md) dan teks [DCO](DCO).
+
 ## Lisensi
 
-Kode DevLok dilisensikan di bawah **Apache License 2.0** — lihat [LICENSE](LICENSE). Copyright 2026 DevLok contributors.
+Kode DevLok dilisensikan di bawah **Apache License 2.0** — lihat [LICENSE](LICENSE). Copyright 2026 I Go On (Igoon).
 
 Runtime pihak ketiga tidak dibundel dan diunduh dari sumber resmi; lihat [docs/LICENSING.md](docs/LICENSING.md).
