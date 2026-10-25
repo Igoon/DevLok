@@ -4,6 +4,8 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.2.10] - 2026-10-25
+
 ### Added
 
 - Konsistensi tray: macOS memakai ikon template PNG (`tray-running.png`/`tray-stopped.png`) karena NSImage tidak mendukung `.ico`; Windows tetap memakai `.ico`. Judul teks tray dihapus agar kedua OS menampilkan ikon saja.
