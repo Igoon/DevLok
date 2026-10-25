@@ -79,11 +79,9 @@ func brewPHP(ctx context.Context, requested string) (rt.Installed, error) {
 }
 
 func replaceSymlink(path, target string) error {
-	if info, err := os.Lstat(path); err == nil {
-		if info.Mode()&os.ModeSymlink != 0 || info.IsDir() {
-			if err := os.Remove(path); err != nil {
-				return devlokerr.Wrap(devlokerr.CodePermissionDenied, err, "Shim runtime tidak dapat diganti.", "")
-			}
+	if _, err := os.Lstat(path); err == nil {
+		if err := os.RemoveAll(path); err != nil {
+			return devlokerr.Wrap(devlokerr.CodePermissionDenied, err, "Shim runtime tidak dapat diganti.", "")
 		}
 	}
 	if err := os.Symlink(target, path); err != nil {

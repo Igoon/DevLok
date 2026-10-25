@@ -4,6 +4,13 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+### Fixed
+
+- Start All tidak lagi gagal saat port umum dipakai: fallback HTTP diperluas ke `80/8080/8081/8000/8888` (macOS `8080/8000/8081/8888`) dan HTTPS ke `443/8443/8444/9443`; pesan error menyebut proses/PID pemilik port.
+- `dl up` selalu membersihkan proses runtime yang tertinggal (orphan) sebelum memilih port, sehingga port tidak salah dianggap terpakai.
+- Shim Nginx macOS kini mengganti file/symlink basi (bukan hanya symlink/direktori), menghindari kegagalan saat Homebrew berubah/upgrade.
+- Warning kegagalan Mailpit menyertakan tail `logs/mailpit.log` untuk diagnosis.
+
 ## [0.2.10] - 2026-10-25
 
 ### Added

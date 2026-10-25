@@ -100,9 +100,7 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 	_ = os.Remove(supervisorStopPath(p.stateDir))
 	endPause := beginSupervisorPause(p.stateDir)
 	defer endPause()
-	if _, err := os.Stat(p.stackState); os.IsNotExist(err) {
-		cleanupRuntimeProcesses(p.stateDir)
-	}
+	cleanupRuntimeProcesses(p.stateDir)
 	mgr, err := rt.NewManager(rt.Options{
 		Root:       p.runtimes,
 		Cache:      p.cache,
@@ -436,7 +434,11 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 				Persistent: true,
 			}
 			if _, err := sm.Start(mailpitSpec); err != nil {
-				res.Warnings = append(res.Warnings, "Mailpit tidak dapat dijalankan: "+err.Error())
+				msg := "Mailpit tidak dapat dijalankan: " + err.Error()
+				if tail := logTail(filepath.Join(p.logs, "mailpit.log"), 8); tail != "" {
+					msg += " | " + tail
+				}
+				res.Warnings = append(res.Warnings, msg)
 				res.MailpitURL = ""
 			} else {
 				mailpitStarted = true
@@ -771,18 +773,30 @@ func stopExisting(sm *supervisor.Manager) {
 	}
 }
 
+func logTail(path string, lines int) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	parts := strings.Split(strings.TrimRight(string(data), "\r\n"), "\n")
+	if len(parts) > lines {
+		parts = parts[len(parts)-lines:]
+	}
+	return strings.Join(parts, " | ")
+}
+
 func chooseHTTPPort(explicit int) (int, error) {
 	if platform.Current().Name() == "darwin" && explicit == 0 {
-		return choosePort(0, "HTTP", 8080, 8000)
+		return choosePort(0, "HTTP", 8080, 8000, 8081, 8888)
 	}
-	return choosePort(explicit, "HTTP", 80, 8080)
+	return choosePort(explicit, "HTTP", 80, 8080, 8081, 8000, 8888)
 }
 
 func chooseHTTPSPort(explicit int) (int, error) {
 	if platform.Current().Name() == "darwin" && explicit == 0 {
-		return choosePort(0, "HTTPS", 8443, 9443)
+		return choosePort(0, "HTTPS", 8443, 9443, 8444)
 	}
-	return choosePort(explicit, "HTTPS", 443, 8443)
+	return choosePort(explicit, "HTTPS", 443, 8443, 8444, 9443)
 }
 
 func installPhpMyAdmin(ctx context.Context, mgr *rt.Manager, phpVersion string) (rt.Installed, bool, error) {
@@ -831,7 +845,23 @@ func choosePort(explicit int, label string, fallback ...int) (int, error) {
 	}
 	port, err := ports.Pick(fallback...)
 	if err != nil {
-		return 0, devlokerr.Wrap(devlokerr.CodePortInUse, err, "Tidak ada port "+label+" yang tersedia.", "Bebaskan port atau set ports di manifest.")
+		var owners []string
+		for _, p := range fallback {
+			st := ports.Check(p)
+			if st.Available {
+				continue
+			}
+			if st.PID > 0 {
+				owners = append(owners, fmt.Sprintf("%d oleh %s (PID %d)", p, st.Process, st.PID))
+			} else {
+				owners = append(owners, fmt.Sprintf("%d terpakai", p))
+			}
+		}
+		hint := "Bebaskan port atau set ports di manifest."
+		if len(owners) > 0 {
+			hint = "Port terpakai: " + strings.Join(owners, "; ") + ". Bebaskan atau set ports di manifest."
+		}
+		return 0, devlokerr.Wrap(devlokerr.CodePortInUse, err, "Tidak ada port "+label+" yang tersedia.", hint)
 	}
 	return port, nil
 }
