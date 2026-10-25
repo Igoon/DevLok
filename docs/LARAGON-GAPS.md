@@ -1,12 +1,12 @@
-# Audit Kekurangan Laragon
+# Perbandingan dengan Laragon
 
-Dokumen ini memetakan kekurangan Laragon ke status implementasi DevLok saat ini. Status jujur, bukan klaim pemasaran.
+Dokumen ini membandingkan fitur Laragon dengan implementasi DevLok dan statusnya secara jujur, bukan klaim pemasaran.
 
 Status: `done`, `partial`, `not yet`.
 
-## 1. Sepuluh kekurangan awal
+## 1. Perbandingan fitur inti
 
-| # | Kekurangan Laragon | Status | Bukti / sisa kekurangan |
+| # | Area (keterbatasan umum Laragon) | Status DevLok | Catatan |
 |---|---|---|---|
 | 1 | Windows-only | done | Core Go lintas platform; Windows dan macOS dirilis (GUI/tray/CLI). macOS memakai runtime Homebrew. |
 | 2 | Runtime global, tidak bisa pin versi per project | done | `.devlok.yaml` + `.devlok.lock`; PHP/Node/MySQL per project (Windows); macOS memakai seri formula Homebrew (`php@8.4`, dst.). |
@@ -44,7 +44,7 @@ Status: `done`, `partial`, `not yet`.
 4. **Import Laragon end-to-end**: copy project dan impor dump database.
 5. **Browser fallback** dan migrasi schema manifest.
 
-## 4. Yang sudah lebih baik dari Laragon
+## 4. Keunggulan DevLok
 
 - Runtime per project dan lockfile.
 - Versi service dapat dipilih dari GUI, Konfigurasi, dan tray.

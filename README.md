@@ -8,8 +8,8 @@
 
 Local development environment untuk **Windows dan macOS**: Nginx + PHP + MySQL, dengan GUI dan CLI. Alternatif Laragon yang reproducible, aman secara default, dan bisa memakai runtime per project (Windows) atau Homebrew (macOS).
 
-- **Versi**: `0.2.7` (Windows 10 22H2+ / Windows 11 x64; macOS 14/15 Intel & Apple Silicon)
-- **Status**: `0.2.7` stabil untuk Windows. macOS didukung sejak v0.2.0: CLI, GUI, tray, CA/hosts, update aplikasi (self-update DMG), dan update runtime via Homebrew. Artifact `.app`/`.dmg` belum di-sign/notarize.
+- **Versi**: `0.2.8` (Windows 10 22H2+ / Windows 11 x64; macOS 14/15 Intel & Apple Silicon)
+- **Status**: `0.2.8` stabil untuk Windows. macOS didukung sejak v0.2.0: CLI, GUI, tray, CA/hosts, update aplikasi (self-update DMG), dan update runtime via Homebrew. Artifact `.app`/`.dmg` belum di-sign/notarize.
 - **Stack**: Go + Wails v2 + Svelte + TypeScript
 - **Binary**: `dl.exe` (CLI), `devlok-gui.exe` / `DevLok.app` (GUI Wails), `dl-helper.exe` (hosts privileged)
 - **Manifest project**: `.devlok.yaml` + `.devlok.lock`
@@ -18,26 +18,16 @@ Sudah tersedia: manifest loader/validator, logger JSONL, platform Windows/macOS,
 
 Belum tersedia: migrasi schema manifest, forwarding perintah lewat named pipe, browser fallback, installer macOS, dan signing/notarization (Apple Developer ID). Lihat [docs/MACOS.md](docs/MACOS.md) untuk dukungan macOS.
 
-## Masalah yang diselesaikan
+## Kenapa DevLok
 
-Laragon cepat dan praktis, tetapi memiliki keterbatasan:
+- **Runtime per project**: pilih/pin versi Nginx, PHP, MySQL, dan Node lewat `.devlok.yaml` + `.devlok.lock` (Windows); di macOS memakai formula Homebrew berversi (`php@8.4`, `mysql@8.4`, dst.).
+- **Supervisi proses**: health check, restart dengan backoff, supervisor latar (`dl supervise`), dan rekonsiliasi state.
+- **Default aman**: service hanya di loopback, password acak, TLS 1.2/1.3 dengan CA lokal yang dikelola.
+- **Satu aplikasi, GUI + CLI**: dashboard/tray dan perintah `dl` berbagi core yang sama.
+- **Lintas platform**: Windows x64 dan macOS (Intel & Apple Silicon).
+- **Reproducible**: lockfile, checksum, export/import environment, dan import project Laragon.
 
-1. Windows-only.
-2. Runtime global, tidak bisa pin versi per project.
-3. Penambahan versi runtime manual, tanpa checksum dan update.
-4. TLS lokal lemah dan trust certificate tidak dikelola otomatis.
-5. Tidak ada supervision proses, health check, atau pemulihan setelah crash.
-6. Port bentrok baru terdeteksi dari log.
-7. Log tersebar di banyak folder.
-8. PATH global diubah sehingga bentrok dengan tool sistem.
-9. Konfigurasi situs menumpuk tanpa lifecycle.
-10. Environment tidak reproducible dan tidak bisa dibagikan ke tim.
-
-Sebagian besar kekurangan Laragon sudah ditangani. Audit status lengkap ada di [docs/LARAGON-GAPS.md](docs/LARAGON-GAPS.md). Tiga pembeda utama:
-
-- **Runtime per project** dan lockfile.
-- **Supervisi proses** yang benar.
-- **Default aman**: loopback-only, password acak, TLS 1.2/1.3.
+Perbandingan detail dengan Laragon ada di [docs/LARAGON-GAPS.md](docs/LARAGON-GAPS.md).
 
 ## Runtime yang dikelola
 
@@ -293,7 +283,7 @@ Catatan: `internal/api` (HTTP lokal untuk browser fallback) belum dibuat; untuk 
 | [docs/MACOS.md](docs/MACOS.md) | Status, prasyarat, dan batasan macOS |
 | [docs/MACOS-SIGNING.md](docs/MACOS-SIGNING.md) | Signing dan notarization macOS |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Troubleshooting MySQL dan update runtime |
-| [docs/LARAGON-GAPS.md](docs/LARAGON-GAPS.md) | Audit kekurangan Laragon vs DevLok |
+| [docs/LARAGON-GAPS.md](docs/LARAGON-GAPS.md) | Perbandingan fitur dengan Laragon |
 | [docs/STITCH_PROMPTS.md](docs/STITCH_PROMPTS.md) | Prompt Google Stitch untuk alternatif UI app dan tray |
 | [docs/POSTER.md](docs/POSTER.md) | Ringkasan rilis 0.2.x dan prompt poster |
 | [docs/adr/](docs/adr/) | Architecture Decision Records |

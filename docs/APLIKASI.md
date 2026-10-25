@@ -37,9 +37,9 @@ Pengguna dapat:
 
 DevLok ditujukan untuk developer yang membutuhkan lingkungan lokal yang konsisten, tetapi tidak ingin mengubah PATH global, memasang runtime secara manual, atau berurusan dengan konfigurasi Nginx dan hosts setiap kali membuat project baru.
 
-### Masalah yang Diselesaikan
+### Kemampuan Utama
 
-Dibandingkan Laragon, DevLok menangani:
+DevLok menyediakan:
 
 1. Runtime per project dengan versi yang dapat dipin.
 2. Lockfile dan verifikasi checksum runtime.
@@ -60,7 +60,7 @@ Dibandingkan Laragon, DevLok menangani:
 
 - Dashboard status stack dan service.
 - Tombol **Start All** yang berubah menjadi **Stop** saat stack berjalan.
-- Toolbar **Web**, **Database**, **Terminal**, dan **Root**.
+- Toolbar **Web**, **Database**, **Terminal**, **Editor**, dan **Root**.
 - Daftar service Nginx, PHP, MySQL, dan phpMyAdmin.
 - Status service real-time: running, stopped, failed, restarting.
 - Versi runtime ditampilkan di dashboard tanpa dropdown versi.
