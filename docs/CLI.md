@@ -204,11 +204,13 @@ Error:
 dl completion powershell | Out-String | Invoke-Expression
 ```
 
-## 9. Autostart
+## 9. Autostart (direncanakan)
+
+Belum ada perintah autostart. Rencananya:
 
 ```powershell
 dl config set ui.autostart true
 dl config set ui.minimize_on_close true
 ```
 
-Pada portable mode, autostart selalu `false` dan tidak dapat diaktifkan.
+Pada portable mode, autostart tidak diaktifkan.
