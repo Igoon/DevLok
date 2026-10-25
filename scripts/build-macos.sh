@@ -30,6 +30,9 @@ echo "Build helper..."
 go build -trimpath -o desktop/build/bin/dl-helper ./cmd/dl-helper
 cp desktop/build/bin/dl-helper "$app/Contents/MacOS/dl-helper"
 chmod +x "$app/Contents/MacOS/dl-helper"
+mkdir -p "$app/Contents/Resources"
+cp "$ROOT/LICENSE" "$app/Contents/Resources/LICENSE"
+cp "$ROOT/NOTICE" "$app/Contents/Resources/NOTICE"
 
 # Ad-hoc signature: valid locally, but not trusted by Gatekeeper for distribution.
 codesign --force --deep --sign - "$app"

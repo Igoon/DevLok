@@ -4,6 +4,10 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+### Added
+
+- Lisensi kode: **Apache License 2.0** (`LICENSE`), atribusi di `NOTICE`. README & `docs/LICENSING.md` diperbarui; kontribusi memakai DCO (`git commit -s`). Paket rilis Windows (portable/installer) dan macOS (`.app`/ZIP/DMG) menyertakan `LICENSE` dan `NOTICE`.
+
 ### Changed
 
 - Dokumentasi: hapus `docs/LARAGON-GAPS.md`, `docs/POSTER.md` (+ aset poster: `docs/poster/devlok-poster-9x16.png` dan `scripts/make-poster.py`), serta `docs/TIMELINE.md` (riwayat rilis ada di CHANGELOG dan rencana di ROADMAP). Tambah `docs/FITUR.md` sebagai ringkasan fitur netral; README dan `docs/APLIKASI.md` tidak lagi membandingkan dengan produk lain.

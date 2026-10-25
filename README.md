@@ -300,4 +300,6 @@ Catatan: `internal/api` (HTTP lokal untuk browser fallback) belum dibuat; untuk 
 
 ## Lisensi
 
-Lisensi kode DevLok belum ditentukan. Runtime pihak ketiga tidak dibundel dan diunduh dari sumber resmi. Lihat [docs/LICENSING.md](docs/LICENSING.md).
+Kode DevLok dilisensikan di bawah **Apache License 2.0** — lihat [LICENSE](LICENSE). Copyright 2026 DevLok contributors.
+
+Runtime pihak ketiga tidak dibundel dan diunduh dari sumber resmi; lihat [docs/LICENSING.md](docs/LICENSING.md).

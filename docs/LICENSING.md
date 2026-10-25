@@ -1,17 +1,12 @@
 # Lisensi dan Distribusi
 
-## 1. Status lisensi kode DevLok
+## 1. Lisensi kode DevLok
 
-Belum ditentukan. Opsi yang dipertimbangkan:
+DevLok dilisensikan di bawah **Apache License, Version 2.0**. Teks lengkap ada di [`LICENSE`](../LICENSE) dan atribusi di [`NOTICE`](../NOTICE). Copyright 2026 DevLok contributors.
 
-| Opsi | Kelebihan | Kekurangan |
-|---|---|---|
-| MIT | Paling permisif, adopsi mudah | Tidak ada proteksi terhadap fork komersial |
-| Apache-2.0 | Patent grant, cocok untuk tool | Sedikit lebih kompleks |
-| AGPL-3.0 | Mencegah layanan tertutup | Kurang ramah adopsi |
-| Proprietary | Kontrol penuh | Menghambat kontribusi dan kepercayaan |
+Alasan: permisif (termasuk penggunaan komersial), ada patent grant dan klausa trademark, serta kompatibel dengan dependency proyek.
 
-Rekomendasi sementara: **Apache-2.0** untuk core dan CLI, dengan keputusan final sebelum rilis publik. Dokumen ini diperbarui setelah lisensi dipilih.
+Konsekuensi: bukan copyleft (fork tertutup diperbolehkan selama mematuhi lisensi/notice), dan relicense ke proprietary di kemudian hari membutuhkan izin seluruh kontributor kecuali diterapkan CLA.
 
 ## 2. Prinsip distribusi runtime
 
@@ -87,7 +82,7 @@ Tanpa signing:
 
 ## 8. Kontribusi
 
-- Kontributor wajib menyetujui DCO atau CLA (belum ditentukan).
+- Kontribusi memakai **DCO** (`git commit -s`), dengan kontribusi dilisensikan di bawah Apache-2.0. CLA belum diterapkan; dapat ditambahkan bila dibutuhkan untuk dual-license.
 - Kontribusi kode harus kompatibel dengan lisensi proyek.
 - Jangan menambahkan dependency dengan lisensi yang tidak kompatibel.
 - Dependency baru harus melalui review lisensi.
@@ -101,8 +96,9 @@ Tanpa signing:
 
 ## 10. To-do sebelum rilis publik
 
-- [ ] Pilih dan terapkan lisensi kode.
-- [ ] Tambahkan `LICENSE` dan `THIRD-PARTY-NOTICES.md`.
+- [x] Pilih dan terapkan lisensi kode (Apache-2.0).
+- [x] Tambahkan `LICENSE` dan `NOTICE`.
+- [ ] Tambahkan `THIRD-PARTY-NOTICES.md` untuk dependency yang dibundel.
 - [ ] Audit lisensi dependency Go dan npm.
 - [ ] Verifikasi syarat redistribusi WebView2 dan VC++.
 - [ ] Siapkan `SHA256SUMS` untuk setiap artefak.

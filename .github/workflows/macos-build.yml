@@ -56,6 +56,9 @@ jobs:
           go build -trimpath -o desktop/build/bin/dl-helper ./cmd/dl-helper
           cp desktop/build/bin/dl-helper "$app/Contents/MacOS/dl-helper"
           chmod +x "$app/Contents/MacOS/dl-helper"
+          mkdir -p "$app/Contents/Resources"
+          cp LICENSE "$app/Contents/Resources/LICENSE"
+          cp NOTICE "$app/Contents/Resources/NOTICE"
           if [ -n "$APPLE_CERT_P12_BASE64" ]; then
             keychain=devlok-sign.keychain
             keychain_pass=devlok-sign
