@@ -48,6 +48,7 @@ Copy-Item -LiteralPath (Join-Path $root "docs\APLIKASI.md") -Destination (Join-P
 Copy-Item -LiteralPath (Join-Path $root "docs\UPDATES.md") -Destination (Join-Path $pkg "docs")
 Copy-Item -LiteralPath (Join-Path $root "LICENSE") -Destination $pkg
 Copy-Item -LiteralPath (Join-Path $root "NOTICE") -Destination $pkg
+Copy-Item -LiteralPath (Join-Path $root "THIRD-PARTY-NOTICES.md") -Destination $pkg
 Set-Content -LiteralPath (Join-Path $pkg "VERSION") -Value "$version`n" -NoNewline
 
 $zip = Join-Path $distRoot ("DevLok-" + $version + "-win64.zip")

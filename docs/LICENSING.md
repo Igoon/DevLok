@@ -44,10 +44,10 @@ Catatan: tabel ini bukan nasihat hukum. Verifikasi lisensi versi spesifik sebelu
 
 ## 4. Kewajiban notice
 
-Bila kelak ada komponen yang dibundel:
+Dependency Go dan npm yang dibundel ke binary/aset dicatat di [`THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md).
 
-- Sertakan file `THIRD-PARTY-NOTICES.md`.
-- Cantumkan teks lisensi lengkap untuk komponen yang mewajibkan.
+- Sertakan file `THIRD-PARTY-NOTICES.md` pada distribusi.
+- Cantumkan teks lisensi lengkap untuk komponen yang mewajibkan (gunakan audit lisensi saat rilis).
 - Tautkan sumber dan versi.
 - Jangan menghapus notice dari binary upstream.
 
@@ -98,7 +98,7 @@ Tanpa signing:
 
 - [x] Pilih dan terapkan lisensi kode (Apache-2.0).
 - [x] Tambahkan `LICENSE` dan `NOTICE`.
-- [ ] Tambahkan `THIRD-PARTY-NOTICES.md` untuk dependency yang dibundel.
+- [x] Tambahkan `THIRD-PARTY-NOTICES.md` untuk dependency yang dibundel.
 - [ ] Audit lisensi dependency Go dan npm.
 - [ ] Verifikasi syarat redistribusi WebView2 dan VC++.
 - [ ] Siapkan `SHA256SUMS` untuk setiap artefak.

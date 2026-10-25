@@ -4,9 +4,11 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.2.9] - 2026-10-24
+
 ### Added
 
-- Lisensi kode: **Apache License 2.0** (`LICENSE`), atribusi di `NOTICE` (Copyright 2026 I Go On / Igoon). Kontribusi memakai **DCO** (`DCO`, `CONTRIBUTING.md`). README & `docs/LICENSING.md` diperbarui; paket rilis Windows (portable/installer) dan macOS (`.app`/ZIP/DMG) menyertakan `LICENSE` dan `NOTICE`.
+- Lisensi kode: **Apache License 2.0** (`LICENSE`), atribusi di `NOTICE` (Copyright 2026 I Go On / Igoon). Kontribusi memakai **DCO** (`DCO`, `CONTRIBUTING.md`). `THIRD-PARTY-NOTICES.md` mencatat dependency Go/npm yang dibundel. Paket rilis Windows (portable/installer) dan macOS (`.app`/ZIP/DMG) menyertakan `LICENSE`, `NOTICE`, dan `THIRD-PARTY-NOTICES.md`.
 
 ### Changed
 

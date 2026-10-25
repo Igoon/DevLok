@@ -178,6 +178,7 @@ jobs:
           mkdir -p "$app/Contents/Resources"
           cp LICENSE "$app/Contents/Resources/LICENSE"
           cp NOTICE "$app/Contents/Resources/NOTICE"
+          cp THIRD-PARTY-NOTICES.md "$app/Contents/Resources/THIRD-PARTY-NOTICES.md"
           if [ -n "$APPLE_CERT_P12_BASE64" ]; then
             keychain=devlok-sign.keychain
             keychain_pass=devlok-sign

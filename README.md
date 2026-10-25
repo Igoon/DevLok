@@ -8,8 +8,8 @@
 
 Local development environment untuk **Windows dan macOS**: Nginx + PHP + MySQL, dengan GUI dan CLI. Reproducible, aman secara default, dan bisa memakai runtime per project (Windows) atau Homebrew (macOS).
 
-- **Versi**: `0.2.8` (Windows 10 22H2+ / Windows 11 x64; macOS 14/15 Intel & Apple Silicon)
-- **Status**: `0.2.8` stabil untuk Windows. macOS didukung sejak v0.2.0: CLI, GUI, tray, CA/hosts, update aplikasi (self-update DMG), dan update runtime via Homebrew. Artifact `.app`/`.dmg` belum di-sign/notarize.
+- **Versi**: `0.2.9` (Windows 10 22H2+ / Windows 11 x64; macOS 14/15 Intel & Apple Silicon)
+- **Status**: `0.2.9` stabil untuk Windows. macOS didukung sejak v0.2.0: CLI, GUI, tray, CA/hosts, update aplikasi (self-update DMG), dan update runtime via Homebrew. Artifact `.app`/`.dmg` belum di-sign/notarize.
 - **Stack**: Go + Wails v2 + Svelte + TypeScript
 - **Binary**: `dl.exe` (CLI), `devlok-gui.exe` / `DevLok.app` (GUI Wails), `dl-helper.exe` (hosts privileged)
 - **Manifest project**: `.devlok.yaml` + `.devlok.lock`
@@ -304,6 +304,6 @@ Kontribusi diterima dengan **DCO** — setiap commit disertai `git commit -s`. L
 
 ## Lisensi
 
-Kode DevLok dilisensikan di bawah **Apache License 2.0** — lihat [LICENSE](LICENSE). Copyright 2026 I Go On (Igoon).
+Kode DevLok dilisensikan di bawah **Apache License 2.0** — lihat [LICENSE](LICENSE). Copyright 2026 I Go On (Igoon). Atribusi dependency ada di [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 Runtime pihak ketiga tidak dibundel dan diunduh dari sumber resmi; lihat [docs/LICENSING.md](docs/LICENSING.md).

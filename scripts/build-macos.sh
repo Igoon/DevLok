@@ -33,6 +33,7 @@ chmod +x "$app/Contents/MacOS/dl-helper"
 mkdir -p "$app/Contents/Resources"
 cp "$ROOT/LICENSE" "$app/Contents/Resources/LICENSE"
 cp "$ROOT/NOTICE" "$app/Contents/Resources/NOTICE"
+cp "$ROOT/THIRD-PARTY-NOTICES.md" "$app/Contents/Resources/THIRD-PARTY-NOTICES.md"
 
 # Ad-hoc signature: valid locally, but not trusted by Gatekeeper for distribution.
 codesign --force --deep --sign - "$app"
