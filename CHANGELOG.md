@@ -4,6 +4,18 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.2.12] - 2026-10-25
+
+### Added
+
+- Installer Windows kini memuat informasi DevLok: publisher (`I Go On (Igoon)`), tautan repo/support/update, halaman lisensi (Apache-2.0), dan halaman informasi pra-instal (`installer/ABOUT.txt`) berisi ringkasan fitur, lisensi, kredit, dan tautan. Metadata `.exe` (CompanyName, FileDescription, ProductName/Version, LegalCopyright) juga diisi; metadata GUI (`devlok-gui.exe`) diperbarui lewat `desktop/wails.json`.
+- macOS: `desktop/build/darwin/Info.plist` kustom — bundle id `com.igoon.devlok`, `CFBundleDisplayName`, kategori `public.app-category.developer-tools`, `LSMinimumSystemVersion` 12.0, dan copyright (`Copyright 2026 I Go On (Igoon)`). DMG rilis kini memuat `Baca Saya.txt`, `LICENSE`, dan `THIRD-PARTY-NOTICES.md` (selain `DevLok.app` + symlink Applications).
+- GUI: jendela **Tentang** (tombol di header) berisi versi, lisensi, copyright, kredit, dan tautan (repo, dokumentasi, lisensi, pihak ketiga).
+
+### Changed
+
+- Footer GUI: kredit AI diselaraskan menjadi "Dibuat dengan bantuan AI · DeepSeek-V4-Flash".
+
 ## [0.2.11] - 2026-10-25
 
 ### Added

@@ -243,6 +243,11 @@ pre.logs {
 .modal-actions {
   justify-content: flex-end;
 }
+.about-links {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
 
 .prefs-box {
   display: flex;

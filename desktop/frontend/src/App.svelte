@@ -159,11 +159,18 @@
   }
 
   let confirmReq: { title: string; message: string; resolve: (v: boolean) => void } | null = null
+  let showAbout = false
 
   function ask(message: string, title = 'Konfirmasi'): Promise<boolean> {
     return new Promise((resolve) => {
       confirmReq = { title, message, resolve }
     })
+  }
+
+  function openLink(url: string) {
+    api()
+      .OpenURL(url)
+      .catch((e) => (error = message(e)))
   }
 
   function answerConfirm(value: boolean) {
@@ -821,6 +828,7 @@
         {status.health || (status.running ? 'running' : 'stopped')}
       </span>
       <button class="ghost" on:click={() => refresh(false)} disabled={!!busy}>Refresh</button>
+      <button class="ghost" on:click={() => (showAbout = true)}>Tentang</button>
     </div>
   </header>
 
@@ -841,6 +849,29 @@
         <div class="form-row modal-actions">
           <button on:click={() => answerConfirm(false)}>Batal</button>
           <button class="primary" on:click={() => answerConfirm(true)}>Ya</button>
+        </div>
+      </div>
+    </div>
+  {/if}
+
+  {#if showAbout}
+    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+    <div class="modal-overlay" on:click={() => (showAbout = false)}>
+      <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+      <div class="modal" role="dialog" aria-modal="true" tabindex="-1" on:click|stopPropagation={() => {}}>
+        <h3>DevLok</h3>
+        <p class="muted">Local development environment manager</p>
+        <p>Versi <strong>{version}</strong></p>
+        <p class="muted">Copyright 2026 I Go On (Igoon). Lisensi Apache License 2.0.</p>
+        <p class="muted">Dibuat dengan bantuan AI · DeepSeek-V4-Flash.</p>
+        <div class="form-row modal-actions about-links">
+          <button on:click={() => openLink('https://github.com/Igoon/DevLok')}>Repo</button>
+          <button on:click={() => openLink('https://github.com/Igoon/DevLok#readme')}>Dokumentasi</button>
+          <button on:click={() => openLink('https://github.com/Igoon/DevLok/blob/main/LICENSE')}>Lisensi</button>
+          <button on:click={() => openLink('https://github.com/Igoon/DevLok/blob/main/THIRD-PARTY-NOTICES.md')}>Pihak ketiga</button>
+        </div>
+        <div class="form-row modal-actions">
+          <button class="primary" on:click={() => (showAbout = false)}>Tutup</button>
         </div>
       </div>
     </div>
@@ -1432,7 +1463,7 @@
 
   <footer class="footer">
     <span>DevLok {version}</span>
-    <span class="powered">AI-powered by DeepSeek-v4-Flash</span>
+    <span class="powered">Dibuat dengan bantuan AI · DeepSeek-V4-Flash</span>
     <span>{busy || 'siap'}</span>
   </footer>
 </div>

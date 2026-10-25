@@ -14,7 +14,20 @@ AppName=DevLok
 AppVersion={#AppVersion}
 AppVerName=DevLok {#AppVersion}
 VersionInfoVersion={#NumericVersion}
-AppPublisher=DevLok
+VersionInfoCompany=I Go On (Igoon)
+VersionInfoDescription=DevLok - Local development environment manager
+VersionInfoCopyright=Copyright 2026 I Go On (Igoon)
+VersionInfoProductName=DevLok
+VersionInfoProductVersion={#NumericVersion}
+VersionInfoProductTextVersion={#AppVersion}
+AppPublisher=I Go On (Igoon)
+AppPublisherURL=https://github.com/Igoon/DevLok
+AppSupportURL=https://github.com/Igoon/DevLok/issues
+AppUpdatesURL=https://github.com/Igoon/DevLok/releases
+AppComments=Local development environment manager
+AppCopyright=Copyright 2026 I Go On (Igoon)
+LicenseFile=..\LICENSE
+InfoBeforeFile=ABOUT.txt
 DefaultDirName={localappdata}\Programs\DevLok
 DefaultGroupName=DevLok
 DisableProgramGroupPage=yes
@@ -29,7 +42,7 @@ SolidCompression=yes
 WizardStyle=modern
 CloseApplications=yes
 RestartApplications=no
-UninstallDisplayName=DevLok
+UninstallDisplayName=DevLok {#AppVersion}
 UninstallDisplayIcon={app}\devlok-gui.exe
 SetupIconFile=DevLok.ico
 
@@ -92,9 +105,9 @@ begin
     Exit;
   Dir := Current + '\backup\previous';
   ForceDirectories(Dir);
-  FileCopy(Current + '\devlok-gui.exe', Dir + '\devlok-gui.exe', False);
-  FileCopy(Current + '\dl.exe', Dir + '\dl.exe', False);
-  FileCopy(Current + '\dl-helper.exe', Dir + '\dl-helper.exe', False);
+  CopyFile(Current + '\devlok-gui.exe', Dir + '\devlok-gui.exe', False);
+  CopyFile(Current + '\dl.exe', Dir + '\dl.exe', False);
+  CopyFile(Current + '\dl-helper.exe', Dir + '\dl-helper.exe', False);
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);

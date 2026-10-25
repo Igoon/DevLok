@@ -31,6 +31,8 @@ devlok-*.zip
 # Desktop build
 /desktop/build/*
 !/desktop/build/appicon.png
+!/desktop/build/darwin/
+!/desktop/build/darwin/Info.plist
 /desktop/frontend/node_modules/
 /desktop/frontend/wailsjs/
 /desktop/frontend/dist/

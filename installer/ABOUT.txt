@@ -1,0 +1,28 @@
+DevLok
+Local development environment manager
+
+DevLok menyiapkan, menjalankan, dan mengelola lingkungan pengembangan web
+lokal (Nginx, PHP, MySQL, dan tool pendukung) dalam satu aplikasi GUI dan CLI
+untuk Windows dan macOS.
+
+Kemampuan utama:
+ - Menjalankan banyak project PHP dengan versi runtime berbeda
+ - Domain lokal *.test otomatis tanpa mengedit hosts manual
+ - HTTPS lokal dengan certificate yang dipercaya sistem
+ - Database MySQL otomatis untuk setiap project
+ - Menjalankan/menghentikan service dari GUI, tray, atau CLI
+ - Import project dan virtual host dari Laragon
+
+Lisensi
+DevLok dilisensikan di bawah Apache License 2.0.
+Copyright 2026 I Go On (Igoon).
+Berkas lengkap: LICENSE dan NOTICE. Dependensi pihak ketiga dirinci pada
+THIRD-PARTY-NOTICES.md (tersedia di folder instalasi).
+
+Kredit
+Dikembangkan dengan bantuan AI - DeepSeek-V4-Flash.
+
+Tautan
+Repository:   https://github.com/Igoon/DevLok
+Dokumentasi:  https://github.com/Igoon/DevLok#readme
+Laporkan bug: https://github.com/Igoon/DevLok/issues

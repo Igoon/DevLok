@@ -44,12 +44,22 @@ ditto -c -k --sequesterRsrc --keepParent "$app" "dist/DevLok-macos-local.zip"
 staging="$(mktemp -d)"
 cp -R "$app" "$staging/DevLok.app"
 ln -s /Applications "$staging/Applications"
-cat > "$staging/README.txt" <<EOF
-DevLok untuk macOS
+cp "$ROOT/LICENSE" "$ROOT/THIRD-PARTY-NOTICES.md" "$staging/"
+cat > "$staging/Baca Saya.txt" <<'EOF'
+DevLok - Local development environment manager
 
 Build lokal / ad-hoc signed, bukan notarized.
-Prasyarat runtime Homebrew:
+Prasyarat runtime (Homebrew):
   brew install nginx php mysql
+
+Jika macOS memblokir aplikasi, jalankan:
+  xattr -dr com.apple.quarantine "/Applications/DevLok.app"
+
+Lisensi: Apache License 2.0 - Copyright 2026 I Go On (Igoon). Lihat LICENSE.
+Dependensi pihak ketiga: THIRD-PARTY-NOTICES.md.
+Kredit: Dibuat dengan bantuan AI - DeepSeek-V4-Flash.
+
+Repo: https://github.com/Igoon/DevLok
 EOF
 hdiutil create -volname DevLok -srcfolder "$staging" -ov -format UDZO "dist/DevLok-macos-local.dmg"
 rm -rf "$staging"

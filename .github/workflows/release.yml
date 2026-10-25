@@ -205,6 +205,23 @@ jobs:
           staging=$(mktemp -d)
           cp -R "$app" "$staging/DevLok.app"
           ln -s /Applications "$staging/Applications"
+          cp LICENSE THIRD-PARTY-NOTICES.md "$staging/"
+          cat > "$staging/Baca Saya.txt" <<'EOF'
+          DevLok - Local development environment manager
+
+          1) Seret DevLok.app ke folder Applications.
+          2) Jalankan DevLok. Prasyarat runtime (Homebrew):
+               brew install nginx php mysql
+          3) Jika macOS memblokir aplikasi (tanpa notarize), buka System Settings >
+             Privacy & Security lalu pilih "Open Anyway", atau jalankan:
+               xattr -dr com.apple.quarantine "/Applications/DevLok.app"
+
+          Lisensi: Apache License 2.0 - Copyright 2026 I Go On (Igoon). Lihat LICENSE.
+          Dependensi pihak ketiga: THIRD-PARTY-NOTICES.md.
+          Kredit: Dibuat dengan bantuan AI - DeepSeek-V4-Flash.
+
+          Repo: https://github.com/Igoon/DevLok
+          EOF
           hdiutil create -volname DevLok -srcfolder "$staging" -ov -format UDZO "dist/DevLok-macos-$ARCH.dmg"
           rm -rf "$staging"
           shasum -a 256 "dist/DevLok-macos-$ARCH.dmg" > "dist/DevLok-macos-$ARCH.dmg.sha256"
