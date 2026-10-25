@@ -6,7 +6,7 @@
 - Portable ZIP dan installer Windows tersedia di halaman rilis.
 - Installer belum ditandatangani Authenticode.
 
-Local development environment untuk **Windows dan macOS**: Nginx + PHP + MySQL, dengan GUI dan CLI. Alternatif Laragon yang reproducible, aman secara default, dan bisa memakai runtime per project (Windows) atau Homebrew (macOS).
+Local development environment untuk **Windows dan macOS**: Nginx + PHP + MySQL, dengan GUI dan CLI. Reproducible, aman secara default, dan bisa memakai runtime per project (Windows) atau Homebrew (macOS).
 
 - **Versi**: `0.2.8` (Windows 10 22H2+ / Windows 11 x64; macOS 14/15 Intel & Apple Silicon)
 - **Status**: `0.2.8` stabil untuk Windows. macOS didukung sejak v0.2.0: CLI, GUI, tray, CA/hosts, update aplikasi (self-update DMG), dan update runtime via Homebrew. Artifact `.app`/`.dmg` belum di-sign/notarize.
@@ -25,9 +25,7 @@ Belum tersedia: migrasi schema manifest, forwarding perintah lewat named pipe, b
 - **Default aman**: service hanya di loopback, password acak, TLS 1.2/1.3 dengan CA lokal yang dikelola.
 - **Satu aplikasi, GUI + CLI**: dashboard/tray dan perintah `dl` berbagi core yang sama.
 - **Lintas platform**: Windows x64 dan macOS (Intel & Apple Silicon).
-- **Reproducible**: lockfile, checksum, export/import environment, dan import project Laragon.
-
-Perbandingan detail dengan Laragon ada di [docs/LARAGON-GAPS.md](docs/LARAGON-GAPS.md).
+- **Reproducible**: lockfile, checksum, export/import environment, dan import project yang sudah ada.
 
 ## Runtime yang dikelola
 
@@ -283,9 +281,8 @@ Catatan: `internal/api` (HTTP lokal untuk browser fallback) belum dibuat; untuk 
 | [docs/MACOS.md](docs/MACOS.md) | Status, prasyarat, dan batasan macOS |
 | [docs/MACOS-SIGNING.md](docs/MACOS-SIGNING.md) | Signing dan notarization macOS |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Troubleshooting MySQL dan update runtime |
-| [docs/LARAGON-GAPS.md](docs/LARAGON-GAPS.md) | Perbandingan fitur dengan Laragon |
+| [docs/FITUR.md](docs/FITUR.md) | Ringkasan fitur dan kemampuan per area |
 | [docs/STITCH_PROMPTS.md](docs/STITCH_PROMPTS.md) | Prompt Google Stitch untuk alternatif UI app dan tray |
-| [docs/POSTER.md](docs/POSTER.md) | Ringkasan rilis 0.2.x dan prompt poster |
 | [docs/adr/](docs/adr/) | Architecture Decision Records |
 
 ## Status milestone

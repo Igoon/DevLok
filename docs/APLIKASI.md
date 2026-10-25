@@ -16,7 +16,7 @@
 | Bahasa | Go, TypeScript, Svelte |
 | Repository | `C:\DevLok` |
 
-DevLok adalah aplikasi untuk menyiapkan, menjalankan, dan mengelola lingkungan pengembangan web lokal di Windows. Aplikasi ini menjadi alternatif Laragon dengan pendekatan yang lebih reproducible, aman secara default, dan berbasis konfigurasi per project.
+DevLok adalah aplikasi untuk menyiapkan, menjalankan, dan mengelola lingkungan pengembangan web lokal di Windows dan macOS. Pendekatannya reproducible, aman secara default, dan berbasis konfigurasi per project.
 
 ---
 
@@ -394,5 +394,5 @@ copy ..\build\bin\dl-helper.exe build\bin\dl-helper.exe
 | [SECURITY.md](SECURITY.md) | Model ancaman dan kontrol keamanan |
 | [UPDATES.md](UPDATES.md) | Kebijakan update aplikasi dan runtime |
 | [TIMELINE.md](TIMELINE.md) | Timeline rilis 0.1.x dan 0.2.x |
-| [LARAGON-GAPS.md](LARAGON-GAPS.md) | Perbandingan dengan Laragon |
+| [FITUR.md](FITUR.md) | Ringkasan fitur dan kemampuan |
 | [ROADMAP.md](ROADMAP.md) | Rencana milestone |

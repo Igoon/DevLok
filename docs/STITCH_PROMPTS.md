@@ -15,7 +15,7 @@ Cara pakai:
 ## Prompt App
 
 ```text
-Design a production-quality desktop developer tool UI named "DevLok". It is a local development environment manager for Windows, similar in purpose to Laragon but modern, precise, and calm.
+Design a production-quality desktop developer tool UI named "DevLok". It is a local development environment manager for Windows and macOS: modern, precise, and calm.
 
 Generate a desktop web app at 1440 x 1024 with 4 screens:
 1. Dashboard

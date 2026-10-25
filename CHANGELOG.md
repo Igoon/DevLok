@@ -4,6 +4,10 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+### Changed
+
+- Dokumentasi: hapus `docs/LARAGON-GAPS.md` dan `docs/POSTER.md`; tambah `docs/FITUR.md` sebagai ringkasan fitur netral. README dan `docs/APLIKASI.md` tidak lagi membandingkan dengan produk lain.
+
 ## [0.2.8] - 2026-10-24
 
 ### Changed
