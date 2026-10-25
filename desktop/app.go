@@ -82,37 +82,41 @@ type ComponentsView struct {
 }
 
 type ProjectConfigView struct {
-	Path       string            `json:"path"`
-	Root       string            `json:"root"`
-	HTTPS      bool              `json:"https"`
-	DBName     string            `json:"db_name"`
-	Name       string            `json:"name"`
-	Domain     string            `json:"domain"`
-	Aliases    []string          `json:"aliases"`
-	HTTPPort   int               `json:"http_port"`
-	HTTPSPort  int               `json:"https_port"`
-	MySQLPort  int               `json:"mysql_port"`
-	PHPPort    int               `json:"php_port"`
-	Versions   map[string]string `json:"versions"`
-	Database   bool              `json:"database"`
-	PHPMyAdmin bool              `json:"phpmyadmin"`
-	Mailpit    bool              `json:"mailpit"`
+	Path        string            `json:"path"`
+	Root        string            `json:"root"`
+	HTTPS       bool              `json:"https"`
+	DBName      string            `json:"db_name"`
+	Name        string            `json:"name"`
+	Domain      string            `json:"domain"`
+	Aliases     []string          `json:"aliases"`
+	HTTPPort    int               `json:"http_port"`
+	HTTPSPort   int               `json:"https_port"`
+	MySQLPort   int               `json:"mysql_port"`
+	PHPPort     int               `json:"php_port"`
+	MailpitSMTP int               `json:"mailpit_smtp"`
+	MailpitHTTP int               `json:"mailpit_http"`
+	Versions    map[string]string `json:"versions"`
+	Database    bool              `json:"database"`
+	PHPMyAdmin  bool              `json:"phpmyadmin"`
+	Mailpit     bool              `json:"mailpit"`
 }
 
 type ProjectConfigInput struct {
-	Domain     string            `json:"domain"`
-	Root       string            `json:"root"`
-	HTTPS      bool              `json:"https"`
-	DBName     string            `json:"db_name"`
-	Aliases    []string          `json:"aliases"`
-	HTTPPort   int               `json:"http_port"`
-	HTTPSPort  int               `json:"https_port"`
-	MySQLPort  int               `json:"mysql_port"`
-	PHPPort    int               `json:"php_port"`
-	Versions   map[string]string `json:"versions"`
-	Database   bool              `json:"database"`
-	PHPMyAdmin bool              `json:"phpmyadmin"`
-	Mailpit    bool              `json:"mailpit"`
+	Domain      string            `json:"domain"`
+	Root        string            `json:"root"`
+	HTTPS       bool              `json:"https"`
+	DBName      string            `json:"db_name"`
+	Aliases     []string          `json:"aliases"`
+	HTTPPort    int               `json:"http_port"`
+	HTTPSPort   int               `json:"https_port"`
+	MySQLPort   int               `json:"mysql_port"`
+	PHPPort     int               `json:"php_port"`
+	MailpitSMTP int               `json:"mailpit_smtp"`
+	MailpitHTTP int               `json:"mailpit_http"`
+	Versions    map[string]string `json:"versions"`
+	Database    bool              `json:"database"`
+	PHPMyAdmin  bool              `json:"phpmyadmin"`
+	Mailpit     bool              `json:"mailpit"`
 }
 
 type ServiceView struct {
@@ -544,20 +548,22 @@ func (a *App) ProjectConfig(path string) (ProjectConfigView, error) {
 		return ProjectConfigView{}, err
 	}
 	v := ProjectConfigView{
-		Path:       path,
-		Root:       m.Web.Root,
-		HTTPS:      m.HTTPSEnabled(),
-		DBName:     m.DB.Name,
-		Name:       m.Name,
-		Domain:     m.BaseDomain(),
-		Aliases:    append([]string{}, m.Web.Aliases...),
-		HTTPPort:   m.Ports.HTTP,
-		HTTPSPort:  m.Ports.HTTPS,
-		MySQLPort:  m.Ports.MySQL,
-		PHPPort:    m.Ports.PHP,
-		Database:   m.ComponentEnabled("mysql"),
-		PHPMyAdmin: m.ComponentEnabled("phpmyadmin"),
-		Mailpit:    m.MailpitEnabled(),
+		Path:        path,
+		Root:        m.Web.Root,
+		HTTPS:       m.HTTPSEnabled(),
+		DBName:      m.DB.Name,
+		Name:        m.Name,
+		Domain:      m.BaseDomain(),
+		Aliases:     append([]string{}, m.Web.Aliases...),
+		HTTPPort:    m.Ports.HTTP,
+		HTTPSPort:   m.Ports.HTTPS,
+		MySQLPort:   m.Ports.MySQL,
+		PHPPort:     m.Ports.PHP,
+		MailpitSMTP: m.Ports.MailpitSMTP,
+		MailpitHTTP: m.Ports.MailpitHTTP,
+		Database:    m.ComponentEnabled("mysql"),
+		PHPMyAdmin:  m.ComponentEnabled("phpmyadmin"),
+		Mailpit:     m.MailpitEnabled(),
 		Versions: map[string]string{
 			"nginx": m.Runtime["nginx"],
 			"php":   m.Web.PHP,
@@ -642,8 +648,8 @@ func (a *App) SaveProjectConfig(path string, in ProjectConfigInput) error {
 		HTTPS:       in.HTTPSPort,
 		MySQL:       in.MySQLPort,
 		PHP:         in.PHPPort,
-		MailpitSMTP: m.Ports.MailpitSMTP,
-		MailpitHTTP: m.Ports.MailpitHTTP,
+		MailpitSMTP: in.MailpitSMTP,
+		MailpitHTTP: in.MailpitHTTP,
 	}
 	if !in.Database {
 		in.PHPMyAdmin = false
@@ -1152,6 +1158,8 @@ func (a *App) Logs(service string, lines int) (string, error) {
 		path = filepath.Join(state, "logs", "nginx", "error.log")
 	case "php":
 		path = filepath.Join(state, "logs", "php-error.log")
+	case "mailpit":
+		path = filepath.Join(state, "logs", "mailpit.log")
 	case "mysql":
 		matches, _ := filepath.Glob(filepath.Join(state, "logs", "mysql", "*-error.log"))
 		if len(matches) > 0 {

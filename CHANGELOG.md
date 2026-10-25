@@ -8,7 +8,7 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 - Konsistensi tray: macOS memakai ikon template PNG (`tray-running.png`/`tray-stopped.png`) karena NSImage tidak mendukung `.ico`; Windows tetap memakai `.ico`. Judul teks tray dihapus agar kedua OS menampilkan ikon saja.
 - Tab Import (khusus Laragon/Windows) disembunyikan di macOS.
-- **Mailpit** (opsional, `components.mailpit`): SMTP server + web UI `mailpit.test`, PHP `mail()` diarahkan ke Mailpit via `sendmail_path`. Port `mailpit_smtp`/`mailpit_http` dapat diatur. Tersedia di Windows dan macOS, dengan toggle/checkbox di Konfigurasi & dashboard, tombol buka UI, output `dl up`, serta deteksi/perbarui di tab Update (termasuk tool di macOS).
+- **Mailpit** (opsional, `components.mailpit`): SMTP server + web UI `mailpit.test`, PHP `mail()` diarahkan ke Mailpit via `sendmail_path`. Port `mailpit_smtp`/`mailpit_http` dapat diatur (manifest maupun tab Konfigurasi GUI). Log Mailpit tersedia di viewer **Logs**. Tersedia di Windows dan macOS, dengan toggle/checkbox di Konfigurasi & dashboard, tombol buka UI, output `dl up`, serta deteksi/perbarui di tab Update (termasuk tool di macOS).
 - Skrip audit lisensi: `scripts/license-audit.ps1` dan `scripts/license-audit.sh` (memakai `go-licenses` + `license-checker`, output ke `dist/licenses/`, memperingatkan GPL/AGPL/SSPL).
 
 ### Changed

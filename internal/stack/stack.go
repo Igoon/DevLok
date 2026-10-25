@@ -417,6 +417,9 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 		if err := os.MkdirAll(dbDir, 0o700); err != nil {
 			res.Warnings = append(res.Warnings, "Mailpit dilewati: "+err.Error())
 			res.MailpitURL = ""
+		} else if err := os.MkdirAll(p.logs, 0o755); err != nil {
+			res.Warnings = append(res.Warnings, "Mailpit dilewati: "+err.Error())
+			res.MailpitURL = ""
 		} else {
 			mailpitSpec = supervisor.Spec{
 				Name:       "mailpit",
@@ -425,6 +428,7 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 					"--smtp", fmt.Sprintf("127.0.0.1:%d", mailpitSMTPPort),
 					"--listen", fmt.Sprintf("127.0.0.1:%d", mailpitHTTPPort),
 					"--database", filepath.Join(dbDir, "mailpit.db"),
+					"--log-file", filepath.Join(p.logs, "mailpit.log"),
 				},
 				Dir:        mailpit.Path,
 				Health:     supervisor.Health{HTTPURL: fmt.Sprintf("http://127.0.0.1:%d/", mailpitHTTPPort), Timeout: 15 * time.Second},

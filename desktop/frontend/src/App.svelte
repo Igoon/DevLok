@@ -70,6 +70,8 @@
   let cfgDB = true
   let cfgPMA = true
   let cfgMailpit = false
+  let cfgMailpitSMTP = ''
+  let cfgMailpitHTTP = ''
   let portChecks: Record<string, any> = {}
   let cfgOptions: Record<string, string[]> = { nginx: [], php: [], mysql: [], node: [] }
   let cfgVersions: Record<string, string> = { nginx: '', php: '', mysql: '', node: '' }
@@ -117,6 +119,8 @@
       db: cfgDB,
       pma: cfgPMA,
       mailpit: cfgMailpit,
+      mailpit_smtp: cfgMailpitSMTP,
+      mailpit_http: cfgMailpitHTTP,
       versions: cfgVersions
     }) !== cfgSnapshot
 
@@ -156,7 +160,7 @@
   }
 
   async function checkPorts() {
-    const list = [cfgHTTP, cfgHTTPS, cfgMySQLPort, cfgPHPPort].map(parsePort).filter((p) => p > 0)
+    const list = [cfgHTTP, cfgHTTPS, cfgMySQLPort, cfgPHPPort, cfgMailpitSMTP, cfgMailpitHTTP].map(parsePort).filter((p) => p > 0)
     if (list.length === 0) {
       portChecks = {}
       return
@@ -211,6 +215,8 @@
       cfgDB = !!c.database
       cfgPMA = !!c.phpmyadmin
       cfgMailpit = !!c.mailpit
+      cfgMailpitSMTP = c.mailpit_smtp ? String(c.mailpit_smtp) : ''
+      cfgMailpitHTTP = c.mailpit_http ? String(c.mailpit_http) : ''
       runtimes = rl
       runtimeCache = cache
       cfgOptions = { nginx, php, mysql, node }
@@ -238,6 +244,8 @@
         db: cfgDB,
         pma: cfgPMA,
         mailpit: cfgMailpit,
+        mailpit_smtp: cfgMailpitSMTP,
+        mailpit_http: cfgMailpitHTTP,
         versions: cfgVersions
       })
       await checkPorts()
@@ -271,7 +279,9 @@
         versions: cfgVersions,
         database: cfgDB,
         phpmyadmin: cfgPMA,
-        mailpit: cfgMailpit
+        mailpit: cfgMailpit,
+        mailpit_smtp: parsePort(cfgMailpitSMTP),
+        mailpit_http: parsePort(cfgMailpitHTTP)
       })
       if (status.running && status.path === cfgPath) {
         await api().Down()
@@ -1017,6 +1027,7 @@
           <option value="nginx">nginx</option>
           <option value="php">php</option>
           <option value="mysql">mysql</option>
+          <option value="mailpit">mailpit</option>
           <option value="app">app</option>
         </select>
         <button on:click={loadLogs} disabled={!!busy}>Muat ulang</button>
@@ -1133,7 +1144,11 @@
               <input type="checkbox" bind:checked={cfgMailpit} />
               Mailpit
             </label>
-            <span class="muted">SMTP 1025, UI mailpit.test</span>
+            <div class="ports">
+              <input type="text" inputmode="numeric" placeholder="1025 (auto)" bind:value={cfgMailpitSMTP} on:change={checkPorts} on:blur={checkPorts} disabled={!cfgMailpit} />
+              <input type="text" inputmode="numeric" placeholder="8025 (auto)" bind:value={cfgMailpitHTTP} on:change={checkPorts} on:blur={checkPorts} disabled={!cfgMailpit} />
+            </div>
+            <span class="port-note">{portHint(cfgMailpitSMTP, 'auto 1025')}<br />{portHint(cfgMailpitHTTP, 'auto 8025')}</span>
           </div>
 
           <div class="service-config-row">
