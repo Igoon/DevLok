@@ -44,4 +44,22 @@ base.save(os.path.join(ROOT, 'desktop', 'assets', 'app.png'))
 build_dir = os.path.join(ROOT, 'desktop', 'build')
 os.makedirs(build_dir, exist_ok=True)
 make(1024).save(os.path.join(build_dir, 'appicon.png'))
+
+
+def make_tray(size=32, running=False):
+    img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    f = font(int(size * 0.62))
+    text = 'DL'
+    box = d.textbbox((0, 0), text, font=f)
+    tw, th = box[2] - box[0], box[3] - box[1]
+    d.text(((size - tw) / 2 - box[0], (size - th) / 2 - box[1]), text, font=f, fill=(255, 255, 255, 255))
+    if running:
+        dot = max(4, size // 8)
+        d.ellipse((size - dot - 2, 2, size - 2, dot + 2), fill=(255, 255, 255, 255))
+    return img
+
+
+make_tray(32, running=True).save(os.path.join(ROOT, 'desktop', 'assets', 'tray-running.png'))
+make_tray(32, running=False).save(os.path.join(ROOT, 'desktop', 'assets', 'tray-stopped.png'))
 print('ok')

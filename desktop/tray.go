@@ -97,8 +97,7 @@ func (a *App) onTrayExit() {
 func (a *App) onTrayReady() {
 	trayReady.Store(true)
 	trayLog("ready")
-	systray.SetIcon(stoppedIcon)
-	systray.SetTitle("DevLok")
+	setTrayIcon(false)
 	systray.SetTooltip("DevLok - stopped")
 	systray.SetOnClick(func(menu systray.IMenu) {
 		wruntime.WindowShow(a.ctx)
@@ -244,11 +243,7 @@ func (a *App) trayStatusLoop() {
 			a.syncTrayStatus()
 			running := mainServicesRunning()
 			if running != runningIconShown {
-				if running {
-					systray.SetIcon(runningIcon)
-				} else {
-					systray.SetIcon(stoppedIcon)
-				}
+				setTrayIcon(running)
 				runningIconShown = running
 			}
 			if tick%300 == 0 {

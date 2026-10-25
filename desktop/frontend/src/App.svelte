@@ -782,7 +782,9 @@
       <button class:active={tab === 'logs'} on:click={() => (tab = 'logs')}>Logs</button>
       <button class:active={tab === 'config'} on:click={openConfig}>Konfigurasi</button>
       <button class:active={tab === 'update'} on:click={() => { tab = 'update'; loadUpdates() }}>Update</button>
-      <button class:active={tab === 'import'} on:click={() => { tab = 'import'; if (importSites.length === 0) scanLaragon() }}>Import</button>
+      {#if status.platform !== 'darwin'}
+        <button class:active={tab === 'import'} on:click={() => { tab = 'import'; if (importSites.length === 0) scanLaragon() }}>Import</button>
+      {/if}
     </nav>
     <div class="top-right">
       <span class="badge {status.health || (status.running ? 'running' : 'stopped')}">
