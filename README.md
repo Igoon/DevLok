@@ -8,8 +8,8 @@
 
 Local development environment untuk **Windows dan macOS**: Nginx + PHP + MySQL, dengan GUI dan CLI. Reproducible, aman secara default, dan bisa memakai runtime per project (Windows) atau Homebrew (macOS).
 
-- **Versi**: `0.2.11` (Windows 10 22H2+ / Windows 11 x64; macOS 14/15 Intel & Apple Silicon)
-- **Status**: `0.2.11` stabil untuk Windows. macOS didukung sejak v0.2.0: CLI, GUI, tray, CA/hosts, update aplikasi (self-update DMG), dan update runtime via Homebrew. Artifact `.app`/`.dmg` belum di-sign/notarize.
+- **Versi**: `0.2.12` (Windows 10 22H2+ / Windows 11 x64; macOS 14/15 Intel & Apple Silicon)
+- **Status**: `0.2.12` stabil untuk Windows. macOS didukung sejak v0.2.0: CLI, GUI, tray, CA/hosts, update aplikasi (self-update DMG), dan update runtime via Homebrew. Artifact `.app`/`.dmg` belum di-sign/notarize.
 - **Stack**: Go + Wails v2 + Svelte + TypeScript
 - **Binary**: `dl.exe` (CLI), `devlok-gui.exe` / `DevLok.app` (GUI Wails), `dl-helper.exe` (hosts privileged)
 - **Manifest project**: `.devlok.yaml` + `.devlok.lock`

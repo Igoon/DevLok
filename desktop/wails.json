@@ -10,10 +10,10 @@
     "name": "DevLok"
   },
   "info": {
-    "companyName": "DevLok",
+    "companyName": "I Go On (Igoon)",
     "productName": "DevLok",
-    "productVersion": "0.2.11",
-    "copyright": "DevLok",
-    "comments": "Local development environment"
+    "productVersion": "0.2.12",
+    "copyright": "Copyright 2026 I Go On (Igoon)",
+    "comments": "Local development environment manager"
   }
 }
