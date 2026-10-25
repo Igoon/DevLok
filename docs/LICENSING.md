@@ -36,7 +36,7 @@ Konsekuensi:
 | Node.js | MIT | Redistribusi diizinkan dengan notice |
 | Adminer | Apache-2.0 / GPL-2.0 | Unduh saat runtime |
 | Git | GPLv2 | Tidak dibundel; memakai instalasi sistem |
-| Mailpit | MIT | Redistribusi diizinkan (v0.1.1) |
+| Mailpit | MIT | Diunduh saat runtime (tidak dibundel) |
 | WebView2 Runtime | Microsoft terms | Bootstrap, bukan redistribusi bebas |
 | Visual C++ Redistributable | Microsoft terms | Bootstrap via installer resmi |
 

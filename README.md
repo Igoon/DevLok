@@ -14,7 +14,7 @@ Local development environment untuk **Windows dan macOS**: Nginx + PHP + MySQL, 
 - **Binary**: `dl.exe` (CLI), `devlok-gui.exe` / `DevLok.app` (GUI Wails), `dl-helper.exe` (hosts privileged)
 - **Manifest project**: `.devlok.yaml` + `.devlok.lock`
 
-Sudah tersedia: manifest loader/validator, logger JSONL, platform Windows/macOS, `doctor`, `init`, `version`, runtime manager (SHA256 + ekstraksi aman), deteksi port dan owner, supervisor proses (health check, restart, rekonsiliasi, `dl supervise`), generator config Nginx, hosts terkelola, CA lokal + TLS per domain, stack `up/down/status`, MySQL per project, backup/restore/seed, lockfile dan verifikasi checksum, export environment, import Laragon, `run/shell` dengan env project, GUI Wails + tray, phpMyAdmin, Adminer, editor teks, update aplikasi/runtime, `dl wildcard` (macOS), single-instance lock, dan CI Windows/macOS.
+Sudah tersedia: manifest loader/validator, logger JSONL, platform Windows/macOS, `doctor`, `init`, `version`, runtime manager (SHA256 + ekstraksi aman), deteksi port dan owner, supervisor proses (health check, restart, rekonsiliasi, `dl supervise`), generator config Nginx, hosts terkelola, CA lokal + TLS per domain, stack `up/down/status`, MySQL per project, backup/restore/seed, lockfile dan verifikasi checksum, export environment, import Laragon, `run/shell` dengan env project, GUI Wails + tray, phpMyAdmin, Adminer, Mailpit, editor teks, update aplikasi/runtime, `dl wildcard` (macOS), single-instance lock, dan CI Windows/macOS.
 
 Belum tersedia: migrasi schema manifest, forwarding perintah lewat named pipe, browser fallback, installer macOS, dan signing/notarization (Apple Developer ID). Lihat [docs/MACOS.md](docs/MACOS.md) untuk dukungan macOS.
 
@@ -42,7 +42,7 @@ Runtime dan tools yang dikelola:
 | phpMyAdmin | 5.2.3 | GUI database, domain `phpmyadmin.test` |
 | Notepad++ | 8.9.8.1 | Editor portable, dipakai `dl edit` |
 | Git | sistem | Dideteksi, tidak dibundel |
-| Mailpit | 1.2x | Opsional, belum tersedia |
+| Mailpit | 1.32.0 | Opsional (`components.mailpit`); SMTP + UI `mailpit.test` |
 
 Tidak termasuk: Linux, Docker, Apache, Redis, PostgreSQL, deploy remote, Windows Service. Di macOS, runtime memakai Homebrew (lihat [docs/MACOS.md](docs/MACOS.md)).
 
@@ -99,14 +99,18 @@ ports:
   https: 8444
   mysql: 3307
   php: 19000               # port FastCGI internal
+  mailpit_smtp: 1025       # opsional
+  mailpit_http: 8025       # opsional
 
 components:
   mysql: true
   phpmyadmin: false        # matikan phpMyAdmin
+  mailpit: false           # opt-in: SMTP + UI mailpit.test
 ```
 
 - Port eksplisit yang dipakai proses lain menghasilkan error, bukan fallback diam-diam.
 - `components.mysql: false` membuat `dl up` tidak menjalankan MySQL/phpMyAdmin; `dl db` tetap bisa dipakai eksplisit.
+- `components.mailpit: true` mengaktifkan Mailpit (SMTP `127.0.0.1:1025`, UI `mailpit.test`); PHP `mail()` diarahkan ke Mailpit. GUI punya toggle Mailpit dan tombol buka UI.
 - `web.domain` mengatur nama virtual host sepenuhnya, termasuk domain multi-label.
 - Versi MySQL dipilih lewat `services.mysql` atau dropdown di area service GUI; katalog saat ini 8.4.10 dan 9.4.0.
 - GUI: toggle Database/phpMyAdmin dan pilihan versi MySQL langsung di area service; perubahan otomatis restart stack.

@@ -115,6 +115,36 @@ func TestNonStandardPortsAndHTTPOnly(t *testing.T) {
 	}
 }
 
+func TestGenerateProxy(t *testing.T) {
+	cfg, _ := testConfig(t)
+	cfg.Servers = []Server{{
+		Name:   "mailpit",
+		Domain: "mailpit.test",
+		Proxy:  "127.0.0.1:8025",
+		HTTPS:  false,
+	}}
+	if err := Generate(cfg); err != nil {
+		t.Fatal(err)
+	}
+	site, err := os.ReadFile(filepath.Join(cfg.SitesDir, "mailpit.conf"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(site)
+	for _, want := range []string{
+		"server_name mailpit.test;",
+		"proxy_pass http://127.0.0.1:8025;",
+		"proxy_http_version 1.1;",
+	} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("missing %q in:\n%s", want, text)
+		}
+	}
+	if strings.Contains(text, "fastcgi_pass") {
+		t.Fatalf("proxy site should not use fastcgi:\n%s", text)
+	}
+}
+
 func TestCleanupStaleSite(t *testing.T) {
 	cfg, _ := testConfig(t)
 	if err := os.MkdirAll(cfg.SitesDir, 0o755); err != nil {

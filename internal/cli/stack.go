@@ -49,6 +49,9 @@ func newUpCommand(jsonOut *bool) *cobra.Command {
 			if res.PHPMyAdminURL != "" {
 				fmt.Fprintf(cmd.OutOrStdout(), "phpMyAdmin: %s\n", res.PHPMyAdminURL)
 			}
+			if res.MailpitURL != "" {
+				fmt.Fprintf(cmd.OutOrStdout(), "Mailpit: %s (SMTP 127.0.0.1:%d)\n", res.MailpitURL, res.MailpitSMTP)
+			}
 			if res.DBName != "" {
 				fmt.Fprintf(cmd.OutOrStdout(), "Database: %s (user %s, port %d)\n", res.DBName, res.DBUser, res.DBPort)
 				fmt.Fprintln(cmd.OutOrStdout(), "Kredensial: dl db creds "+res.DBName)

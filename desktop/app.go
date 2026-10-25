@@ -70,12 +70,14 @@ type StatusView struct {
 	HTTPSListening bool          `json:"https_listening"`
 	DatabaseOn     bool          `json:"database_enabled"`
 	PHPMyAdminOn   bool          `json:"phpmyadmin_enabled"`
+	MailpitURL     string        `json:"mailpit_url,omitempty"`
 	Services       []ServiceView `json:"services"`
 }
 
 type ComponentsView struct {
 	Database     bool   `json:"database"`
 	PHPMyAdmin   bool   `json:"phpmyadmin"`
+	Mailpit      bool   `json:"mailpit"`
 	MySQLVersion string `json:"mysql_version"`
 }
 
@@ -94,6 +96,7 @@ type ProjectConfigView struct {
 	Versions   map[string]string `json:"versions"`
 	Database   bool              `json:"database"`
 	PHPMyAdmin bool              `json:"phpmyadmin"`
+	Mailpit    bool              `json:"mailpit"`
 }
 
 type ProjectConfigInput struct {
@@ -109,6 +112,7 @@ type ProjectConfigInput struct {
 	Versions   map[string]string `json:"versions"`
 	Database   bool              `json:"database"`
 	PHPMyAdmin bool              `json:"phpmyadmin"`
+	Mailpit    bool              `json:"mailpit"`
 }
 
 type ServiceView struct {
@@ -237,6 +241,7 @@ func (a *App) Status() StatusView {
 		HTTPSListening: !https.Available,
 		DatabaseOn:     dbOn,
 		PHPMyAdminOn:   pmaOn,
+		MailpitURL:     st.MailpitURL,
 		Services:       svcs,
 	}
 }
@@ -397,7 +402,7 @@ func (a *App) Components(path string) (ComponentsView, error) {
 	if version == "" {
 		version = "8.4"
 	}
-	return ComponentsView{Database: dbOn, PHPMyAdmin: dbOn && m.ComponentEnabled("phpmyadmin"), MySQLVersion: version}, nil
+	return ComponentsView{Database: dbOn, PHPMyAdmin: dbOn && m.ComponentEnabled("phpmyadmin"), Mailpit: m.MailpitEnabled(), MySQLVersion: version}, nil
 }
 
 func (a *App) MySQLVersions() ([]string, error) {
@@ -552,6 +557,7 @@ func (a *App) ProjectConfig(path string) (ProjectConfigView, error) {
 		PHPPort:    m.Ports.PHP,
 		Database:   m.ComponentEnabled("mysql"),
 		PHPMyAdmin: m.ComponentEnabled("phpmyadmin"),
+		Mailpit:    m.MailpitEnabled(),
 		Versions: map[string]string{
 			"nginx": m.Runtime["nginx"],
 			"php":   m.Web.PHP,
@@ -631,11 +637,18 @@ func (a *App) SaveProjectConfig(path string, in ProjectConfigInput) error {
 		}
 	}
 	m.Web.Aliases = aliases
-	m.Ports = config.PortsConfig{HTTP: in.HTTPPort, HTTPS: in.HTTPSPort, MySQL: in.MySQLPort, PHP: in.PHPPort}
+	m.Ports = config.PortsConfig{
+		HTTP:        in.HTTPPort,
+		HTTPS:       in.HTTPSPort,
+		MySQL:       in.MySQLPort,
+		PHP:         in.PHPPort,
+		MailpitSMTP: m.Ports.MailpitSMTP,
+		MailpitHTTP: m.Ports.MailpitHTTP,
+	}
 	if !in.Database {
 		in.PHPMyAdmin = false
 	}
-	m.Components = map[string]bool{"mysql": in.Database, "phpmyadmin": in.PHPMyAdmin}
+	m.Components = map[string]bool{"mysql": in.Database, "phpmyadmin": in.PHPMyAdmin, "mailpit": in.Mailpit}
 	if err := config.Validate(m, path); err != nil {
 		return err
 	}
@@ -781,7 +794,7 @@ func mergeRegistries(base, override []rt.Registry) []rt.Registry {
 	return out
 }
 
-func (a *App) SetComponents(path string, database, phpmyadmin bool) error {
+func (a *App) SetComponents(path string, database, phpmyadmin, mailpit bool) error {
 	m, err := loadManifest(path)
 	if err != nil {
 		return err
@@ -790,7 +803,7 @@ func (a *App) SetComponents(path string, database, phpmyadmin bool) error {
 		phpmyadmin = false
 	}
 	saveLastProject(path)
-	m.Components = map[string]bool{"mysql": database, "phpmyadmin": phpmyadmin}
+	m.Components = map[string]bool{"mysql": database, "phpmyadmin": phpmyadmin, "mailpit": mailpit}
 	if err := config.Validate(m, path); err != nil {
 		return err
 	}

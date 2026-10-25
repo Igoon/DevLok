@@ -21,6 +21,7 @@ type Server struct {
 	Aliases     []string
 	Root        string
 	PHPUpstream string
+	Proxy       string
 	HTTPS       bool
 	CertFile    string
 	KeyFile     string
@@ -96,11 +97,17 @@ func validateServer(srv Server) error {
 	if !nameRe.MatchString(srv.Name) {
 		return devlokerr.New(devlokerr.CodeInvalidArgument, "Nama site tidak valid: "+srv.Name, "")
 	}
-	if srv.Domain == "" || srv.Root == "" || srv.PHPUpstream == "" {
+	if srv.Domain == "" {
 		return devlokerr.New(devlokerr.CodeInvalidArgument, "Data site tidak lengkap: "+srv.Name, "")
 	}
 	if srv.HTTPS && (srv.CertFile == "" || srv.KeyFile == "") {
 		return devlokerr.New(devlokerr.CodeInvalidArgument, "Certificate site tidak lengkap: "+srv.Name, "")
+	}
+	if srv.Proxy != "" {
+		return nil
+	}
+	if srv.Root == "" || srv.PHPUpstream == "" {
+		return devlokerr.New(devlokerr.CodeInvalidArgument, "Data site tidak lengkap: "+srv.Name, "")
 	}
 	if _, err := os.Stat(srv.Root); err != nil {
 		return devlokerr.New(devlokerr.CodeDependencyMissing, "Document root tidak ditemukan: "+srv.Root, "")
@@ -136,6 +143,9 @@ func renderMain(cfg Config) string {
 }
 
 func renderSite(cfg Config, srv Server, customPath string) string {
+	if srv.Proxy != "" {
+		return renderProxy(cfg, srv)
+	}
 	names := uniqueStrings(append([]string{srv.Domain}, srv.Aliases...))
 	var b strings.Builder
 	if srv.HTTPS {
@@ -172,6 +182,43 @@ func renderSite(cfg Config, srv Server, customPath string) string {
 	if customPath != "" {
 		fmt.Fprintf(&b, "    include %s;\n", quote(customPath))
 	}
+	b.WriteString("}\n")
+	return b.String()
+}
+
+func renderProxy(cfg Config, srv Server) string {
+	names := uniqueStrings(append([]string{srv.Domain}, srv.Aliases...))
+	var b strings.Builder
+	if srv.HTTPS {
+		fmt.Fprintf(&b, "server {\n    listen %d;\n    server_name %s;\n", cfg.HTTPPort, strings.Join(names, " "))
+		if cfg.HTTPSPort == 443 {
+			b.WriteString("    return 301 https://$host$request_uri;\n}\n\n")
+		} else {
+			fmt.Fprintf(&b, "    return 301 https://$host:%d$request_uri;\n}\n\n", cfg.HTTPSPort)
+		}
+		fmt.Fprintf(&b, "server {\n    listen %d ssl;\n    http2 on;\n", cfg.HTTPSPort)
+	} else {
+		fmt.Fprintf(&b, "server {\n    listen %d;\n", cfg.HTTPPort)
+	}
+	fmt.Fprintf(&b, "    server_name %s;\n", strings.Join(names, " "))
+	if srv.HTTPS {
+		fmt.Fprintf(&b, "    ssl_certificate %s;\n", quote(srv.CertFile))
+		fmt.Fprintf(&b, "    ssl_certificate_key %s;\n", quote(srv.KeyFile))
+		b.WriteString("    ssl_protocols TLSv1.2 TLSv1.3;\n")
+		b.WriteString("    ssl_ciphers HIGH:!aNULL:!MD5;\n")
+		b.WriteString("    ssl_session_cache shared:SSL:10m;\n")
+	}
+	b.WriteString("    add_header X-Content-Type-Options nosniff always;\n")
+	b.WriteString("    add_header X-Frame-Options SAMEORIGIN always;\n")
+	fmt.Fprintf(&b, "    location / {\n        proxy_pass http://%s;\n", srv.Proxy)
+	b.WriteString("        proxy_http_version 1.1;\n")
+	b.WriteString("        proxy_set_header Host $host;\n")
+	b.WriteString("        proxy_set_header X-Real-IP $remote_addr;\n")
+	b.WriteString("        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n")
+	b.WriteString("        proxy_set_header X-Forwarded-Proto $scheme;\n")
+	b.WriteString("        proxy_set_header Upgrade $http_upgrade;\n")
+	b.WriteString("        proxy_set_header Connection \"upgrade\";\n")
+	b.WriteString("    }\n")
 	b.WriteString("}\n")
 	return b.String()
 }

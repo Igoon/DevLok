@@ -2,7 +2,7 @@
 
 Status per 2026-10-20: A1-A3, A5-A9 selesai; A4 (migrasi schema) dan A6 (forwarding named pipe) partial. B1-B11 selesai. C1-C9 selesai. D1-D12 selesai kecuali reload queue (D4) yang masih berupa restart. E1-E9 selesai. F1-F6 selesai. G1-G3 selesai; G4 pending. I1-I8 selesai (termasuk tray); I9 (fallback browser) dan I10 (uji idle) pending. Berikutnya: M7 installer dan hardening.
 
-Per v0.2.7: M7 (installer/release/updater) selesai, auto-update dan supervisor latar selesai, Epic K (macOS) dirilis. Sisa utama: A4 (migrasi schema), A6 (forwarding pipe), I9 (browser fallback), Windows ARM64, Mailpit, notarization macOS.
+Per v0.2.9: M7 (installer/release/updater) selesai, auto-update dan supervisor latar selesai, Epic K (macOS) dirilis, Mailpit tersedia opsional. Sisa utama: A4 (migrasi schema), A6 (forwarding pipe), I9 (browser fallback), Windows ARM64, notarization macOS.
 
 Estimasi dalam hari kerja ideal (1 hari = 6-7 jam fokus). Urutan mengikuti milestone. Status awal semua `todo`.
 

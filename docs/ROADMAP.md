@@ -12,7 +12,26 @@
 
 Estimasi: satu developer, full-time, tanpa gangguan besar. Part-time 20 jam/minggu: kalikan 2-2.5.
 
-> Status per v0.2.8: v0.1.x (Windows) dan v0.2.x (macOS) sudah dirilis. Mailpit, Windows ARM64, dan notarization macOS belum; v0.3.0 (Redis/PostgreSQL/Apache) belum dimulai. Riwayat rilis detail ada di [CHANGELOG](../CHANGELOG.md).
+> Status per v0.2.9: v0.1.x (Windows) dan v0.2.x (macOS) sudah dirilis. Mailpit tersedia opsional (`components.mailpit`). Sisa: Windows ARM64 dan notarization macOS; v0.3.0 (Redis/PostgreSQL/Apache) belum dimulai. Riwayat rilis detail ada di [CHANGELOG](../CHANGELOG.md).
+
+### Status implementasi per v0.2.9
+
+| Item | Status |
+|---|---|
+| Core Windows: runtime per project, supervisor, site/hosts/TLS, database, lockfile/export/import | Selesai |
+| GUI + tray, installer Windows, auto-update, rollback | Selesai |
+| macOS: platform, GUI/tray, CA/hosts, config, self-update, update runtime Homebrew, dnsmasq wildcard, editor | Selesai |
+| Mailpit (SMTP + UI `mailpit.test`) | Selesai (opsional) |
+| Update manifest bertanda tangan per-platform | Selesai |
+| Lisensi Apache-2.0 + DCO + audit lisensi | Selesai |
+| Windows ARM64 | Belum |
+| MySQL 8.0 opsional | Belum (registry 8.4/9.4) |
+| Notarization macOS / Authenticode Windows | Menunggu certificate |
+| Browser fallback (`dl ui --browser`, `internal/api`) | Belum |
+| Migrasi schema manifest | Belum |
+| Forwarding perintah GUI via named pipe | Belum |
+| `dl support bundle` / autostart | Belum |
+| v0.3.0: Redis, PostgreSQL, Apache | Belum dimulai |
 
 ## 2. Milestone v0.1.0
 

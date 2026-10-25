@@ -23,6 +23,7 @@
     https_listening: boolean
     database_enabled: boolean
     phpmyadmin_enabled: boolean
+    mailpit_url?: string
     services: any[]
   }
 
@@ -47,6 +48,7 @@
   let newWithDB = true
   let dbEnabled = true
   let pmaEnabled = true
+  let mailpitEnabled = false
   let componentsPath = ''
   let mysqlVersion = '8.4'
   let mysqlVersions: string[] = []
@@ -67,6 +69,7 @@
   let cfgPHPPort = ''
   let cfgDB = true
   let cfgPMA = true
+  let cfgMailpit = false
   let portChecks: Record<string, any> = {}
   let cfgOptions: Record<string, string[]> = { nginx: [], php: [], mysql: [], node: [] }
   let cfgVersions: Record<string, string> = { nginx: '', php: '', mysql: '', node: '' }
@@ -113,6 +116,7 @@
       php: cfgPHPPort,
       db: cfgDB,
       pma: cfgPMA,
+      mailpit: cfgMailpit,
       versions: cfgVersions
     }) !== cfgSnapshot
 
@@ -206,6 +210,7 @@
       cfgPHPPort = c.php_port ? String(c.php_port) : ''
       cfgDB = !!c.database
       cfgPMA = !!c.phpmyadmin
+      cfgMailpit = !!c.mailpit
       runtimes = rl
       runtimeCache = cache
       cfgOptions = { nginx, php, mysql, node }
@@ -218,6 +223,7 @@
       componentsPath = path
       dbEnabled = !!c.database
       pmaEnabled = !!c.phpmyadmin
+      mailpitEnabled = !!c.mailpit
       mysqlVersion = cfgVersions.mysql
       cfgSnapshot = JSON.stringify({
         domain: cfgDomain,
@@ -231,6 +237,7 @@
         php: cfgPHPPort,
         db: cfgDB,
         pma: cfgPMA,
+        mailpit: cfgMailpit,
         versions: cfgVersions
       })
       await checkPorts()
@@ -263,7 +270,8 @@
         php_port: parsePort(cfgPHPPort),
         versions: cfgVersions,
         database: cfgDB,
-        phpmyadmin: cfgPMA
+        phpmyadmin: cfgPMA,
+        mailpit: cfgMailpit
       })
       if (status.running && status.path === cfgPath) {
         await api().Down()
@@ -324,6 +332,7 @@
       const versions: string[] = val(1) || []
       dbEnabled = !!c.database
       pmaEnabled = !!c.phpmyadmin
+      mailpitEnabled = !!c.mailpit
       mysqlVersions = versions
       mysqlVersion = c.mysql_version || mysqlVersions[0] || '8.4'
       if (mysqlVersion && !mysqlVersions.includes(mysqlVersion)) {
@@ -350,7 +359,7 @@
       if (mysqlVersion) {
         await api().SetMySQLVersion(componentsPath, mysqlVersion)
       }
-      await api().SetComponents(componentsPath, dbEnabled, pmaEnabled)
+      await api().SetComponents(componentsPath, dbEnabled, pmaEnabled, mailpitEnabled)
       if (status.running && status.path === componentsPath) {
         await api().Down()
         await api().Up(componentsPath)
@@ -730,6 +739,13 @@
     pmaEnabled = !pmaEnabled
     applyComponents()
   }
+  function toggleMailpit() {
+    mailpitEnabled = !mailpitEnabled
+    applyComponents()
+  }
+  function openMailpit() {
+    if (status.mailpit_url) openURL(status.mailpit_url)
+  }
   function stateClass(s: string) {
     return ['running', 'stopped', 'failed', 'restarting'].includes(s) ? s : 'stopped'
   }
@@ -880,6 +896,10 @@
           <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v6c0 1.7 3.1 3 7 3s7-1.3 7-3V5M5 11v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>
           Database
         </button>
+        <button class="tool" on:click={openMailpit} disabled={!status.running || !mailpitEnabled || !status.mailpit_url || !!busy}>
+          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+          Mailpit
+        </button>
         <button class="tool" on:click={() => openTerminal(activePath())} disabled={!activePath() || !!busy}>
           <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></svg>
           Terminal
@@ -936,6 +956,16 @@
           </div>
           <span class="pill {status.running && dbEnabled && pmaEnabled ? 'running' : 'stopped'}">{status.running && dbEnabled && pmaEnabled ? 'on' : 'off'}</span>
           <button type="button" class="switch" class:on={status.running && dbEnabled && pmaEnabled} on:click={togglePMA} disabled={!status.running || !componentsPath || !dbEnabled || !!busy} role="switch" aria-checked={status.running && dbEnabled && pmaEnabled} aria-label="phpMyAdmin"></button>
+        </div>
+
+        <div class="service-row">
+          <div class="service-main">
+            <span class="service-dot {status.running && mailpitEnabled ? 'running' : 'stopped'}"></span>
+            <strong>Mailpit</strong>
+            <span class="muted">Email testing{status.running && mailpitEnabled && status.mailpit_url ? ' - ' + status.mailpit_url : ''}</span>
+          </div>
+          <span class="pill {status.running && mailpitEnabled ? 'running' : 'stopped'}">{status.running && mailpitEnabled ? 'on' : 'off'}</span>
+          <button type="button" class="switch" class:on={status.running && mailpitEnabled} on:click={toggleMailpit} disabled={!status.running || !componentsPath || !!busy} role="switch" aria-checked={status.running && mailpitEnabled} aria-label="Mailpit"></button>
         </div>
       </div>
     </section>
@@ -1094,6 +1124,14 @@
               phpMyAdmin
             </label>
             <span class="muted">Mengikuti HTTP/HTTPS</span>
+          </div>
+
+          <div class="service-config-row">
+            <label class="check">
+              <input type="checkbox" bind:checked={cfgMailpit} />
+              Mailpit
+            </label>
+            <span class="muted">SMTP 1025, UI mailpit.test</span>
           </div>
 
           <div class="service-config-row">

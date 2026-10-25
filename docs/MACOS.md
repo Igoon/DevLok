@@ -64,6 +64,7 @@ Data MySQL, kredensial, log, certificate, dan runtime shim berada di state dir D
 - `dl doctor` memeriksa Homebrew dan formula `nginx`/`php`/`mysql`.
 - MySQL Homebrew dengan data DevLok.
 - phpMyAdmin.
+- Mailpit opsional (`components.mailpit`): SMTP + UI `mailpit.test`; PHP `mail()` diarahkan ke Mailpit.
 - Hosts melalui `osascript` dengan administrator prompt.
 - Trust CA melalui `security` (login keychain); untrust memakai `security delete-certificate`.
 - Build GUI Wails dan `.app`.

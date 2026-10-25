@@ -36,10 +36,13 @@ ports:
   https: 8444
   mysql: 3307
   php: 19000
+  mailpit_smtp: 1025
+  mailpit_http: 8025
 
 components:
   mysql: true
   phpmyadmin: false
+  mailpit: true          # opt-in; SMTP + UI mailpit.test
 
 db:
   name: siso
@@ -64,8 +67,8 @@ env:
 | `runtime` | map | Tidak | `{}` | Nama runtime yang dikenal |
 | `services` | map | Tidak | `{mysql: "8.4"}` | Nama service dan versi |
 | `db` | object | Tidak | nama project | Lihat bawah |
-| `ports` | object | Tidak | otomatis | Port HTTP/HTTPS/MySQL/PHP |
-| `components` | map[string]bool | Tidak | semua aktif | `mysql`, `phpmyadmin` |
+| `ports` | object | Tidak | otomatis | Port HTTP/HTTPS/MySQL/PHP/Mailpit |
+| `components` | map[string]bool | Tidak | semua aktif (kecuali `mailpit`) | `mysql`, `phpmyadmin`, `mailpit` |
 | `env` | map[string]string | Tidak | `{}` | Hanya untuk proses project, bukan service |
 | `x-*` | any | Tidak | - | Ekstensi, diabaikan core |
 
@@ -107,6 +110,8 @@ Auto-detect root, berurutan:
 | `https` | int | `0` (auto 443/8443) | Port HTTPS vhost |
 | `mysql` | int | `0` (auto 3306-3310) | Port MySQL |
 | `php` | int | `0` (ephemeral) | Port FastCGI php-cgi |
+| `mailpit_smtp` | int | `0` (auto 1025-1027) | Port SMTP Mailpit |
+| `mailpit_http` | int | `0` (auto 8025-8027) | Port web UI Mailpit |
 
 Port `0` atau kosong berarti otomatis. Port eksplisit yang terpakai menghasilkan error.
 
@@ -116,8 +121,9 @@ Port `0` atau kosong berarti otomatis. Port eksplisit yang terpakai menghasilkan
 |---|---|---|
 | `mysql` | `true` | Jalankan MySQL dan database project |
 | `phpmyadmin` | `true` | Pasang dan layani phpMyAdmin |
+| `mailpit` | `false` | Aktifkan Mailpit (SMTP + web UI `mailpit.test`) |
 
-Komponen yang tidak dikenal ditolak. `phpmyadmin` otomatis dilewati bila `mysql` dimatikan.
+Komponen yang tidak dikenal ditolak. `phpmyadmin` otomatis dilewati bila `mysql` dimatikan. `mailpit` bersifat opt-in: hanya aktif bila diset `true`.
 
 ## 4. Aturan validasi
 

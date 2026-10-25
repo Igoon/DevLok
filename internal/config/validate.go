@@ -78,8 +78,8 @@ func validateWeb(m *Manifest, baseDir string) error {
 		return err
 	}
 	for name := range m.Components {
-		if name != "mysql" && name != "phpmyadmin" {
-			return invalid("Komponen tidak dikenal: "+name, "Komponen yang didukung: mysql, phpmyadmin.")
+		if name != "mysql" && name != "phpmyadmin" && name != "mailpit" {
+			return invalid("Komponen tidak dikenal: "+name, "Komponen yang didukung: mysql, phpmyadmin, mailpit.")
 		}
 	}
 	if err := validateRoot(m.Web.Root, baseDir); err != nil {
@@ -155,7 +155,14 @@ func validateExtensions(ext map[string]any, scope string) error {
 func ValidDomain(d string) bool { return validDomain(d) }
 
 func validatePorts(p PortsConfig) error {
-	for name, port := range map[string]int{"http": p.HTTP, "https": p.HTTPS, "mysql": p.MySQL, "php": p.PHP} {
+	for name, port := range map[string]int{
+		"http":         p.HTTP,
+		"https":        p.HTTPS,
+		"mysql":        p.MySQL,
+		"php":          p.PHP,
+		"mailpit_smtp": p.MailpitSMTP,
+		"mailpit_http": p.MailpitHTTP,
+	} {
 		if port < 0 || port > 65535 {
 			return invalid("Port "+name+" tidak valid: "+fmt.Sprint(port), "Gunakan 1-65535 atau 0 untuk otomatis.")
 		}

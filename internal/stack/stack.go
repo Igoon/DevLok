@@ -49,6 +49,8 @@ type Result struct {
 	URL           string   `json:"url"`
 	LocalURL      string   `json:"local_url"`
 	PHPMyAdminURL string   `json:"phpmyadmin_url,omitempty"`
+	MailpitURL    string   `json:"mailpit_url,omitempty"`
+	MailpitSMTP   int      `json:"mailpit_smtp,omitempty"`
 	DBName        string   `json:"db_name,omitempty"`
 	DBUser        string   `json:"db_user,omitempty"`
 	DBPort        int      `json:"db_port,omitempty"`
@@ -72,6 +74,7 @@ type State struct {
 	DBUser     string    `json:"db_user,omitempty"`
 	DBPort     int       `json:"db_port,omitempty"`
 	MySQL      string    `json:"mysql_version,omitempty"`
+	MailpitURL string    `json:"mailpit_url,omitempty"`
 	StartedAt  time.Time `json:"started_at"`
 }
 
@@ -151,6 +154,18 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 		preWarnings = append(preWarnings, "phpMyAdmin dilewati karena komponen mysql dimatikan.")
 	}
 
+	mailpitEnabled := p.manifest.MailpitEnabled()
+	var mailpit rt.Installed
+	mailpitOK := false
+	if mailpitEnabled {
+		if inst, _, err := mgr.Install(ctx, "mailpit", "1.32"); err != nil {
+			preWarnings = append(preWarnings, "Mailpit tidak dapat disiapkan: "+err.Error())
+		} else {
+			mailpit = inst
+			mailpitOK = true
+		}
+	}
+
 	var dbc db.DatabaseCreds
 	var dbm *db.Manager
 	mysqlPort := 0
@@ -195,15 +210,33 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 		return Result{}, err
 	}
 
+	mailpitSMTPPort := 0
+	mailpitHTTPPort := 0
+	if mailpitOK {
+		mailpitSMTPPort, err = choosePort(p.manifest.Ports.MailpitSMTP, "Mailpit SMTP", 1025, 1026, 1027)
+		if err != nil {
+			preWarnings = append(preWarnings, "Mailpit dilewati: "+err.Error())
+			mailpitOK = false
+		}
+	}
+	if mailpitOK {
+		mailpitHTTPPort, err = choosePort(p.manifest.Ports.MailpitHTTP, "Mailpit HTTP", 8025, 8026, 8027)
+		if err != nil {
+			preWarnings = append(preWarnings, "Mailpit dilewati: "+err.Error())
+			mailpitOK = false
+		}
+	}
+
 	res := Result{
-		Name:      p.manifest.Name,
-		Domain:    p.manifest.BaseDomain(),
-		HTTPPort:  httpPort,
-		HTTPSPort: httpsPort,
-		PHPPort:   phpPort,
-		DBName:    dbc.Name,
-		DBUser:    dbc.User,
-		DBPort:    mysqlPort,
+		Name:        p.manifest.Name,
+		Domain:      p.manifest.BaseDomain(),
+		HTTPPort:    httpPort,
+		HTTPSPort:   httpsPort,
+		PHPPort:     phpPort,
+		DBName:      dbc.Name,
+		DBUser:      dbc.User,
+		DBPort:      mysqlPort,
+		MailpitSMTP: mailpitSMTPPort,
 	}
 	res.Warnings = append(res.Warnings, preWarnings...)
 	if p.lock != nil {
@@ -272,6 +305,25 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 		}
 	}
 
+	if mailpitOK {
+		mailpitDomain := "mailpit.test"
+		mailpitServer := web.Server{
+			Name:   "mailpit",
+			Domain: mailpitDomain,
+			Proxy:  fmt.Sprintf("127.0.0.1:%d", mailpitHTTPPort),
+			HTTPS:  p.manifest.HTTPSEnabled(),
+		}
+		if mailpitServer.HTTPS {
+			mailpitServer.CertFile, mailpitServer.KeyFile, err = ca.Issue("mailpit", []string{mailpitDomain})
+			if err != nil {
+				return Result{}, err
+			}
+		}
+		servers = append(servers, mailpitServer)
+		domains = append(domains, mailpitDomain)
+		res.MailpitURL = urlFor(scheme(mailpitServer.HTTPS), mailpitDomain, portFor(mailpitServer.HTTPS, httpPort, httpsPort))
+	}
+
 	iniPath := filepath.Join(p.generated, "php", php.Version, "php.ini")
 	caPath := filepath.Join(p.generated, "php", "cacert.pem")
 	if err := os.MkdirAll(filepath.Dir(caPath), 0o755); err != nil {
@@ -297,7 +349,12 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 	if err != nil {
 		return Result{}, err
 	}
-	if err := writePHPIni(iniPath, php.Path, filepath.Join(p.logs, "php-error.log"), caPath, extensions, phpCustom); err != nil {
+	sendmail := ""
+	if mailpitOK {
+		mailpitExe := filepath.Join(mailpit.Path, "mailpit"+platform.Current().ExeSuffix())
+		sendmail = fmt.Sprintf("\"%s\" sendmail -S 127.0.0.1:%d", mailpitExe, mailpitSMTPPort)
+	}
+	if err := writePHPIni(iniPath, php.Path, filepath.Join(p.logs, "php-error.log"), caPath, extensions, phpCustom, sendmail); err != nil {
 		return Result{}, err
 	}
 
@@ -352,6 +409,37 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 		_ = sm.Stop("php")
 		return Result{}, err
 	}
+
+	var mailpitSpec supervisor.Spec
+	mailpitStarted := false
+	if mailpitOK {
+		dbDir := filepath.Join(p.stateDir, "data", "mailpit")
+		if err := os.MkdirAll(dbDir, 0o700); err != nil {
+			res.Warnings = append(res.Warnings, "Mailpit dilewati: "+err.Error())
+			res.MailpitURL = ""
+		} else {
+			mailpitSpec = supervisor.Spec{
+				Name:       "mailpit",
+				Executable: filepath.Join(mailpit.Path, "mailpit"+platform.Current().ExeSuffix()),
+				Args: []string{
+					"--smtp", fmt.Sprintf("127.0.0.1:%d", mailpitSMTPPort),
+					"--listen", fmt.Sprintf("127.0.0.1:%d", mailpitHTTPPort),
+					"--database", filepath.Join(dbDir, "mailpit.db"),
+				},
+				Dir:        mailpit.Path,
+				Health:     supervisor.Health{HTTPURL: fmt.Sprintf("http://127.0.0.1:%d/", mailpitHTTPPort), Timeout: 15 * time.Second},
+				Policy:     supervisor.PolicyNo,
+				Persistent: true,
+			}
+			if _, err := sm.Start(mailpitSpec); err != nil {
+				res.Warnings = append(res.Warnings, "Mailpit tidak dapat dijalankan: "+err.Error())
+				res.MailpitURL = ""
+			} else {
+				mailpitStarted = true
+			}
+		}
+	}
+
 	st := State{
 		Schema:     1,
 		Name:       res.Name,
@@ -366,6 +454,7 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 		DBUser:     dbc.User,
 		DBPort:     mysqlPort,
 		MySQL:      mysqlVersion,
+		MailpitURL: res.MailpitURL,
 		StartedAt:  time.Now().UTC(),
 	}
 	if err := writeState(p.stackState, st); err != nil {
@@ -376,6 +465,9 @@ func Up(ctx context.Context, opts Options) (Result, error) {
 	specs := []supervisor.Spec{phpSpec, nginxSpec}
 	if mysqlEnabled {
 		specs = append(specs, dbm.Spec())
+	}
+	if mailpitStarted {
+		specs = append(specs, mailpitSpec)
 	}
 	if err := writeSupervisorSpecs(p.stateDir, specs); err != nil {
 		res.Warnings = append(res.Warnings, "Supervisor latar tidak dapat disiapkan: "+err.Error())
@@ -400,7 +492,7 @@ func Down(stateDir string) error {
 		return err
 	}
 	var errs []string
-	for _, name := range []string{"nginx", "php", "phpmyadmin"} {
+	for _, name := range []string{"nginx", "php", "phpmyadmin", "mailpit"} {
 		if err := sm.Stop(name); err != nil {
 			errs = append(errs, name+": "+err.Error())
 		}
@@ -670,7 +762,7 @@ func beginSupervisorPause(stateDir string) func() {
 }
 
 func stopExisting(sm *supervisor.Manager) {
-	for _, name := range []string{"nginx", "php"} {
+	for _, name := range []string{"nginx", "php", "mailpit"} {
 		_ = sm.Stop(name)
 	}
 }
@@ -760,7 +852,7 @@ func freePort() (int, error) {
 	return port, nil
 }
 
-func writePHPIni(path, phpDir, logPath, caPath string, extensions []string, custom []byte) error {
+func writePHPIni(path, phpDir, logPath, caPath string, extensions []string, custom []byte, sendmail string) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return devlokerr.Wrap(devlokerr.CodePermissionDenied, err, "Folder php.ini tidak dapat dibuat.", "")
 	}
@@ -780,6 +872,9 @@ func writePHPIni(path, phpDir, logPath, caPath string, extensions []string, cust
 	b.WriteString("expose_php = Off\n")
 	fmt.Fprintf(&b, "curl.cainfo = %q\n", filepath.ToSlash(caPath))
 	fmt.Fprintf(&b, "openssl.cafile = %q\n\n", filepath.ToSlash(caPath))
+	if sendmail != "" {
+		fmt.Fprintf(&b, "sendmail_path = %q\n", sendmail)
+	}
 	writePHPExtensionSettings(&b, phpDir, extensions)
 	if text := strings.TrimSpace(string(custom)); text != "" {
 		b.WriteString("\n; >>> DevLok user override >>>\n")

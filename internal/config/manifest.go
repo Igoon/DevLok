@@ -32,10 +32,12 @@ type Manifest struct {
 }
 
 type PortsConfig struct {
-	HTTP  int `yaml:"http,omitempty" json:"http,omitempty"`
-	HTTPS int `yaml:"https,omitempty" json:"https,omitempty"`
-	MySQL int `yaml:"mysql,omitempty" json:"mysql,omitempty"`
-	PHP   int `yaml:"php,omitempty" json:"php,omitempty"`
+	HTTP        int `yaml:"http,omitempty" json:"http,omitempty"`
+	HTTPS       int `yaml:"https,omitempty" json:"https,omitempty"`
+	MySQL       int `yaml:"mysql,omitempty" json:"mysql,omitempty"`
+	PHP         int `yaml:"php,omitempty" json:"php,omitempty"`
+	MailpitSMTP int `yaml:"mailpit_smtp,omitempty" json:"mailpit_smtp,omitempty"`
+	MailpitHTTP int `yaml:"mailpit_http,omitempty" json:"mailpit_http,omitempty"`
 }
 
 type Web struct {
@@ -87,6 +89,14 @@ func (m *Manifest) ComponentEnabled(name string) bool {
 		return true
 	}
 	return enabled
+}
+
+// MailpitEnabled bersifat opt-in: hanya aktif bila components.mailpit = true.
+func (m *Manifest) MailpitEnabled() bool {
+	if m.Components == nil {
+		return false
+	}
+	return m.Components["mailpit"]
 }
 
 var (

@@ -6,6 +6,7 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ### Added
 
+- **Mailpit** (opsional, `components.mailpit`): SMTP server + web UI `mailpit.test`, PHP `mail()` diarahkan ke Mailpit via `sendmail_path`. Port `mailpit_smtp`/`mailpit_http` dapat diatur. Tersedia di Windows dan macOS (registry `mailpit` 1.32.0), dengan toggle dan tombol buka UI di dashboard GUI serta output `dl up`.
 - Skrip audit lisensi: `scripts/license-audit.ps1` dan `scripts/license-audit.sh` (memakai `go-licenses` + `license-checker`, output ke `dist/licenses/`, memperingatkan GPL/AGPL/SSPL).
 
 ### Changed

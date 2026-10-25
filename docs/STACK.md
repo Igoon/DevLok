@@ -26,7 +26,7 @@
 | Node.js | 22 LTS | nodejs.org Windows zip |
 | Adminer | 6.1.2 | adminer.org single file |
 | phpMyAdmin | 5.2.3 | all-languages zip, domain `phpmyadmin.test` |
-| Mailpit | 1.2x (v0.1.1) | github.com/axllent/mailpit |
+| Mailpit | 1.32.0 | github.com/axllent/mailpit |
 
 Catatan teknis:
 

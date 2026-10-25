@@ -18,7 +18,7 @@ DevLok adalah local development environment untuk Windows yang menggabungkan Ngi
 
 - macOS dan Linux (target v0.2.0).
 - Docker, container, WSL integration.
-- Apache, Redis, PostgreSQL, RabbitMQ, Mailpit (Mailpit target v0.1.1).
+- Apache, Redis, PostgreSQL, RabbitMQ. (Mailpit tersedia opsional sejak v0.2.9.)
 - Deploy remote, tunnel publik, sinkronisasi cloud.
 - Windows Service mode.
 - Dukungan ARM64 native (target v0.1.2).

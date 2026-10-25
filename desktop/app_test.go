@@ -31,7 +31,7 @@ func TestComponentsRoundtrip(t *testing.T) {
 	if !c.Database || !c.PHPMyAdmin {
 		t.Fatalf("default components should be on: %+v", c)
 	}
-	if err := a.SetComponents(dir, false, true); err != nil {
+	if err := a.SetComponents(dir, false, true, false); err != nil {
 		t.Fatal(err)
 	}
 	c, err = a.Components(dir)
@@ -41,12 +41,12 @@ func TestComponentsRoundtrip(t *testing.T) {
 	if c.Database || c.PHPMyAdmin {
 		t.Fatalf("both should be off: %+v", c)
 	}
-	if err := a.SetComponents(dir, true, true); err != nil {
+	if err := a.SetComponents(dir, true, true, true); err != nil {
 		t.Fatal(err)
 	}
 	c, _ = a.Components(dir)
-	if !c.Database || !c.PHPMyAdmin {
-		t.Fatalf("both should be on: %+v", c)
+	if !c.Database || !c.PHPMyAdmin || !c.Mailpit {
+		t.Fatalf("all should be on: %+v", c)
 	}
 }
 

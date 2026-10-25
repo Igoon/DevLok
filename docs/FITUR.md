@@ -31,6 +31,11 @@ Ringkasan fitur dan kemampuan DevLok per area. Untuk riwayat perubahan lihat [CH
 - `dl db create/drop/reset/backup/restore/seed/shell/creds`.
 - phpMyAdmin (dipilih otomatis sesuai seri PHP) dan Adminer.
 
+## Email testing
+
+- Mailpit opsional (`components.mailpit: true`): SMTP server (`127.0.0.1:1025`) dan web UI `mailpit.test`.
+- PHP `mail()` diarahkan ke Mailpit lewat `sendmail_path`, sehingga email project tertangkap.
+
 ## Supervisor dan log
 
 - Health check, restart dengan backoff, supervisor latar `dl supervise`, dan rekonsiliasi state.
