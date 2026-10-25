@@ -28,7 +28,13 @@ type RuntimeUpdate struct {
 
 func Check(mgr *rt.Manager) ([]RuntimeUpdate, error) {
 	if platform.Current().Name() == "darwin" {
-		return brewRuntimeUpdates()
+		out, _ := brewRuntimeUpdates()
+		if mgr != nil {
+			if installed, err := mgr.ListInstalled(); err == nil {
+				out = append(out, checkInstalled(installed, mgr.Registries, mgr.OS+"/"+mgr.Arch)...)
+			}
+		}
+		return out, nil
 	}
 	installed, err := mgr.ListInstalled()
 	if err != nil {

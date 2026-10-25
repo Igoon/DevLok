@@ -73,7 +73,7 @@ func newUpdateCommand(jsonOut *bool) *cobra.Command {
 					fmt.Fprintf(cmd.OutOrStdout(), "  %s %s -> %s\n", u.Name, u.Installed, u.Latest)
 				}
 				if platform.Current().Name() == "darwin" {
-					fmt.Fprintln(cmd.OutOrStdout(), "\nPerbarui dengan: brew upgrade <nama>")
+					fmt.Fprintln(cmd.OutOrStdout(), "\nService: brew upgrade <nama>. Tool: dl runtime add <nama>@<versi>.")
 				} else {
 					fmt.Fprintln(cmd.OutOrStdout(), "\nPasang versi baru dengan: dl runtime add <nama>@<versi>")
 				}
@@ -82,7 +82,7 @@ func newUpdateCommand(jsonOut *bool) *cobra.Command {
 				fmt.Fprintf(cmd.ErrOrStderr(), "peringatan: update aplikasi tidak dapat diperiksa: %s\n", remoteErr)
 			}
 			if platform.Current().Name() == "darwin" && len(updates) == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "Runtime dikelola Homebrew; perbarui dengan: brew upgrade nginx php mysql")
+				fmt.Fprintln(cmd.OutOrStdout(), "Service: brew upgrade nginx php mysql. Tool (Mailpit/phpMyAdmin/Adminer): dl runtime add <nama>@<versi>.")
 			} else if appUpdate == nil && len(updates) == 0 {
 				fmt.Fprintln(cmd.OutOrStdout(), "Semua runtime terpasang sudah memakai versi terbaru dari registry.")
 			}

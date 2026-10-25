@@ -960,12 +960,12 @@
 
         <div class="service-row">
           <div class="service-main">
-            <span class="service-dot {status.running && mailpitEnabled ? 'running' : 'stopped'}"></span>
+            <span class="service-dot {mailpitEnabled ? serviceState('mailpit') : 'stopped'}"></span>
             <strong>Mailpit</strong>
-            <span class="muted">Email testing{status.running && mailpitEnabled && status.mailpit_url ? ' - ' + status.mailpit_url : ''}</span>
+            <span class="muted">Email testing{status.mailpit_url ? ' - ' + status.mailpit_url : ''}</span>
           </div>
-          <span class="pill {status.running && mailpitEnabled ? 'running' : 'stopped'}">{status.running && mailpitEnabled ? 'on' : 'off'}</span>
-          <button type="button" class="switch" class:on={status.running && mailpitEnabled} on:click={toggleMailpit} disabled={!status.running || !componentsPath || !!busy} role="switch" aria-checked={status.running && mailpitEnabled} aria-label="Mailpit"></button>
+          <span class="pill {mailpitEnabled ? serviceState('mailpit') : 'stopped'}">{mailpitEnabled ? serviceState('mailpit') : 'off'}</span>
+          <button type="button" class="switch" class:on={mailpitEnabled && serviceState('mailpit') === 'running'} on:click={toggleMailpit} disabled={!status.running || !componentsPath || !!busy} role="switch" aria-checked={mailpitEnabled && serviceState('mailpit') === 'running'} aria-label="Mailpit"></button>
         </div>
       </div>
     </section>
@@ -1308,7 +1308,7 @@
         {/if}
         {#if !updateInfo.runtimes || updateInfo.runtimes.length === 0}
           {#if status.platform === 'darwin'}
-            <p class="muted">Runtime dikelola Homebrew. Perbarui dengan brew upgrade nginx php mysql.</p>
+            <p class="muted">Service via Homebrew (brew upgrade nginx php mysql); tool (Mailpit/phpMyAdmin/Adminer) lewat tombol Update.</p>
           {:else}
             <p class="muted">Semua runtime terpasang sudah versi terbaru.</p>
           {/if}

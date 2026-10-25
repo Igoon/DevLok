@@ -1405,7 +1405,7 @@ func (a *App) UpdateInfo() (UpdateInfoView, error) {
 }
 
 func (a *App) InstallRuntimeUpdate(name, version string) (string, error) {
-	if platform.Current().Name() == "darwin" {
+	if platform.Current().Name() == "darwin" && isServiceRuntime(name) {
 		return a.installBrewRuntime(name, version)
 	}
 	a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "start", Name: name, Version: version})
@@ -1448,7 +1448,7 @@ func (a *App) InstallRuntimeUpdate(name, version string) (string, error) {
 			message += " Data MySQL tidak dimigrasikan otomatis; restore dump lama bila diperlukan."
 		}
 	}
-	restart := (service && name != "node") || name == "phpmyadmin" || name == "adminer"
+	restart := (service && name != "node") || name == "phpmyadmin" || name == "adminer" || name == "mailpit"
 	if project != "" && restart {
 		if st, err := stack.LoadState(""); err == nil && sameTrayPath(st.ProjectDir, project) {
 			a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "restart", Name: inst.Name, Version: inst.Version})
@@ -1480,27 +1480,58 @@ func (a *App) installBrewRuntime(name, version string) (string, error) {
 	return a.restartActiveStack("Runtime " + name + " diperbarui via Homebrew."), nil
 }
 
-func (a *App) updateRuntimesBrew(patches []update.RuntimeUpdate) (string, error) {
+func (a *App) updateRuntimesDarwin(patches []update.RuntimeUpdate) (string, error) {
 	a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "start", Name: "semua patch"})
+	mgr, err := a.runtimeManagerWithProgress(func(p rt.Progress) {
+		a.emitUpdateProgress(UpdateProgressView{
+			Kind:       "runtime",
+			Phase:      p.Phase,
+			Name:       p.Name,
+			Version:    p.Version,
+			Downloaded: p.Downloaded,
+			Total:      p.Total,
+		})
+	})
+	if err != nil {
+		a.emitUpdateError("runtime", "semua patch", "", err)
+		return "", err
+	}
 	ctx, cancel := a.startUpdateContext(30 * time.Minute)
 	defer a.finishUpdate(cancel)
 	var done []string
 	var failures []string
+	needsRestart := false
 	for _, u := range patches {
 		if ctx.Err() != nil {
 			return "", ctx.Err()
 		}
-		if _, err := brew.Upgrade(ctx, u.Name); err != nil {
-			failures = append(failures, u.Name+": "+err.Error())
-			continue
+		if isServiceRuntime(u.Name) {
+			if _, err := brew.Upgrade(ctx, u.Name); err != nil {
+				failures = append(failures, u.Name+": "+err.Error())
+				continue
+			}
+			if u.Name != "node" {
+				needsRestart = true
+			}
+		} else {
+			if _, _, err := mgr.Install(ctx, u.Name, u.Latest); err != nil {
+				failures = append(failures, u.Name+": "+err.Error())
+				continue
+			}
+			if u.Name == "phpmyadmin" || u.Name == "adminer" || u.Name == "mailpit" {
+				needsRestart = true
+			}
 		}
 		done = append(done, u.Name)
 	}
-	message := a.restartActiveStack("Runtime diperbarui via Homebrew: " + strings.Join(done, ", ") + ".")
+	message := "Runtime diperbarui: " + strings.Join(done, ", ") + "."
+	if needsRestart && len(done) > 0 {
+		message = a.restartActiveStack(message)
+	}
 	if len(failures) > 0 {
 		err := devlokerr.New(devlokerr.CodeDependencyMissing,
 			fmt.Sprintf("%d diperbarui, %d gagal: %s", len(done), len(failures), strings.Join(failures, "; ")),
-			"Jalankan brew upgrade secara manual.")
+			"Periksa koneksi lalu ulangi update.")
 		a.emitUpdateError("runtime", "semua patch", "", err)
 		return message, err
 	}
@@ -1561,7 +1592,7 @@ func (a *App) updateRuntimes(includeNewSeries bool) (string, error) {
 		return "", nil
 	}
 	if platform.Current().Name() == "darwin" {
-		return a.updateRuntimesBrew(patches)
+		return a.updateRuntimesDarwin(patches)
 	}
 	a.emitUpdateProgress(UpdateProgressView{Kind: "runtime", Phase: "start", Name: "semua patch"})
 	mgr, err := a.runtimeManagerWithProgress(func(p rt.Progress) {
