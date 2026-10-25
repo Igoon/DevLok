@@ -130,4 +130,4 @@ matrix:
   os: [windows-latest, macos-latest]
 ```
 
-Build macOS baru diaktifkan setelah v0.1.0 stabil, tetapi CI kompilasi core sudah berjalan sejak M0.
+Build macOS aktif sejak v0.2.0; CI mengompilasi core dan menjalankan test untuk kedua OS.

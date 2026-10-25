@@ -7,10 +7,10 @@
 | Nama | **DevLok** |
 | Arti | Development lokal |
 | Jenis | Local development environment manager |
-| Platform | Windows 10 22H2+ / Windows 11, x64 |
-| Versi | `0.1.1` |
+| Platform | Windows 10 22H2+ / Windows 11 x64; macOS 14/15 Intel & Apple Silicon |
+| Versi | `0.2.7` |
 | Lisensi | Belum ditentukan |
-| GUI | `devlok-gui.exe` |
+| GUI | `devlok-gui.exe` / `DevLok.app` |
 | CLI | `dl.exe` |
 | Helper privileged | `dl-helper.exe` |
 | Bahasa | Go, TypeScript, Svelte |
@@ -336,9 +336,11 @@ components:
 
 ### Batasan Saat Ini
 
-- Dukungan resmi baru Windows x64.
-- Installer, browser fallback, dan migrasi schema manifest belum tersedia.
-- macOS/Linux belum menjadi target rilis, meskipun sebagian arsitektur sudah disiapkan.
+- Dukungan resmi Windows x64 dan macOS 14/15 (Intel & Apple Silicon).
+- Installer Windows tersedia; macOS memakai `.dmg`/`.zip` (belum ada installer dan belum notarized).
+- Browser fallback dan migrasi schema manifest belum tersedia.
+- Di macOS, runtime memakai Homebrew (bukan runtime per project); versi seri bisa dipin lewat formula seperti `php@8.4`.
+- Linux belum menjadi target.
 - Apache, Redis, PostgreSQL, Docker, deploy remote, dan Windows Service tidak termasuk scope.
 - Aplikasi tidak boleh dijalankan sebagai Administrator.
 - Jika DevLok pernah dijalankan elevated, service dapat dimiliki Administrator dan perlu dihentikan dari terminal Administrator atau restart Windows.
@@ -391,6 +393,6 @@ copy ..\build\bin\dl-helper.exe build\bin\dl-helper.exe
 | [CLI.md](CLI.md) | Spesifikasi CLI |
 | [SECURITY.md](SECURITY.md) | Model ancaman dan kontrol keamanan |
 | [UPDATES.md](UPDATES.md) | Kebijakan update aplikasi dan runtime |
-| [TIMELINE.md](TIMELINE.md) | Timeline fitur 0.1.0 sampai rencana 0.2.0 |
+| [TIMELINE.md](TIMELINE.md) | Timeline rilis 0.1.x dan 0.2.x |
 | [LARAGON-GAPS.md](LARAGON-GAPS.md) | Perbandingan dengan Laragon |
 | [ROADMAP.md](ROADMAP.md) | Rencana milestone |

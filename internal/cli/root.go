@@ -35,7 +35,7 @@ func newRootCommand() *cobra.Command {
 	var jsonOut, verbose bool
 	root := &cobra.Command{
 		Use:           "dl",
-		Short:         "Local development environment untuk Windows",
+		Short:         "Local development environment untuk Windows & macOS",
 		Long:          "DevLok mengelola Nginx, PHP, MySQL, dan tool pendukung dalam satu CLI dan GUI.",
 		Version:       version.Current().Version,
 		SilenceErrors: true,

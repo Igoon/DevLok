@@ -2,7 +2,7 @@
 
 ## 1. Tujuan
 
-Windows adalah target v0.1.0. macOS adalah target v0.2.0. Agar port murah, semua perbedaan OS diisolasi di `internal/platform`.
+Windows adalah target utama (v0.1.x) dan macOS didukung sejak v0.2.0. Agar port murah, semua perbedaan OS diisolasi di `internal/platform`.
 
 ## 2. Aturan
 
@@ -15,7 +15,7 @@ Windows adalah target v0.1.0. macOS adalah target v0.2.0. Agar port murah, semua
 7. Semua pembukaan browser/terminal lewat `Platform`.
 8. Template config tidak boleh memuat path OS-specific; path disuntikkan sebagai parameter.
 9. Build tag: `//go:build windows` dan `//go:build darwin`.
-10. CI mengompilasi core untuk kedua OS sejak M0, meski fitur Mac belum ada.
+10. CI mengompilasi core untuk kedua OS sejak M0; macOS sudah dirilis sejak v0.2.0.
 
 ## 3. Pemetaan operasi
 
@@ -49,7 +49,7 @@ Windows adalah target v0.1.0. macOS adalah target v0.2.0. Agar port murah, semua
 
 ### 4.1 DNS
 
-Windows `hosts` tidak mendukung wildcard. v0.1.0 menulis satu entri per site. macOS v0.2.0 dapat memakai mekanisme yang sama, dengan opsi dnsmasq untuk wildcard.
+Windows `hosts` tidak mendukung wildcard. DevLok menulis satu entri per site. macOS dapat memakai resolver dnsmasq (opsional) untuk wildcard `*.test` lewat `dl wildcard`.
 
 ### 4.2 Elevation
 
@@ -77,7 +77,7 @@ Nama project dan file config harus diperlakukan case-sensitive secara logis, mes
 ### 4.6 Signing
 
 - macOS membutuhkan Apple Developer ID ($99/tahun) dan notarization agar tidak diblokir Gatekeeper.
-- Windows SmartScreen dapat diatasi dengan certificate EV, tetapi tidak wajib untuk v0.1.0.
+- Windows SmartScreen dapat diatasi dengan certificate EV, tetapi tidak wajib.
 - Checksum rilis dipublikasikan terlepas dari signing.
 
 ## 5. Interface platform

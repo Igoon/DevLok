@@ -193,7 +193,7 @@ Runtime tidak pernah ditulis ke dalam folder project. Yang masuk repo hanya mani
 ### 5.10 `internal/api`
 
 - GUI Wails memanggil paket core lewat binding Go.
-- HTTP API lokal untuk fallback browser direncanakan setelah v0.1.0.
+- HTTP API lokal untuk fallback browser belum diimplementasikan.
 - Operasi destruktif butuh konfirmasi eksplisit.
 
 ### 5.11 `internal/platform`
@@ -218,7 +218,7 @@ type Platform interface {
 }
 ```
 
-Implementasi: `platform_windows.go`, nanti `platform_darwin.go`. Core tidak boleh memanggil `golang.org/x/sys/windows` langsung.
+Implementasi: `platform_windows.go`, `platform_darwin.go`, dan `platform_other.go`. Core tidak boleh memanggil `golang.org/x/sys/windows` langsung.
 
 ## 6. Alur `dl up`
 

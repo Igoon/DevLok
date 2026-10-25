@@ -12,6 +12,8 @@
 
 Estimasi: satu developer, full-time, tanpa gangguan besar. Part-time 20 jam/minggu: kalikan 2-2.5.
 
+> Status per v0.2.7: v0.1.x (Windows) dan v0.2.x (macOS) sudah dirilis. Mailpit, Windows ARM64, dan notarization macOS belum; v0.3.0 (Redis/PostgreSQL/Apache) belum dimulai.
+
 ## 2. Milestone v0.1.0
 
 ### M0 - Fondasi (minggu 1)

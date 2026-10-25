@@ -1,5 +1,7 @@
 # PRD - DevLok v0.1.0 (Windows)
 
+> Catatan: dokumen ini mendefinisikan scope v0.1.0 (Windows). Dukungan macOS sejak v0.2.0 dijelaskan di [MACOS.md](MACOS.md).
+
 ## 1. Ringkasan
 
 DevLok adalah local development environment untuk Windows yang menggabungkan Nginx, PHP, MySQL, dan tool pendukung dalam satu aplikasi tray dan CLI. Fokus v0.1.0 adalah paritas fitur inti Laragon dengan perbaikan pada reproducibility, keamanan, dan operasional.

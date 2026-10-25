@@ -4,6 +4,10 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+### Changed
+
+- Dokumentasi direkonsiliasi dengan status v0.2.7: README (dukungan Windows+macOS, update macOS, struktur repo, milestone), `docs/CLI.md` (perintah nyata; perintah fiktif dipindah ke "Direncanakan"), `docs/MACOS.md` (status rilis + pemisahan fitur/batasan), `docs/LARAGON-GAPS.md`, `docs/PLATFORM.md`, `docs/APLIKASI.md`, `docs/TIMELINE.md`, `docs/ROADMAP.md`, `docs/BACKLOG.md`, `docs/REGISTRY.md`, `docs/LICENSING.md`, `docs/ARCHITECTURE.md`, `docs/TESTING.md`.
+
 ## [0.2.7] - 2026-10-24
 
 ### Fixed

@@ -98,9 +98,9 @@ Jangan menambahkan checksum yang belum diverifikasi. Jangan memakai URL `latest`
 
 Key artifact memakai format `os/arch`:
 
-- `windows/amd64` (v0.1.0)
-- `windows/arm64` (v0.1.2)
-- `darwin/arm64` dan `darwin/amd64` (v0.2.0)
+- `windows/amd64` (rilis)
+- `windows/arm64` (rencana)
+- `darwin/arm64` dan `darwin/amd64` (rilis; untuk nginx/php/mysql macOS memakai Homebrew, registry dipakai untuk phpMyAdmin, Adminer, dan tool unduhan)
 
 Versi yang tidak punya artifact untuk platform aktif tidak akan dipilih oleh resolver.
 

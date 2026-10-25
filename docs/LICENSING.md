@@ -69,8 +69,8 @@ Untuk runtime yang diunduh, notice disediakan di folder runtime masing-masing da
 
 | Platform | Kebutuhan | Status |
 |---|---|---|
-| Windows | Authenticode, idealnya EV | Belum, opsional v0.1.0 |
-| macOS | Developer ID + notarization | Wajib untuk v0.2.0 |
+| Windows | Authenticode, idealnya EV | Belum (opsional) |
+| macOS | Developer ID + notarization | Belum; wajib untuk distribusi publik |
 
 Tanpa signing:
 

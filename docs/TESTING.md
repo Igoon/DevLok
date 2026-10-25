@@ -124,7 +124,7 @@ Catatan:
 
 - `-race` dijalankan di macOS karena Windows runner tidak selalu punya CGO/gcc.
 - Test integrasi yang butuh binary runtime dijalankan di job terpisah dengan cache.
-- macOS job hanya kompilasi dan unit test pada v0.1.0.
+- macOS job menjalankan unit test (termasuk `-race`), build core, serta workflow `macos-build`/`macos-runtime` (build `.app` dan uji stack nyata).
 - E2E Windows dijalankan nightly dan sebelum rilis.
 
 ## 9. Manual QA sebelum rilis

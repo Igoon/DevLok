@@ -2,7 +2,7 @@
 
 ## Status
 
-Dukungan macOS masih tahap pengembangan. Build `.app`/`.dmg` tersedia sebagai artifact GitHub Actions dan dilampirkan ke GitHub Release oleh workflow `release` (`DevLok-macos-arm64`/`-intel`), unsigned kecuali secret signing tersedia.
+Dukungan macOS tersedia sejak v0.2.0 dan dirilis (CLI, GUI, tray). Build `.app`/`.dmg` dilampirkan ke GitHub Release oleh workflow `release` (`DevLok-macos-arm64`/`-intel`), unsigned kecuali secret signing tersedia (lihat [MACOS-SIGNING.md](MACOS-SIGNING.md)).
 
 ## Prasyarat
 
@@ -74,6 +74,10 @@ Data MySQL, kredensial, log, certificate, dan runtime shim berada di state dir D
 - Formula Homebrew berversi didukung: bila `php@8.4`, `mysql@8.4`, dst. terpasang, seri tersebut dipakai otomatis dan muncul di dropdown Konfigurasi. Pasang dengan `brew install php@8.4` / `brew install mysql@8.4`.
 - DMG unsigned berisi aplikasi, symlink Applications, README prasyarat, dan `dl-helper` di dalam bundle.
 - CI Intel dan Apple Silicon (`macos-build` menghasilkan artifact arm64 dan intel).
+- Tray/menu bar berjalan (systray `nativeStart` dijadwalkan ke main queue Cocoa via `dispatch_async_f`).
+- Update aplikasi: deteksi `.dmg`, unduh + verifikasi SHA256, self-update `.app` (ganti bundle atomik + relaunch), fallback buka DMG.
+- Update runtime lewat Homebrew: tab Update/`dl update` menampilkan paket usang dan menjalankan `brew upgrade <formula>` lalu restart stack.
+- Editor (`dl edit`, tray/GUI): VS Code/Cursor/Zed/Sublime/TextMate, fallback TextEdit (file) / Finder (folder).
 
 ## Tanpa Apple Developer Berbayar
 
@@ -108,14 +112,11 @@ Untuk distribusi publik yang aman, tetap diperlukan Apple Developer Program berb
 
 ## Batasan
 
-- Tray/menu bar macOS memakai `systray` dengan `nativeStart` dijadwalkan ke main queue Cocoa (`dispatch_async_f`); perlu pengujian di perangkat.
-- Installer macOS belum tersedia.
+- Installer macOS belum tersedia (distribusi lewat `.dmg`/`.zip`).
 - Aplikasi belum ditandatangani Developer ID.
-- Belum dinotarisasi; Gatekeeper dapat memblokir.
-- Update aplikasi macOS: `dl update` mendeteksi aset `DevLok-macos-<arch>.dmg`, `dl update download` mengunduh + verifikasi SHA256. `dl update apply` melakukan self-update: stage `.app` dari DMG/ZIP, ganti bundle secara atomik lewat skrip terpisah, lalu relaunch (fallback membuka DMG bila folder tidak writable). Instal senyap penuh + rollback menunggu notarization.
-- Update runtime macOS lewat Homebrew: tab Update dan `dl update` menampilkan paket usang (`brew outdated` untuk nginx/php/mysql/node); tombol Update menjalankan `brew upgrade <formula>` lalu me-restart stack bila aktif.
-- Editor (`dl edit`, tray/GUI): VS Code, Cursor, Zed, Sublime, atau TextMate bila terpasang; fallback TextEdit (file) / Finder (folder).
+- Belum dinotarisasi; Gatekeeper dapat memblokir distribusi publik.
+- Rollback otomatis update aplikasi macOS belum tersedia.
 - Runtime harus dipasang manual lewat Homebrew.
 - Versi runtime mengikuti Homebrew. Seri spesifik didukung bila formula berversi terpasang (`php@8.4`, `mysql@8.4`, dst.); jika tidak, formula `php`/`mysql` terpasang yang dipakai.
-- Data MySQL disimpan per seri yang diminta (mis. `8.4`). Berpindah antar biner seri berbeda pada seri yang sama (mis. `mysql` lalu `mysql@8.4`) dapat membuat `mysqld` menolak start karena datadir dibuat versi lain. Hapus `data/mysql/<seri>` lalu `dl up` untuk inisialisasi ulang.
+- Data MySQL disimpan per seri yang diminta (mis. `8.4`). Berpindah antar biner seri berbeda pada seri yang sama (mis. `mysql` lalu `mysql@8.4`) dapat membuat `mysqld` menolak start karena datadir dibuat versi lain; jalankan `dl db reset --yes` lalu `dl up`.
 - DevLok belum mengelola `brew services`.

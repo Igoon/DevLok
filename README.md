@@ -6,17 +6,17 @@
 - Portable ZIP dan installer Windows tersedia di halaman rilis.
 - Installer belum ditandatangani Authenticode.
 
-Local development environment untuk Windows: Nginx + PHP + MySQL, dengan GUI dan CLI. Dibuat sebagai alternatif Laragon yang reproducible, aman secara default, dan siap diport ke macOS.
+Local development environment untuk **Windows dan macOS**: Nginx + PHP + MySQL, dengan GUI dan CLI. Alternatif Laragon yang reproducible, aman secara default, dan bisa memakai runtime per project (Windows) atau Homebrew (macOS).
 
 - **Versi**: `0.2.7` (Windows 10 22H2+ / Windows 11 x64; macOS 14/15 Intel & Apple Silicon)
-- **Status**: `0.2.7` stabil untuk Windows. macOS memakai runtime Homebrew (Nginx/PHP-FPM/MySQL); CLI, GUI, dan tray berfungsi; `.app`/`.dmg` unsigned dilampirkan ke rilis (signing/notarization belum).
+- **Status**: `0.2.7` stabil untuk Windows. macOS didukung sejak v0.2.0: CLI, GUI, tray, CA/hosts, update aplikasi (self-update DMG), dan update runtime via Homebrew. Artifact `.app`/`.dmg` belum di-sign/notarize.
 - **Stack**: Go + Wails v2 + Svelte + TypeScript
-- **Binary**: `dl.exe` (CLI), `devlok-gui.exe` (GUI Wails), `dl-helper.exe` (hosts privileged)
+- **Binary**: `dl.exe` (CLI), `devlok-gui.exe` / `DevLok.app` (GUI Wails), `dl-helper.exe` (hosts privileged)
 - **Manifest project**: `.devlok.yaml` + `.devlok.lock`
 
-Sudah tersedia: manifest loader/validator, logger JSONL, platform Windows, `doctor`, `init`, `version`, runtime manager (SHA256 + ekstraksi aman), deteksi port dan owner, supervisor proses (Job Object, health check, restart, rekonsiliasi), generator config Nginx, hosts terkelola, CA lokal + TLS per domain, stack `up/down/status`, MySQL per project (password DPAPI, database/user acak), backup/restore/seed, lockfile dan verifikasi checksum, export environment, import Laragon, `run/shell` dengan env project, GUI Wails, phpMyAdmin, editor teks, single-instance lock, dan CI Windows/macOS.
+Sudah tersedia: manifest loader/validator, logger JSONL, platform Windows/macOS, `doctor`, `init`, `version`, runtime manager (SHA256 + ekstraksi aman), deteksi port dan owner, supervisor proses (health check, restart, rekonsiliasi, `dl supervise`), generator config Nginx, hosts terkelola, CA lokal + TLS per domain, stack `up/down/status`, MySQL per project, backup/restore/seed, lockfile dan verifikasi checksum, export environment, import Laragon, `run/shell` dengan env project, GUI Wails + tray, phpMyAdmin, Adminer, editor teks, update aplikasi/runtime, `dl wildcard` (macOS), single-instance lock, dan CI Windows/macOS.
 
-Belum tersedia: migrasi schema manifest, forwarding perintah lewat named pipe, dan browser fallback. Dukungan macOS ada di jalur v0.2.0: CLI dan GUI bisa dibangun dan dijalankan memakai runtime Homebrew (lihat [docs/MACOS.md](docs/MACOS.md)); installer, signing, notarization, dan update aplikasi macOS belum tersedia.
+Belum tersedia: migrasi schema manifest, forwarding perintah lewat named pipe, browser fallback, installer macOS, dan signing/notarization (Apple Developer ID). Lihat [docs/MACOS.md](docs/MACOS.md) untuk dukungan macOS.
 
 ## Masalah yang diselesaikan
 
@@ -39,7 +39,7 @@ Sebagian besar kekurangan Laragon sudah ditangani. Audit status lengkap ada di [
 - **Supervisi proses** yang benar.
 - **Default aman**: loopback-only, password acak, TLS 1.2/1.3.
 
-## Scope v0.1.0
+## Runtime yang dikelola
 
 Runtime dan tools yang dikelola:
 
@@ -54,9 +54,9 @@ Runtime dan tools yang dikelola:
 | phpMyAdmin | 5.2.3 | GUI database, domain `phpmyadmin.test` |
 | Notepad++ | 8.9.8.1 | Editor portable, dipakai `dl edit` |
 | Git | sistem | Dideteksi, tidak dibundel |
-| Mailpit | 1.2x | Opsional, target v0.1.1 |
+| Mailpit | 1.2x | Opsional, belum tersedia |
 
-Bukan bagian dari v0.1.0: macOS, Linux, Docker, Apache, Redis, PostgreSQL, deploy remote, Windows Service.
+Tidak termasuk: Linux, Docker, Apache, Redis, PostgreSQL, deploy remote, Windows Service. Di macOS, runtime memakai Homebrew (lihat [docs/MACOS.md](docs/MACOS.md)).
 
 ## Prasyarat build
 
@@ -269,7 +269,7 @@ DevLok/
 `-- build/                  output build (ignored)
 ```
 
-Paket yang menyusul: `db`, `importlaragon`, `api`, `desktop/`, `templates/`, `installer/`.
+Catatan: `internal/api` (HTTP lokal untuk browser fallback) belum dibuat; untuk sekarang GUI native adalah satu-satunya UI.
 
 ## Dokumentasi
 
@@ -289,12 +289,13 @@ Paket yang menyusul: `db`, `importlaragon`, `api`, `desktop/`, `templates/`, `in
 | [docs/LICENSING.md](docs/LICENSING.md) | Lisensi runtime dan distribusi |
 | [docs/UPDATES.md](docs/UPDATES.md) | Kebijakan update aplikasi dan runtime |
 | [docs/RELEASE.md](docs/RELEASE.md) | Build portable, installer, GitHub Release, dan rollback |
-| [docs/TIMELINE.md](docs/TIMELINE.md) | Timeline fitur 0.1.0 sampai rencana 0.2.0 |
+| [docs/TIMELINE.md](docs/TIMELINE.md) | Timeline rilis 0.1.x dan 0.2.x |
 | [docs/MACOS.md](docs/MACOS.md) | Status, prasyarat, dan batasan macOS |
 | [docs/MACOS-SIGNING.md](docs/MACOS-SIGNING.md) | Signing dan notarization macOS |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Troubleshooting MySQL dan update runtime |
 | [docs/LARAGON-GAPS.md](docs/LARAGON-GAPS.md) | Audit kekurangan Laragon vs DevLok |
 | [docs/STITCH_PROMPTS.md](docs/STITCH_PROMPTS.md) | Prompt Google Stitch untuk alternatif UI app dan tray |
+| [docs/POSTER.md](docs/POSTER.md) | Ringkasan rilis 0.2.x dan prompt poster |
 | [docs/adr/](docs/adr/) | Architecture Decision Records |
 
 ## Status milestone
@@ -309,6 +310,7 @@ Paket yang menyusul: `db`, `importlaragon`, `api`, `desktop/`, `templates/`, `in
 | M5 Reproducibility dan import | Selesai (inti) |
 | M6 GUI | Selesai (tray tersedia; browser fallback pending) |
 | M7 Installer dan hardening | Installer, release, updater, dan rollback selesai; Authenticode menunggu certificate |
+| macOS (v0.2.x) | Selesai: CLI, GUI, tray, CA/hosts, config, self-update aplikasi, update runtime Homebrew, `dl wildcard`; notarization menunggu certificate |
 
 ## Lisensi
 

@@ -1,11 +1,11 @@
 # Spesifikasi CLI
 
-Binary: `dl.exe`
+Binary: `dl.exe` (Windows) / `dl` (macOS)
 
 ## 1. Prinsip
 
 - Semua aksi GUI tersedia di CLI.
-- Semua perintah mendukung `--json`.
+- Perintah yang relevan untuk automasi mendukung `--json`.
 - Perintah yang mengubah sistem mendukung `--dry-run` bila masuk akal.
 - Default non-destruktif; aksi destruktif butuh `--yes` di mode non-interaktif.
 - Exit code stabil untuk automasi.
@@ -14,71 +14,64 @@ Binary: `dl.exe`
 
 | Flag | Default | Fungsi |
 |---|---|---|
-| `--root <path>` | `%USERPROFILE%\.devlok` | State dir / portable mode |
-| `--workspace <path>` | `%USERPROFILE%\DevLok\sites` | Folder project |
 | `--json` | false | Output JSON |
-| `--yes` | false | Setujui konfirmasi |
 | `--verbose` | false | Log detail |
-| `--no-color` | false | Matikan warna |
-| `--timeout <dur>` | 120s | Timeout operasi |
-| `--version` | - | Versi |
-| `--help` | - | Bantuan |
+
+Catatan: `--yes` hanya ada pada perintah destruktif (mis. `db drop`, `update apply`). Flag lain (`--path`, `--state`, `--workspace`, `--php`, dst.) bersifat per-perintah.
 
 ## 3. Perintah
 
 ### Diagnosa
 
 ```powershell
-dl doctor [--json]
-dl version
-dl support bundle [-o file.zip]
+dl doctor [--json] [--manifest path]
+dl version [--json]
 ```
 
-`doctor` memeriksa: Windows, arsitektur, WebView2, VC++ runtime, port 80/443/3306, akses hosts, trust CA, cache runtime, proses sisa, ruang disk, schema manifest.
+`doctor` memeriksa OS, arsitektur, dependency (WebView2/VC++ di Windows; Homebrew di macOS), state dir, hosts, port, dan manifest.
 
 ### Project
 
 ```powershell
-dl init [path] [--name siso] [--tld test] [--domain app.local] [--http-port 8081] [--https-port 8444] [--no-db]
+dl init [path] [--name demo] [--root public] [--tld test] [--php 8.4] [--domain app.local] [--http-port 0] [--https-port 0] [--no-db] [--force]
 dl lock [--path dir]
 dl up [--path dir] [--skip-hosts] [--skip-trust]
-dl down [--all]
-dl restart [service]
+dl down
 dl status [--json]
-dl open [site]
-dl export [-o env.zip] [--path dir]
+dl export [-o env.zip]
 ```
 
-### Runtime
+### Runtime dan update
 
 ```powershell
 dl runtime list [--json]
 dl runtime add php@8.4 [--offline]
 dl runtime remove php@8.3.35
 dl runtime verify [php@8.4]
+dl update [--check] [--json]
+dl update download
+dl update apply --yes
+dl update rollback --yes
 ```
 
-`runtime list` menampilkan semua versi yang tersedia untuk platform saat ini beserta status `installed` atau `available`. `runtime add` memverifikasi SHA256 sebelum ekstraksi; `--offline` hanya memakai cache. `runtime verify` memeriksa marker, executable, dan checksum arsip cache.
+`runtime list` menampilkan versi terpasang/tersedia untuk platform aktif. `runtime add` memverifikasi SHA256; `--offline` hanya memakai cache. `dl update` memeriksa aplikasi + runtime. Di macOS, runtime diperbarui lewat `brew upgrade` dan `dl update apply` melakukan self-update `.app`.
 
 ### Site
 
 ```powershell
 dl site list
-dl site create <name> [--php 8.4] [--domain app.local] [--http-port 8081] [--https-port 8444] [--no-db]
+dl site create <name> [--workspace path] [--php 8.4] [--domain app.local] [--http-port 0] [--https-port 0] [--no-db]
 dl site remove <name> [--delete]
+dl site adopt <path>
 ```
 
-### Service
+### Supervisor
 
 ```powershell
-dl service list
-dl service start <name>
-dl service stop <name>
-dl service restart <name>
-dl service logs <name> [--follow] [--level error]
+dl supervise [--state dir] [--once] [--json]
 ```
 
-Nama service: `nginx`, `php@8.4`, `mysql@8.4`.
+Supervisor latar memantau liveness/health service dan me-restart dengan backoff. Perintah ini **internal** (disembunyikan dari `--help`) dan dijalankan otomatis oleh `dl up`.
 
 ### Database
 
@@ -95,23 +88,6 @@ dl db creds [name] [--root]
 dl db admin
 ```
 
-### TLS
-
-```powershell
-dl tls status
-dl tls trust
-dl tls untrust
-dl tls renew [site]
-```
-
-### Hosts
-
-```powershell
-dl hosts list
-dl hosts sync
-dl hosts clean
-```
-
 ### Wildcard (macOS)
 
 ```bash
@@ -120,33 +96,30 @@ dl wildcard on --tld test
 dl wildcard off --tld test
 ```
 
-### Import
+### Import dan tool
 
 ```powershell
-dl import laragon <path> [--dry-run] [--yes]
-dl import laragon <path> --site siso
+dl import laragon <path> [--dry-run] [--yes] [--adopt]
+dl edit [path]
+dl ports [--json] [--port 9000]
 dl run -- php artisan
 dl shell
-```
-
-### Lain-lain
-
-```powershell
-dl config get <key>
-dl config set <key> <value>
 dl ui
-dl logs [--follow] [--service nginx]
-dl ports
-dl edit [path]
-dl completion powershell
 ```
+
+### Direncanakan
+
+- `dl ui --browser` dan browser fallback.
+- `dl support bundle`.
+- Forwarding perintah GUI lewat named pipe.
+- Migrasi schema manifest.
 
 ## 4. Contoh output manusia
 
 ```text
 $ dl up
 
-DevLok 0.1.0
+DevLok 0.2.7
 
 Runtime
   php 8.4.23        ok (cache)
