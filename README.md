@@ -281,7 +281,6 @@ Catatan: `internal/api` (HTTP lokal untuk browser fallback) belum dibuat; untuk 
 | [docs/MACOS-SIGNING.md](docs/MACOS-SIGNING.md) | Signing dan notarization macOS |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Troubleshooting MySQL dan update runtime |
 | [docs/FITUR.md](docs/FITUR.md) | Ringkasan fitur dan kemampuan per area |
-| [docs/STITCH_PROMPTS.md](docs/STITCH_PROMPTS.md) | Prompt Google Stitch untuk alternatif UI app dan tray |
 | [docs/adr/](docs/adr/) | Architecture Decision Records |
 
 ## Status milestone

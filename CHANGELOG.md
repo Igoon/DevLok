@@ -4,6 +4,14 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+### Added
+
+- Skrip audit lisensi: `scripts/license-audit.ps1` dan `scripts/license-audit.sh` (memakai `go-licenses` + `license-checker`, output ke `dist/licenses/`, memperingatkan GPL/AGPL/SSPL).
+
+### Changed
+
+- Hapus `docs/STITCH_PROMPTS.md` dari repo.
+
 ## [0.2.9] - 2026-10-24
 
 ### Added

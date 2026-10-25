@@ -57,5 +57,5 @@ Nginx, PHP, MySQL, Node.js, Composer, Adminer, phpMyAdmin, Notepad++, Mailpit. R
 
 ## Catatan
 
-- Lisensi MIT/BSD/ISC/Unlicense mewajibkan penyertaan notice/lisensi pihak ketiga pada distribusi. Untuk rilis resmi, jalankan audit lisensi (mis. `go-licenses` untuk Go dan `license-checker` untuk npm) guna menghasilkan berkas teks lisensi gabungan bila diperlukan.
+- Lisensi MIT/BSD/ISC/Unlicense mewajibkan penyertaan notice/lisensi pihak ketiga pada distribusi. Jalankan `scripts/license-audit.sh` (macOS/Linux) atau `scripts/license-audit.ps1` (Windows) — memakai `go-licenses` dan `license-checker` — untuk menghasilkan daftar di `dist/licenses/` dan mendeteksi lisensi GPL/AGPL/SSPL.
 - Teks lisensi lengkap juga tersedia pada modul di `go.sum` dan `desktop/frontend/package-lock.json`, serta di repositori upstream masing-masing.

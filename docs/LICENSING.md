@@ -53,6 +53,17 @@ Dependency Go dan npm yang dibundel ke binary/aset dicatat di [`THIRD-PARTY-NOTI
 
 Untuk runtime yang diunduh, notice disediakan di folder runtime masing-masing dan ditampilkan di halaman About.
 
+Audit otomatis:
+
+```bash
+./scripts/license-audit.sh          # macOS/Linux
+```
+```powershell
+.\scripts\license-audit.ps1         # Windows
+```
+
+Skrip memakai `go-licenses` (dependency Go pada platform aktif) dan `license-checker` (npm), menulis hasil ke `dist/licenses/`, dan memperingatkan lisensi GPL/AGPL/SSPL.
+
 ## 5. Merek dagang
 
 - "DevLok" belum didaftarkan.
