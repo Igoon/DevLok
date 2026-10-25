@@ -393,6 +393,5 @@ copy ..\build\bin\dl-helper.exe build\bin\dl-helper.exe
 | [CLI.md](CLI.md) | Spesifikasi CLI |
 | [SECURITY.md](SECURITY.md) | Model ancaman dan kontrol keamanan |
 | [UPDATES.md](UPDATES.md) | Kebijakan update aplikasi dan runtime |
-| [TIMELINE.md](TIMELINE.md) | Timeline rilis 0.1.x dan 0.2.x |
 | [FITUR.md](FITUR.md) | Ringkasan fitur dan kemampuan |
 | [ROADMAP.md](ROADMAP.md) | Rencana milestone |

@@ -6,7 +6,7 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ### Changed
 
-- Dokumentasi: hapus `docs/LARAGON-GAPS.md` dan `docs/POSTER.md`; tambah `docs/FITUR.md` sebagai ringkasan fitur netral. README dan `docs/APLIKASI.md` tidak lagi membandingkan dengan produk lain.
+- Dokumentasi: hapus `docs/LARAGON-GAPS.md`, `docs/POSTER.md` (+ aset poster: `docs/poster/devlok-poster-9x16.png` dan `scripts/make-poster.py`), serta `docs/TIMELINE.md` (riwayat rilis ada di CHANGELOG dan rencana di ROADMAP). Tambah `docs/FITUR.md` sebagai ringkasan fitur netral; README dan `docs/APLIKASI.md` tidak lagi membandingkan dengan produk lain.
 
 ## [0.2.8] - 2026-10-24
 

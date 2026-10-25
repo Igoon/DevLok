@@ -277,7 +277,6 @@ Catatan: `internal/api` (HTTP lokal untuk browser fallback) belum dibuat; untuk 
 | [docs/LICENSING.md](docs/LICENSING.md) | Lisensi runtime dan distribusi |
 | [docs/UPDATES.md](docs/UPDATES.md) | Kebijakan update aplikasi dan runtime |
 | [docs/RELEASE.md](docs/RELEASE.md) | Build portable, installer, GitHub Release, dan rollback |
-| [docs/TIMELINE.md](docs/TIMELINE.md) | Timeline rilis 0.1.x dan 0.2.x |
 | [docs/MACOS.md](docs/MACOS.md) | Status, prasyarat, dan batasan macOS |
 | [docs/MACOS-SIGNING.md](docs/MACOS-SIGNING.md) | Signing dan notarization macOS |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Troubleshooting MySQL dan update runtime |
