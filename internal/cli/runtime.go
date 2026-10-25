@@ -17,10 +17,12 @@ import (
 )
 
 type runtimeRow struct {
-	Name     string `json:"name"`
-	Version  string `json:"version"`
-	Status   string `json:"status"`
-	Platform string `json:"platform"`
+	Name        string `json:"name"`
+	Version     string `json:"version"`
+	Channel     string `json:"channel,omitempty"`
+	Recommended bool   `json:"recommended,omitempty"`
+	Status      string `json:"status"`
+	Platform    string `json:"platform"`
 }
 
 type verifyRow struct {
@@ -71,20 +73,28 @@ func newRuntimeListCommand(jsonOut *bool) *cobra.Command {
 					if have[reg.Name+"@"+v.Version] {
 						status = "installed"
 					}
-					rows = append(rows, runtimeRow{Name: reg.Name, Version: v.Version, Status: status, Platform: key})
+					rows = append(rows, runtimeRow{Name: reg.Name, Version: v.Version, Channel: v.Channel, Recommended: v.Recommended, Status: status, Platform: key})
 				}
 			}
 			if *jsonOut {
 				return writeJSON(cmd.OutOrStdout(), "runtime.list", true, rows)
 			}
 			tw := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 2, 2, ' ', 0)
-			fmt.Fprintln(tw, "NAME\tVERSION\tSTATUS\tPATH")
+			fmt.Fprintln(tw, "NAME\tVERSION\tCHANNEL\tSTATUS\tPATH")
 			installedAt := map[string]string{}
 			for _, in := range installed {
 				installedAt[in.Name+"@"+in.Version] = in.Path
 			}
 			for _, r := range rows {
-				fmt.Fprintf(tw, "%s\t%s\t%s\t%s\n", r.Name, r.Version, r.Status, installedAt[r.Name+"@"+r.Version])
+				channel := r.Channel
+				if r.Recommended {
+					if channel == "" {
+						channel = "disarankan"
+					} else {
+						channel += " (disarankan)"
+					}
+				}
+				fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\n", r.Name, r.Version, channel, r.Status, installedAt[r.Name+"@"+r.Version])
 			}
 			return tw.Flush()
 		},

@@ -74,6 +74,7 @@
   let cfgMailpitHTTP = ''
   let portChecks: Record<string, any> = {}
   let cfgOptions: Record<string, string[]> = { nginx: [], php: [], mysql: [], node: [] }
+  let cfgOptionMeta: Record<string, { version: string; channel?: string; recommended?: boolean }[]> = { nginx: [], php: [], mysql: [], node: [] }
   let cfgVersions: Record<string, string> = { nginx: '', php: '', mysql: '', node: '' }
   let cfgSnapshot = ''
   let cfgDirty = false
@@ -144,6 +145,19 @@
     return options.find((v) => v.startsWith(current + '.')) || options[0]
   }
 
+  function versionLabel(service: string, version: string) {
+    const opt = (cfgOptionMeta[service] || []).find((o) => o.version === version)
+    if (!opt) return ''
+    const parts: string[] = []
+    if (opt.channel) parts.push(opt.channel)
+    if (opt.recommended) parts.push('disarankan')
+    return parts.length ? ' (' + parts.join(', ') + ')' : ''
+  }
+
+  function optionLabel(service: string, version: string) {
+    return version + versionLabel(service, version)
+  }
+
   let confirmReq: { title: string; message: string; resolve: (v: boolean) => void } | null = null
 
   function ask(message: string, title = 'Konfirmasi'): Promise<boolean> {
@@ -186,20 +200,24 @@
     try {
       const settled = await Promise.allSettled([
         api().ProjectConfig(path),
-        api().ServiceVersions('nginx'),
-        api().ServiceVersions('php'),
-        api().ServiceVersions('mysql'),
-        api().ServiceVersions('node'),
+        api().ServiceVersionOptions('nginx'),
+        api().ServiceVersionOptions('php'),
+        api().ServiceVersionOptions('mysql'),
+        api().ServiceVersionOptions('node'),
         api().RuntimeList(),
         api().RuntimeCache()
       ])
       const val = (i: number) => (settled[i].status === 'fulfilled' ? (settled[i] as any).value : undefined)
       const c = val(0)
       if (!c) throw new Error('Konfigurasi project tidak dapat dimuat.')
-      const nginx: string[] = val(1) || []
-      const php: string[] = val(2) || []
-      const mysql: string[] = val(3) || []
-      const node: string[] = val(4) || []
+      const nginxOpts = val(1) || []
+      const phpOpts = val(2) || []
+      const mysqlOpts = val(3) || []
+      const nodeOpts = val(4) || []
+      const nginx: string[] = nginxOpts.map((o: any) => o.version)
+      const php: string[] = phpOpts.map((o: any) => o.version)
+      const mysql: string[] = mysqlOpts.map((o: any) => o.version)
+      const node: string[] = nodeOpts.map((o: any) => o.version)
       const rl = val(5) || []
       const cache = val(6) || { bytes: 0, files: 0 }
       cfgPath = path
@@ -220,6 +238,7 @@
       runtimes = rl
       runtimeCache = cache
       cfgOptions = { nginx, php, mysql, node }
+      cfgOptionMeta = { nginx: nginxOpts, php: phpOpts, mysql: mysqlOpts, node: nodeOpts }
       cfgVersions = {
         nginx: matchVersion(nginx, c.versions?.nginx),
         php: matchVersion(php, c.versions?.php),
@@ -1086,11 +1105,11 @@
             {#if cfgOptions.nginx.length > 1}
               <select bind:value={cfgVersions.nginx}>
                 {#each cfgOptions.nginx as v}
-                  <option value={v}>{v}</option>
+                  <option value={v}>{optionLabel('nginx', v)}</option>
                 {/each}
               </select>
             {:else}
-              <span class="svc-version">{cfgOptions.nginx[0] || cfgVersions.nginx || '-'}</span>
+              <span class="svc-version">{(cfgOptions.nginx[0] || cfgVersions.nginx || '-')}{versionLabel('nginx', cfgOptions.nginx[0] || cfgVersions.nginx)}</span>
             {/if}
             <div class="ports">
               <input type="text" inputmode="numeric" placeholder="80 (auto)" bind:value={cfgHTTP} on:change={checkPorts} on:blur={checkPorts} />
@@ -1106,7 +1125,7 @@
             </label>
             <select bind:value={cfgVersions.php}>
               {#each cfgOptions.php as v}
-                <option value={v}>{v}</option>
+                <option value={v}>{optionLabel('php', v)}</option>
               {/each}
             </select>
             <div class="ports">
@@ -1122,7 +1141,7 @@
             </label>
             <select bind:value={cfgVersions.mysql} disabled={!cfgDB}>
               {#each cfgOptions.mysql as v}
-                <option value={v}>{v}</option>
+                <option value={v}>{optionLabel('mysql', v)}</option>
               {/each}
             </select>
             <div class="ports">
@@ -1163,7 +1182,7 @@
             <select bind:value={cfgVersions.node} disabled={!cfgVersions.node}>
               <option value="">Tidak dipakai</option>
               {#each cfgOptions.node as v}
-                <option value={v}>{v}</option>
+                <option value={v}>{optionLabel('node', v)}</option>
               {/each}
             </select>
             <span class="muted">Runtime untuk run/shell</span>

@@ -173,6 +173,40 @@ func TestProjectConfigSave(t *testing.T) {
 	}
 }
 
+func TestServiceVersionOptions(t *testing.T) {
+	a := NewApp()
+	opts, err := a.ServiceVersionOptions("php")
+	if err != nil {
+		t.Fatal(err)
+	}
+	channel := map[string]string{}
+	recommended := 0
+	for _, o := range opts {
+		channel[o.Version] = o.Channel
+		if o.Recommended {
+			recommended++
+		}
+	}
+	if recommended != 1 {
+		t.Fatalf("expected exactly one recommended PHP version, got %d", recommended)
+	}
+	if channel["8.4.27"] != "stable" {
+		t.Fatalf("php 8.4.27 channel = %q", channel["8.4.27"])
+	}
+	versions, err := a.ServiceVersions("php")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(versions) != len(opts) {
+		t.Fatalf("versions/options length mismatch: %d vs %d", len(versions), len(opts))
+	}
+	for i := range opts {
+		if versions[i] != opts[i].Version {
+			t.Fatalf("order mismatch at %d: %q vs %q", i, versions[i], opts[i].Version)
+		}
+	}
+}
+
 func TestRemoveRuntimeGuard(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("USERPROFILE", home)

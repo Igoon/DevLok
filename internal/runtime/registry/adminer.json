@@ -5,6 +5,8 @@
   "versions": [
     {
       "version": "6.1.2",
+      "channel": "stable",
+      "recommended": true,
       "artifacts": {
         "windows/amd64": {
           "url": "https://www.adminer.org/static/download/6.1.2/adminer-6.1.2.php",

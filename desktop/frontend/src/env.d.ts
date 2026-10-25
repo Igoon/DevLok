@@ -16,6 +16,7 @@
           MySQLVersions(): Promise<string[]>
           SetMySQLVersion(path: string, version: string): Promise<void>
           ServiceVersions(service: string): Promise<string[]>
+          ServiceVersionOptions(service: string): Promise<{ version: string; channel?: string; recommended?: boolean }[]>
           CheckPorts(ports: number[]): Promise<any[]>
           ScanLaragon(path: string): Promise<any[]>
           ImportLaragon(path: string, names: string[], adopt: boolean): Promise<any[]>

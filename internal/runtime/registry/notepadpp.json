@@ -5,6 +5,8 @@
   "versions": [
     {
       "version": "8.9.8.1",
+      "channel": "stable",
+      "recommended": true,
       "artifacts": {
         "windows/amd64": {
           "url": "https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.9.8.1/npp.8.9.8.1.portable.x64.zip",

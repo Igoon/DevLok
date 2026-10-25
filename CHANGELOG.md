@@ -4,8 +4,15 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.2.11] - 2026-10-25
+
+### Added
+
+- Label channel versi (`stable`, `latest`, `lts`, `legacy`, `eol`, `beta`, `rc`, `preview`) dan tanda `recommended` pada registry runtime, sehingga pemilihan versi lebih terseleksi. Tampil di kolom `CHANNEL` pada `dl runtime list` dan sebagai label pada daftar versi di tab Konfigurasi GUI. Registry embedded dan payload rilis (`devlok-release registries`) memuat field ini.
+
 ### Fixed
 
+- Membuka/menyimpan tab Konfigurasi di macOS tidak lagi gagal dengan `RUNTIME_NOT_FOUND: Versi nginx@<versi> tidak tersedia.`: versi service (dari Homebrew) kini disimpan langsung tanpa resolve registry di darwin, sama seperti `SetServiceVersion`.
 - Start All tidak lagi gagal saat port umum dipakai: fallback HTTP diperluas ke `80/8080/8081/8000/8888` (macOS `8080/8000/8081/8888`) dan HTTPS ke `443/8443/8444/9443`; pesan error menyebut proses/PID pemilik port.
 - `dl up` selalu membersihkan proses runtime yang tertinggal (orphan) sebelum memilih port, sehingga port tidak salah dianggap terpakai.
 - Shim Nginx macOS kini mengganti file/symlink basi (bukan hanya symlink/direktori), menghindari kegagalan saat Homebrew berubah/upgrade.

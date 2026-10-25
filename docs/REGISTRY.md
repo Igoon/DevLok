@@ -59,6 +59,23 @@ File saat ini:
 | `version` | Ya | Angka dan titik, contoh `8.4.26` |
 | `artifacts` | Ya | Map `os/arch` ke artifact |
 | `strip_root` | Tidak | `false` mematikan penghapusan folder root tunggal |
+| `channel` | Tidak | Label channel versi: `stable`, `latest`, `lts`, `legacy`, `eol`, `beta`, `rc`, `preview` |
+| `recommended` | Tidak | `true` menandai versi yang disarankan untuk default/pemakaian baru |
+
+### Channel versi
+
+`channel` memberi keterangan status versi agar pemilihan lebih terseleksi (di CLI `dl runtime list` kolom `CHANNEL`, di GUI label pada daftar versi):
+
+| Channel | Arti |
+|---|---|
+| `stable` | Rilis stabil saat ini, cocok untuk produksi |
+| `latest` | Rilis terbaru (mungkin baru dirilis) |
+| `lts` | Long-term support |
+| `legacy` | Versi lama yang masih didukung |
+| `eol` | End of life; disarankan tidak dipakai untuk project baru |
+| `beta` / `rc` / `preview` | Pra-rilis |
+
+`recommended: true` menandai satu versi unggulan per runtime. Boleh hanya satu, dan sebaiknya tidak menandai versi `eol`/pra-rilis.
 
 ### Artifact
 

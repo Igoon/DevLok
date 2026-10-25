@@ -27,9 +27,18 @@ type Registry struct {
 }
 
 type Version struct {
-	Version   string              `json:"version"`
-	Artifacts map[string]Artifact `json:"artifacts"`
-	StripRoot *bool               `json:"strip_root,omitempty"`
+	Version     string              `json:"version"`
+	Artifacts   map[string]Artifact `json:"artifacts"`
+	StripRoot   *bool               `json:"strip_root,omitempty"`
+	Channel     string              `json:"channel,omitempty"`
+	Recommended bool                `json:"recommended,omitempty"`
+}
+
+func (v Version) Label() string {
+	if v.Channel == "" {
+		return ""
+	}
+	return v.Channel
 }
 
 type Artifact struct {
@@ -76,6 +85,21 @@ var (
 	platformRe = regexp.MustCompile(`^[a-z0-9]+/[a-z0-9]+$`)
 	sha256Re   = regexp.MustCompile(`^[a-f0-9]{64}$`)
 )
+
+// channelRe membatasi label channel ke huruf kecil, angka, dan tanda hubung.
+var channelRe = regexp.MustCompile(`^[a-z][a-z0-9-]{0,15}$`)
+
+// knownChannels adalah nilai channel yang didukung. Kosong berarti tanpa label.
+var knownChannels = map[string]bool{
+	"stable":  true,
+	"latest":  true,
+	"lts":     true,
+	"legacy":  true,
+	"eol":     true,
+	"beta":    true,
+	"rc":      true,
+	"preview": true,
+}
 
 func LoadEmbedded() ([]Registry, error) {
 	entries, err := registryFS.ReadDir("registry")
@@ -136,6 +160,14 @@ func validateRegistry(reg Registry) error {
 			return devlokerr.New(devlokerr.CodeInternal, "Versi duplikat: "+v.Version, "")
 		}
 		seen[v.Version] = true
+		if v.Channel != "" {
+			if !channelRe.MatchString(v.Channel) {
+				return devlokerr.New(devlokerr.CodeInternal, "Channel tidak valid: "+v.Channel, "Gunakan huruf kecil, contoh: stable, lts, latest.")
+			}
+			if !knownChannels[v.Channel] {
+				return devlokerr.New(devlokerr.CodeInternal, "Channel tidak dikenal: "+v.Channel, "Channel yang didukung: stable, latest, lts, legacy, eol, beta, rc, preview.")
+			}
+		}
 		if len(v.Artifacts) == 0 {
 			return devlokerr.New(devlokerr.CodeInternal, "Artifact kosong untuk "+reg.Name+" "+v.Version, "")
 		}

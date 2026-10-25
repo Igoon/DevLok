@@ -415,6 +415,49 @@ func TestParseRegistryRejectsBadFallbackURL(t *testing.T) {
 	}
 }
 
+func TestParseRegistryChannel(t *testing.T) {
+	okData := []byte(`{"schema":1,"name":"x","display":"X","versions":[{"version":"1.0.0","channel":"stable","recommended":true,"artifacts":{"windows/amd64":{"url":"https://example.com/x.zip","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","archive":"zip","executables":["x.exe"]}}}]}`)
+	reg, err := ParseRegistry(okData)
+	if err != nil {
+		t.Fatalf("valid channel rejected: %v", err)
+	}
+	if reg.Versions[0].Channel != "stable" || !reg.Versions[0].Recommended {
+		t.Fatalf("channel fields not parsed: %+v", reg.Versions[0])
+	}
+	badData := []byte(`{"schema":1,"name":"x","display":"X","versions":[{"version":"1.0.0","channel":"Stable!","artifacts":{"windows/amd64":{"url":"https://example.com/x.zip","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","archive":"zip","executables":["x.exe"]}}}]}`)
+	if _, err := ParseRegistry(badData); err == nil {
+		t.Fatal("expected invalid channel error")
+	}
+	unknownData := []byte(`{"schema":1,"name":"x","display":"X","versions":[{"version":"1.0.0","channel":"shiny","artifacts":{"windows/amd64":{"url":"https://example.com/x.zip","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","archive":"zip","executables":["x.exe"]}}}]}`)
+	if _, err := ParseRegistry(unknownData); err == nil {
+		t.Fatal("expected unknown channel error")
+	}
+}
+
+func TestEmbeddedRegistriesChannels(t *testing.T) {
+	regs, err := LoadEmbedded()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(regs) == 0 {
+		t.Fatal("no embedded registries")
+	}
+	for _, reg := range regs {
+		recommended := 0
+		for _, v := range reg.Versions {
+			if v.Recommended {
+				recommended++
+				if v.Channel == "eol" || v.Channel == "beta" || v.Channel == "rc" || v.Channel == "preview" {
+					t.Fatalf("%s %s marks unstable channel as recommended", reg.Name, v.Version)
+				}
+			}
+		}
+		if recommended > 1 {
+			t.Fatalf("%s has %d recommended versions", reg.Name, recommended)
+		}
+	}
+}
+
 func TestCompareVersions(t *testing.T) {
 	if compareVersions("8.10.1", "8.9.9") <= 0 {
 		t.Fatal("8.10.1 should be greater")

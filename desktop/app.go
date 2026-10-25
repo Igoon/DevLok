@@ -413,23 +413,41 @@ func (a *App) MySQLVersions() ([]string, error) {
 	return a.ServiceVersions("mysql")
 }
 
+type ServiceVersionOption struct {
+	Version     string `json:"version"`
+	Channel     string `json:"channel,omitempty"`
+	Recommended bool   `json:"recommended,omitempty"`
+}
+
 func (a *App) ServiceVersions(service string) ([]string, error) {
+	opts, err := a.ServiceVersionOptions(service)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]string, 0, len(opts))
+	for _, o := range opts {
+		out = append(out, o.Version)
+	}
+	return out, nil
+}
+
+func (a *App) ServiceVersionOptions(service string) ([]ServiceVersionOption, error) {
 	if platform.Current().Name() == "darwin" {
-		return brewServiceVersions(service), nil
+		return brewServiceVersionOptions(service), nil
 	}
 	mgr, err := a.runtimeManager()
 	if err != nil {
 		return nil, err
 	}
 	key := mgr.OS + "/" + mgr.Arch
-	var out []string
+	var out []ServiceVersionOption
 	for _, reg := range mgr.Registries {
 		if reg.Name != service {
 			continue
 		}
 		for _, v := range reg.Versions {
 			if _, ok := v.Artifacts[key]; ok {
-				out = append(out, v.Version)
+				out = append(out, ServiceVersionOption{Version: v.Version, Channel: v.Channel, Recommended: v.Recommended})
 			}
 		}
 	}
@@ -437,6 +455,15 @@ func (a *App) ServiceVersions(service string) ([]string, error) {
 		return nil, devlokerr.New(devlokerr.CodeDependencyMissing, "Tidak ada versi "+service+" di registry.", "")
 	}
 	return out, nil
+}
+
+func brewServiceVersionOptions(service string) []ServiceVersionOption {
+	versions := brewServiceVersions(service)
+	out := make([]ServiceVersionOption, 0, len(versions))
+	for _, v := range versions {
+		out = append(out, ServiceVersionOption{Version: v, Channel: "brew"})
+	}
+	return out
 }
 
 func brewServiceVersions(service string) []string {
@@ -585,11 +612,16 @@ func (a *App) SaveProjectConfig(path string, in ProjectConfigInput) error {
 	if err != nil {
 		return err
 	}
-	mgr, err := a.runtimeManager()
-	if err != nil {
-		return err
+	darwin := platform.Current().Name() == "darwin"
+	var mgr *rt.Manager
+	if !darwin {
+		mgr, err = a.runtimeManager()
+		if err != nil {
+			return err
+		}
 	}
 	resolved := map[string]rt.Resolved{}
+	exactVersions := map[string]string{}
 	for _, service := range []string{"nginx", "php", "mysql", "node"} {
 		version := strings.TrimSpace(in.Versions[service])
 		if version == "" {
@@ -598,12 +630,16 @@ func (a *App) SaveProjectConfig(path string, in ProjectConfigInput) error {
 			}
 			continue
 		}
-		res, err := mgr.Resolve(service, version)
-		if err != nil {
-			return err
+		exact := version
+		if !darwin {
+			res, err := mgr.Resolve(service, version)
+			if err != nil {
+				return err
+			}
+			resolved[service] = res
+			exact = res.Version.Version
 		}
-		resolved[service] = res
-		exact := res.Version.Version
+		exactVersions[service] = exact
 		switch service {
 		case "nginx":
 			if m.Runtime == nil {
@@ -668,8 +704,12 @@ func (a *App) SaveProjectConfig(path string, in ProjectConfigInput) error {
 	lockPath := filepath.Join(path, config.LockFileName)
 	if lock, err := config.LoadLock(lockPath); err == nil {
 		lock.Domain = m.BaseDomain()
-		for service, res := range resolved {
-			lr := config.LockedRuntime{Version: res.Version.Version, SHA256: res.Artifact.SHA256, URL: res.Artifact.URL}
+		for service, exact := range exactVersions {
+			lr := config.LockedRuntime{Version: exact}
+			if res, ok := resolved[service]; ok {
+				lr.SHA256 = res.Artifact.SHA256
+				lr.URL = res.Artifact.URL
+			}
 			switch service {
 			case "nginx":
 				lock.Web.Version = lr.Version

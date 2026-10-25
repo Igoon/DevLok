@@ -5,6 +5,8 @@
   "versions": [
     {
       "version": "5.2.3",
+      "channel": "stable",
+      "recommended": true,
       "artifacts": {
         "windows/amd64": {
           "url": "https://files.phpmyadmin.net/phpMyAdmin/5.2.3/phpMyAdmin-5.2.3-all-languages.zip",

@@ -5,6 +5,8 @@
   "versions": [
     {
       "version": "1.32.0",
+      "channel": "stable",
+      "recommended": true,
       "artifacts": {
         "windows/amd64": {
           "url": "https://github.com/axllent/mailpit/releases/download/v1.32.0/mailpit-windows-amd64.zip",

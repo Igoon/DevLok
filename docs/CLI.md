@@ -54,7 +54,7 @@ dl update apply --yes
 dl update rollback --yes
 ```
 
-`runtime list` menampilkan versi terpasang/tersedia untuk platform aktif. `runtime add` memverifikasi SHA256; `--offline` hanya memakai cache. `dl update` memeriksa aplikasi + runtime. Di macOS, runtime diperbarui lewat `brew upgrade` dan `dl update apply` melakukan self-update `.app`.
+`runtime list` menampilkan versi terpasang/tersedia untuk platform aktif beserta kolom `CHANNEL` (label `stable`/`lts`/`latest`/`legacy`/`eol`/pra-rilis, dan penanda `disarankan` untuk versi unggulan) agar pemilihan versi lebih terseleksi. `runtime add` memverifikasi SHA256; `--offline` hanya memakai cache. `dl update` memeriksa aplikasi + runtime. Di macOS, runtime diperbarui lewat `brew upgrade` dan `dl update apply` melakukan self-update `.app`.
 
 ### Site
 
