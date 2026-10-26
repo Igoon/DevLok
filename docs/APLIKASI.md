@@ -8,7 +8,7 @@
 | Arti | Development lokal |
 | Jenis | Local development environment manager |
 | Platform | Windows 10 22H2+ / Windows 11 x64; macOS 14/15 Intel & Apple Silicon |
-| Versi | `0.2.12` |
+| Versi | `0.2.13` |
 | Lisensi | Apache License 2.0 (`LICENSE`, `NOTICE`) |
 | GUI | `devlok-gui.exe` / `DevLok.app` |
 | CLI | `dl.exe` |
