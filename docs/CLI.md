@@ -105,11 +105,13 @@ dl ports [--json] [--port 9000]
 dl run -- php artisan
 dl shell
 dl ui
+dl ui --browser [--port 9000]
 ```
+
+`dl ui --browser` menyajikan GUI lewat HTTP lokal (127.0.0.1) dan membuka browser default, tanpa WebView. Berguna bila WebView2/WebKit bermasalah atau di lingkungan tanpa GUI native. Port default otomatis; tentukan dengan `--port`.
 
 ### Direncanakan
 
-- `dl ui --browser` dan browser fallback.
 - `dl support bundle`.
 - Forwarding perintah GUI lewat named pipe.
 - Migrasi schema manifest.

@@ -4,6 +4,17 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id/1.1.0/) dan [S
 
 ## [Unreleased]
 
+## [0.2.13] - 2026-10-25
+
+### Added
+
+- Mode browser: `dl ui --browser [--port N]` menyajikan GUI lewat HTTP lokal (`127.0.0.1`) dan membuka browser default tanpa WebView. Paket baru `internal/api`: dispatch method `App` via refleksi (`POST /api/call`), shim `window.go`/`window.runtime`, event SSE (`/api/events`), dan penyajian aset frontend dengan SPA fallback. Implementasi: `devlok-gui --browser [--port N]`.
+- `Status()` kini menyertakan `platform` meski stack belum berjalan (sebelumnya kosong, membuat tab Import sempat tampil di macOS).
+
+### Docs
+
+- `docs/WINDOWS-SIGNING.md` (Authenticode: cert, `.pfx`→base64, secret, verifikasi) dan `docs/WINDOWS-ARM64.md` (riset kelayakan: Node/Mailpit punya arm64; Nginx/PHP/MySQL tidak, jalur realistis via emulasi).
+
 ## [0.2.12] - 2026-10-25
 
 ### Added

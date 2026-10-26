@@ -38,6 +38,7 @@ type App struct {
 	registryMu      sync.Mutex
 	registryFetchMu sync.Mutex
 	registries      []rt.Registry
+	emit            func(event string, data any)
 }
 
 func NewApp() *App { return &App{} }
@@ -46,6 +47,11 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	go a.refreshRemoteRegistries(10*time.Second, false)
 	go a.autoUpdateLoop(ctx)
+}
+
+// startHeadless menyiapkan App untuk mode browser (tanpa WebView/tray).
+func (a *App) startHeadless() {
+	go a.refreshRemoteRegistries(10*time.Second, false)
 }
 
 type StatusView struct {
@@ -154,7 +160,7 @@ func (a *App) Status() StatusView {
 	services, _ := stack.Services("")
 	st, err := stack.LoadState("")
 	if err != nil {
-		return StatusView{Running: false, Services: toServiceViews(services)}
+		return StatusView{Running: false, Platform: platform.Current().Name(), Services: toServiceViews(services)}
 	}
 	http := ports.Check(st.HTTPPort)
 	https := ports.Check(st.HTTPSPort)
@@ -940,6 +946,9 @@ func (a *App) Confirm(title, message string) (bool, error) {
 	if title == "" {
 		title = "DevLok"
 	}
+	if a.ctx == nil {
+		return false, devlokerr.New(devlokerr.CodeUnsupported, "Dialog konfirmasi hanya tersedia di GUI native.", "")
+	}
 	res, err := wruntime.MessageDialog(a.ctx, wruntime.MessageDialogOptions{
 		Type:    wruntime.QuestionDialog,
 		Title:   title,
@@ -1280,6 +1289,10 @@ func (a *App) emitUpdateProgress(p UpdateProgressView) {
 	}
 	if p.Percent > 100 {
 		p.Percent = 100
+	}
+	if a.emit != nil {
+		a.emit(updateProgressEvent, p)
+		return
 	}
 	if a.ctx == nil {
 		return

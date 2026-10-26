@@ -8,15 +8,15 @@
 
 Local development environment untuk **Windows dan macOS**: Nginx + PHP + MySQL, dengan GUI dan CLI. Reproducible, aman secara default, dan bisa memakai runtime per project (Windows) atau Homebrew (macOS).
 
-- **Versi**: `0.2.12` (Windows 10 22H2+ / Windows 11 x64; macOS 14/15 Intel & Apple Silicon)
-- **Status**: `0.2.12` stabil untuk Windows. macOS didukung sejak v0.2.0: CLI, GUI, tray, CA/hosts, update aplikasi (self-update DMG), dan update runtime via Homebrew. Artifact `.app`/`.dmg` belum di-sign/notarize.
+- **Versi**: `0.2.13` (Windows 10 22H2+ / Windows 11 x64; macOS 14/15 Intel & Apple Silicon)
+- **Status**: `0.2.13` stabil untuk Windows. macOS didukung sejak v0.2.0: CLI, GUI, tray, CA/hosts, update aplikasi (self-update DMG), dan update runtime via Homebrew. Artifact `.app`/`.dmg` belum di-sign/notarize.
 - **Stack**: Go + Wails v2 + Svelte + TypeScript
 - **Binary**: `dl.exe` (CLI), `devlok-gui.exe` / `DevLok.app` (GUI Wails), `dl-helper.exe` (hosts privileged)
 - **Manifest project**: `.devlok.yaml` + `.devlok.lock`
 
-Sudah tersedia: manifest loader/validator, logger JSONL, platform Windows/macOS, `doctor`, `init`, `version`, runtime manager (SHA256 + ekstraksi aman), deteksi port dan owner, supervisor proses (health check, restart, rekonsiliasi, `dl supervise`), generator config Nginx, hosts terkelola, CA lokal + TLS per domain, stack `up/down/status`, MySQL per project, backup/restore/seed, lockfile dan verifikasi checksum, export environment, import Laragon, `run/shell` dengan env project, GUI Wails + tray, phpMyAdmin, Adminer, Mailpit, editor teks, update aplikasi/runtime, `dl wildcard` (macOS), single-instance lock, dan CI Windows/macOS.
+Sudah tersedia: manifest loader/validator, logger JSONL, platform Windows/macOS, `doctor`, `init`, `version`, runtime manager (SHA256 + ekstraksi aman), deteksi port dan owner, supervisor proses (health check, restart, rekonsiliasi, `dl supervise`), generator config Nginx, hosts terkelola, CA lokal + TLS per domain, stack `up/down/status`, MySQL per project, backup/restore/seed, lockfile dan verifikasi checksum, export environment, import Laragon, `run/shell` dengan env project, GUI Wails + tray, phpMyAdmin, Adminer, Mailpit, editor teks, update aplikasi/runtime, mode browser (`dl ui --browser`), `dl wildcard` (macOS), single-instance lock, dan CI Windows/macOS.
 
-Belum tersedia: migrasi schema manifest, forwarding perintah lewat named pipe, browser fallback, installer macOS, dan signing/notarization (Apple Developer ID). Lihat [docs/MACOS.md](docs/MACOS.md) untuk dukungan macOS.
+Belum tersedia: migrasi schema manifest, forwarding perintah lewat named pipe, installer macOS, dan signing/notarization (Apple Developer ID). Lihat [docs/MACOS.md](docs/MACOS.md) untuk dukungan macOS.
 
 ## Kenapa DevLok
 
@@ -214,13 +214,8 @@ dl import laragon C:\laragon [--dry-run] [--yes] [--adopt]
 dl run -- php artisan
 dl shell
 dl ui
+dl ui --browser [--port N]
 dl wildcard on|off|status [--tld test]   # macOS
-```
-
-Direncanakan (lihat roadmap):
-
-```powershell
-dl ui --browser
 ```
 
 Daftar lengkap: [docs/CLI.md](docs/CLI.md).
@@ -261,7 +256,7 @@ DevLok/
 `-- build/                  output build (ignored)
 ```
 
-Catatan: `internal/api` (HTTP lokal untuk browser fallback) belum dibuat; untuk sekarang GUI native adalah satu-satunya UI.
+Catatan: `internal/api` menyediakan HTTP lokal untuk mode browser (`dl ui --browser`); GUI native tetap opsi utama.
 
 ## Dokumentasi
 
@@ -283,6 +278,8 @@ Catatan: `internal/api` (HTTP lokal untuk browser fallback) belum dibuat; untuk 
 | [docs/RELEASE.md](docs/RELEASE.md) | Build portable, installer, GitHub Release, dan rollback |
 | [docs/MACOS.md](docs/MACOS.md) | Status, prasyarat, dan batasan macOS |
 | [docs/MACOS-SIGNING.md](docs/MACOS-SIGNING.md) | Signing dan notarization macOS |
+| [docs/WINDOWS-SIGNING.md](docs/WINDOWS-SIGNING.md) | Signing Authenticode Windows |
+| [docs/WINDOWS-ARM64.md](docs/WINDOWS-ARM64.md) | Riset kelayakan Windows ARM64 |
 | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Troubleshooting MySQL dan update runtime |
 | [docs/FITUR.md](docs/FITUR.md) | Ringkasan fitur dan kemampuan per area |
 | [docs/adr/](docs/adr/) | Architecture Decision Records |
@@ -297,7 +294,7 @@ Catatan: `internal/api` (HTTP lokal untuk browser fallback) belum dibuat; untuk 
 | M3 Site, hosts, TLS | Selesai (inti) |
 | M4 Database | Selesai (inti) |
 | M5 Reproducibility dan import | Selesai (inti) |
-| M6 GUI | Selesai (tray tersedia; browser fallback pending) |
+| M6 GUI | Selesai (tray dan mode browser `dl ui --browser` tersedia) |
 | M7 Installer dan hardening | Installer, release, updater, dan rollback selesai; Authenticode menunggu certificate |
 | macOS (v0.2.x) | Selesai: CLI, GUI, tray, CA/hosts, config, self-update aplikasi, update runtime Homebrew, `dl wildcard`; notarization menunggu certificate |
 

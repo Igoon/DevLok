@@ -6,6 +6,7 @@ import (
 	"context"
 	"embed"
 	"errors"
+	"flag"
 	"log"
 
 	"github.com/wailsapp/wails/v2"
@@ -19,6 +20,10 @@ import (
 var assets embed.FS
 
 func main() {
+	browserMode := flag.Bool("browser", false, "Jalankan GUI di browser (tanpa WebView)")
+	port := flag.Int("port", 0, "Port server mode browser (0 = otomatis)")
+	flag.Parse()
+
 	lock, err := instance.Acquire("gui")
 	if err != nil && !errors.Is(err, instance.ErrAlreadyRunning) {
 		log.Fatal(err)
@@ -29,6 +34,12 @@ func main() {
 	defer lock.Close()
 
 	app := NewApp()
+	if *browserMode {
+		if err := runBrowser(app, *port); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
 	err = wails.Run(&options.App{
 		Title:            "DevLok",
 		Width:            1120,

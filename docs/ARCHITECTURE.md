@@ -193,7 +193,8 @@ Runtime tidak pernah ditulis ke dalam folder project. Yang masuk repo hanya mani
 ### 5.10 `internal/api`
 
 - GUI Wails memanggil paket core lewat binding Go.
-- HTTP API lokal untuk fallback browser belum diimplementasikan.
+- HTTP API lokal untuk mode browser (`dl ui --browser`): server di `127.0.0.1` mengekspos method `App` sebagai JSON (`POST /api/call`), menyajikan aset frontend dengan shim `window.go`/`window.runtime`, dan menyediakan event via SSE (`/api/events`).
+- Dispatch memakai refleksi (method exported), sehingga binding GUI dan HTTP berbagi satu sumber.
 - Operasi destruktif butuh konfirmasi eksplisit.
 
 ### 5.11 `internal/platform`

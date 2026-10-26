@@ -116,10 +116,10 @@ Jangan menambahkan checksum yang belum diverifikasi. Jangan memakai URL `latest`
 Key artifact memakai format `os/arch`:
 
 - `windows/amd64` (rilis)
-- `windows/arm64` (rencana)
+- `windows/arm64` (sebagian: Node, Mailpit; Nginx/PHP/MySQL hanya x64 lalu dijalankan via emulasi — lihat [docs/WINDOWS-ARM64.md](WINDOWS-ARM64.md))
 - `darwin/arm64` dan `darwin/amd64` (rilis; untuk nginx/php/mysql macOS memakai Homebrew, registry dipakai untuk phpMyAdmin, Adminer, dan tool unduhan)
 
-Versi yang tidak punya artifact untuk platform aktif tidak akan dipilih oleh resolver.
+Versi yang tidak punya artifact untuk platform aktif tidak akan dipilih oleh resolver (fallback `windows/amd64` di host ARM64: belum diimplementasikan, lihat [docs/WINDOWS-ARM64.md](WINDOWS-ARM64.md)).
 
 ## 7. Registry remote
 

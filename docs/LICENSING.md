@@ -75,8 +75,8 @@ Skrip memakai `go-licenses` (dependency Go pada platform aktif) dan `license-che
 
 | Platform | Kebutuhan | Status |
 |---|---|---|
-| Windows | Authenticode, idealnya EV | Belum (opsional) |
-| macOS | Developer ID + notarization | Belum; wajib untuk distribusi publik |
+| Windows | Authenticode, idealnya EV | Pipeline siap; menunggu certificate ([docs/WINDOWS-SIGNING.md](WINDOWS-SIGNING.md)) |
+| macOS | Developer ID + notarization | Pipeline siap; menunggu certificate ([docs/MACOS-SIGNING.md](MACOS-SIGNING.md)) |
 
 Tanpa signing:
 

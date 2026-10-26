@@ -2,8 +2,11 @@ package cli
 
 import (
 	"fmt"
+	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -14,12 +17,13 @@ import (
 
 func newUICommand() *cobra.Command {
 	var browser bool
+	var port int
 	cmd := &cobra.Command{
 		Use:   "ui",
 		Short: "Buka GUI DevLok",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if browser {
-				return devlokerr.New(devlokerr.CodeUnsupported, "Mode browser belum tersedia.", "Gunakan GUI native: dl ui")
+				return runBrowserMode(cmd, port)
 			}
 			exe, err := findGUI()
 			if err != nil {
@@ -33,8 +37,60 @@ func newUICommand() *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().BoolVar(&browser, "browser", false, "Buka mode browser")
+	cmd.Flags().BoolVar(&browser, "browser", false, "Buka mode browser (tanpa WebView)")
+	cmd.Flags().IntVar(&port, "port", 0, "Port mode browser (0 = otomatis)")
 	return cmd
+}
+
+// runBrowserMode menjalankan GUI dalam mode browser: menyajikan frontend lewat
+// HTTP lokal dan membuka browser default.
+func runBrowserMode(cmd *cobra.Command, port int) error {
+	exe, err := findGUIBinary()
+	if err != nil {
+		return err
+	}
+	if port <= 0 {
+		port = freePort()
+	}
+	if port <= 0 {
+		return devlokerr.New(devlokerr.CodeInternal, "Tidak ada port bebas untuk mode browser.", "")
+	}
+	c := exec.Command(exe, "--browser", "--port", strconv.Itoa(port))
+	c.Stdout = cmd.OutOrStdout()
+	c.Stderr = cmd.ErrOrStderr()
+	if err := c.Start(); err != nil {
+		return devlokerr.Wrap(devlokerr.CodeDependencyMissing, err, "Mode browser tidak dapat dijalankan.", "")
+	}
+	fmt.Fprintf(cmd.OutOrStdout(), "Mode browser: http://127.0.0.1:%d/\n", port)
+	return nil
+}
+
+func freePort() int {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		return 0
+	}
+	defer ln.Close()
+	if t, ok := ln.Addr().(*net.TCPAddr); ok {
+		return t.Port
+	}
+	return 0
+}
+
+// findGUIBinary mengembalikan path executable GUI. Untuk bundle .app macOS,
+// mengembalikan binary di dalam Contents/MacOS agar argumen dapat diteruskan.
+func findGUIBinary() (string, error) {
+	exe, err := findGUI()
+	if err != nil {
+		return "", err
+	}
+	if platform.Current().AppSuffix() != "" && strings.HasSuffix(exe, ".app") {
+		inner := filepath.Join(exe, "Contents", "MacOS", "devlok-gui")
+		if _, statErr := os.Stat(inner); statErr == nil {
+			return inner, nil
+		}
+	}
+	return exe, nil
 }
 
 func findGUI() (string, error) {
